@@ -1,16 +1,18 @@
 [gd_scene format=3 uid="uid://dgdlya015cetr"]
 
 [ext_resource type="Texture2D" uid="uid://b8tqracnspdkt" path="res://assets/Tailmap/TailMap.png" id="1_8j60k"]
-[ext_resource type="PackedScene" uid="uid://ds0rbtr8es0d2" path="res://Scenes/Characters/Boy/Player.tscn" id="1_a02cp"]
-[ext_resource type="Script" uid="uid://t3eg8wc6moop" path="res://Scenes/Characters/Boy/player.gd" id="2_5a7ea"]
-[ext_resource type="Script" uid="uid://kr7wdrheuour" path="res://Scenes/action_tile.gd" id="2_fo5ed"]
-[ext_resource type="PackedScene" uid="uid://b01bjvv18ncx1" path="res://Scenes/UI/TouchControls/TouchControls.tscn" id="2_go701"]
+[ext_resource type="PackedScene" uid="uid://ds0rbtr8es0d2" path="res://src/gameplay/boy/boy.tscn" id="1_a02cp"]
+[ext_resource type="Script" uid="uid://t3eg8wc6moop" path="res://src/gameplay/boy/boy_movement.gd" id="2_5a7ea"]
+[ext_resource type="Script" uid="uid://ctbkugej15esq" path="res://src/levels/dig_spot.gd" id="2_fo5ed"]
+[ext_resource type="PackedScene" uid="uid://b01bjvv18ncx1" path="res://src/ui/touch_controls/touch_controls.tscn" id="2_go701"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8j60k"]
 texture = ExtResource("1_8j60k")
 texture_region_size = Vector2i(172, 191)
 0:0/0 = 0
 0:0/0/custom_data_0 = "sand"
+0:1/0 = 0
+0:1/0/custom_data_0 = "soil"
 
 [sub_resource type="TileSet" id="TileSet_ddwlq"]
 tile_size = Vector2i(172, 191)

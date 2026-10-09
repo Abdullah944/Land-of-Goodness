@@ -1,1 +1,11 @@
 .godot/
+
+# Export builds
+export/
+export_presets.cfg
+
+# Android build folder Godot creates
+android/
+
+# macOS
+.DS_Store

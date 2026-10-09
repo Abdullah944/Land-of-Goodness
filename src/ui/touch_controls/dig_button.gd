@@ -1,4 +1,4 @@
-# File: Scenes/UI/TouchControls/dig_button.gd
+# File: src/ui/touch_controls/dig_button.gd
 # Purpose: show the Dig button with the gold square, and play the dig.
 
 extends Button

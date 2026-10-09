@@ -1,5 +1,5 @@
-# File: Scenes/Characters/Boy/player.gd
-# Purpose: move the boy, and play walk, idle, or one dig.
+# File: src/gameplay/boy/boy_movement.gd
+# Purpose: move the boy and start a dig.
 
 extends CharacterBody2D
 
@@ -7,12 +7,14 @@ extends CharacterBody2D
 
 @onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
 
+var _animation := BoyAnimation.new()
 # The last way he was facing. Starts looking down.
 var _facing := &"D"
 # True while a dig animation is playing.
 var _digging := false
 
 func _ready() -> void:
+	_animation.setup(_sprite)
 	_sprite.animation_finished.connect(_on_animation_finished)
 
 func _physics_process(_delta: float) -> void:
@@ -23,15 +25,14 @@ func _physics_process(_delta: float) -> void:
 		return
 	# Read the stick or the arrow keys.
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	# Move the body.
 	velocity = direction * speed
 	move_and_slide()
 	# Walk while moving. Idle in the same direction when he stops.
 	if direction != Vector2.ZERO:
 		_facing = _facing_name(direction)
-		_play_walk()
+		_animation.play_walk(_facing)
 	else:
-		_play_idle()
+		_animation.play_idle(_facing)
 
 # Play the dig that matches the way he is facing.
 func dig() -> void:
@@ -39,7 +40,7 @@ func dig() -> void:
 		return
 	_digging = true
 	velocity = Vector2.ZERO
-	_sprite.play(_dig_animation())
+	_animation.play_dig(_facing)
 
 # Pick right, left, up, or down. The stronger axis wins.
 func _facing_name(direction: Vector2) -> StringName:
@@ -49,35 +50,14 @@ func _facing_name(direction: Vector2) -> StringName:
 		return &"UP"
 	return &"D"
 
-func _dig_animation() -> StringName:
-	match _facing:
-		&"R":
-			return &"dig_r"
-		&"L":
-			return &"dig_l"
-		&"UP":
-			return &"dig_up"
-		_:
-			return &"dig_d"
-
-# Play the walk for the way he is facing.
-func _play_walk() -> void:
-	_play(StringName("Walk_" + _facing))
-
-# Play the idle for the way he is facing.
-func _play_idle() -> void:
-	_play(StringName("idle_" + _facing))
-
-# Change the picture only when the animation name changes.
-func _play(animation_name: StringName) -> void:
-	if _sprite.animation != animation_name:
-		_sprite.play(animation_name)
-
 func _on_animation_finished() -> void:
 	if not _digging:
 		return
 	_digging = false
-	_play_idle()
+	var action_tile := get_tree().get_first_node_in_group("action_tile")
+	if action_tile != null:
+		action_tile.dig_here()
+	_animation.play_idle(_facing)
 
 # Tell the square which tile is in front of him.
 func get_facing_cell() -> Vector2i:

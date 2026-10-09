@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cc14fx86283ij"
-path="res://.godot/imported/Cute Arab Boy in White Thobe and Kufi.png-da8053215b30a994f2b4b571eaa83822.ctex"
+uid="uid://3cnpr41vohr0"
+path="res://.godot/imported/hoe.png-9f98f43e6b6a8abfc6c8f9496b1bcd38.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/boy/images/Cute Arab Boy in White Thobe and Kufi.png"
-dest_files=["res://.godot/imported/Cute Arab Boy in White Thobe and Kufi.png-da8053215b30a994f2b4b571eaa83822.ctex"]
+source_file="res://assets/tools/hoe.png"
+dest_files=["res://.godot/imported/hoe.png-9f98f43e6b6a8abfc6c8f9496b1bcd38.ctex"]
 
 [params]
 

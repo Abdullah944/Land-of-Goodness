@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://b01bjvv18ncx1"]
 
-[ext_resource type="Script" uid="uid://cggek0xnksc8" path="res://Scenes/UI/TouchControls/button.gd" id="1_d0q8r"]
-[ext_resource type="Texture2D" uid="uid://cveiek61f1x85" path="res://assets/tools/dig_btn.png" id="1_rs3f3"]
+[ext_resource type="Script" uid="uid://cggek0xnksc8" path="res://src/ui/touch_controls/dig_button.gd" id="1_d0q8r"]
+[ext_resource type="Texture2D" uid="uid://ds2lcnqr4sg3l" path="res://assets/tools/Empty_btn.png" id="1_fkxxd"]
+[ext_resource type="Texture2D" uid="uid://3cnpr41vohr0" path="res://assets/tools/hoe.png" id="2_6gex4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_isujq"]
 bg_color = Color(0.90588236, 0.7882353, 0.6039216, 0.69803923)
@@ -26,6 +27,15 @@ corner_radius_top_left = 128
 corner_radius_top_right = 128
 corner_radius_bottom_right = 128
 corner_radius_bottom_left = 128
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_6gex4"]
+texture = ExtResource("1_fkxxd")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pk3wl"]
+texture = ExtResource("1_fkxxd")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hs0we"]
+texture = ExtResource("1_fkxxd")
 
 [node name="TouchControls" type="Control" unique_id=1122109103]
 layout_mode = 3
@@ -63,7 +73,11 @@ offset_right = -40.0
 offset_bottom = -40.0
 grow_horizontal = 0
 grow_vertical = 0
-icon = ExtResource("1_rs3f3")
-flat = true
+theme_override_constants/icon_max_width = 80
+theme_override_styles/normal = SubResource("StyleBoxTexture_6gex4")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_pk3wl")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hs0we")
+icon = ExtResource("2_6gex4")
+icon_alignment = 1
 expand_icon = true
 script = ExtResource("1_d0q8r")

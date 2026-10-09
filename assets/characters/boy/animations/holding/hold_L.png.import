@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cveiek61f1x85"
-path="res://.godot/imported/dig_btn.png-f17657f93e69e7b911abe3be3af4f84b.ctex"
+uid="uid://cma3ujvqkd84r"
+path="res://.godot/imported/hold_L.png-fd4e5a1bcbfefaf08377ed6e0272f23c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tools/dig_btn.png"
-dest_files=["res://.godot/imported/dig_btn.png-f17657f93e69e7b911abe3be3af4f84b.ctex"]
+source_file="res://assets/characters/boy/animations/holding/hold_L.png"
+dest_files=["res://.godot/imported/hold_L.png-fd4e5a1bcbfefaf08377ed6e0272f23c.ctex"]
 
 [params]
 
