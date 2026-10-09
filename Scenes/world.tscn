@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://dgdlya015cetr"]
+
+[ext_resource type="Texture2D" uid="uid://b8tqracnspdkt" path="res://assets/Tailmap/TailMap.png" id="1_8j60k"]
+[ext_resource type="PackedScene" uid="uid://ds0rbtr8es0d2" path="res://Scenes/Characters/Boy/Player.tscn" id="1_a02cp"]
+[ext_resource type="Script" uid="uid://t3eg8wc6moop" path="res://Scenes/Characters/Boy/player.gd" id="2_5a7ea"]
+[ext_resource type="Script" uid="uid://kr7wdrheuour" path="res://Scenes/action_tile.gd" id="2_fo5ed"]
+[ext_resource type="PackedScene" uid="uid://b01bjvv18ncx1" path="res://Scenes/UI/TouchControls/TouchControls.tscn" id="2_go701"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8j60k"]
+texture = ExtResource("1_8j60k")
+texture_region_size = Vector2i(172, 191)
+0:0/0 = 0
+0:0/0/custom_data_0 = "sand"
+
+[sub_resource type="TileSet" id="TileSet_ddwlq"]
+tile_size = Vector2i(172, 191)
+custom_data_layer_0/name = "ground"
+custom_data_layer_0/type = 4
+sources/0 = SubResource("TileSetAtlasSource_8j60k")
+
+[node name="World" type="Node2D" unique_id=1284320382]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=949561707]
+tile_map_data = PackedByteArray(0, 0, 1, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+tile_set = SubResource("TileSet_ddwlq")
+
+[node name="ActionTile" type="Polygon2D" parent="TileMapLayer" unique_id=771540581 groups=["action_tile"]]
+color = Color(1, 0.75686276, 0.30588236, 0.43137255)
+polygon = PackedVector2Array(-43, -48, 43, -48, 43, 48, -43, 48)
+script = ExtResource("2_fo5ed")
+
+[node name="Player" parent="." unique_id=1413336827 groups=["player"] instance=ExtResource("1_a02cp")]
+script = ExtResource("2_5a7ea")
+
+[node name="TouchControls" parent="." unique_id=1122109103 instance=ExtResource("2_go701")]
