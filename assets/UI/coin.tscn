@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://dvsy03eu6l2up"]
+
+[ext_resource type="Texture2D" uid="uid://clxm5lut0wi3d" path="res://assets/UI/ard_al_khair_coin_3_equal_frames.png" id="1_88i0u"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_12ffh"]
+atlas = ExtResource("1_88i0u")
+region = Rect2(0, 0, 724, 724)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aqvo3"]
+atlas = ExtResource("1_88i0u")
+region = Rect2(724, 0, 724, 724)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tp5hn"]
+atlas = ExtResource("1_88i0u")
+region = Rect2(1448, 0, 724, 724)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ubrcs"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_12ffh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aqvo3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tp5hn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aqvo3")
+}],
+"loop": 1,
+"name": &"coin_turns",
+"speed": 1.0
+}]
+
+[node name="Coin" type="Node2D" unique_id=504502152]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=824642007]
+sprite_frames = SubResource("SpriteFrames_ubrcs")
+animation = &"coin_turns"
+frame_progress = 0.8395323

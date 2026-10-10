@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3c61266njjoc"
-path="res://.godot/imported/tomatoSeedlingIcon.png-1312721b505ec721917911772973f4ed.ctex"
+uid="uid://bmd4nk3cw56i1"
+path="res://.godot/imported/butter.png-4a30397b79118119923b08319054e375.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/plants/tomatoSeedlingIcon.png"
-dest_files=["res://.godot/imported/tomatoSeedlingIcon.png-1312721b505ec721917911772973f4ed.ctex"]
+source_file="res://assets/items/animal_products/butter.png"
+dest_files=["res://.godot/imported/butter.png-4a30397b79118119923b08319054e375.ctex"]
 
 [params]
 
