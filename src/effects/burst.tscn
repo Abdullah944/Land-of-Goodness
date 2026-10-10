@@ -2,13 +2,17 @@
 
 [ext_resource type="Texture2D" uid="uid://dq07673s3xnmd" path="res://assets/effects/vfx_dirt_dig.png" id="1_qrinr"]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_qrinr"]
+atlas = ExtResource("1_qrinr")
+region = Rect2(0, 0, 512, 512)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_17i66"]
 atlas = ExtResource("1_qrinr")
-region = Rect2(1024, 512, 512, 512)
+region = Rect2(512, 0, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_231ve"]
 atlas = ExtResource("1_qrinr")
-region = Rect2(512, 512, 512, 512)
+region = Rect2(1024, 0, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6h4cl"]
 atlas = ExtResource("1_qrinr")
@@ -16,19 +20,18 @@ region = Rect2(0, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_wu867"]
 atlas = ExtResource("1_qrinr")
-region = Rect2(1024, 0, 512, 512)
+region = Rect2(512, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_737hu"]
 atlas = ExtResource("1_qrinr")
-region = Rect2(512, 0, 512, 512)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ckj1v"]
-atlas = ExtResource("1_qrinr")
-region = Rect2(0, 0, 512, 512)
+region = Rect2(1024, 512, 512, 512)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ubrcs"]
 animations = [{
 "frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qrinr")
+}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_17i66")
 }, {
@@ -43,9 +46,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_737hu")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ckj1v")
 }],
 "loop": 0,
 "name": &"dirt",
@@ -57,5 +57,5 @@ animations = [{
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1318014500]
 sprite_frames = SubResource("SpriteFrames_ubrcs")
 animation = &"dirt"
-frame = 1
-frame_progress = 0.6746203
+frame = 5
+frame_progress = 1.0
