@@ -1,5 +1,5 @@
 # File: src/gameplay/boy/boy_movement.gd
-# Purpose: move the boy and start a dig.
+# Purpose: move the boy and start a dig or a pickup.
 
 extends CharacterBody2D
 
@@ -8,41 +8,44 @@ extends CharacterBody2D
 @onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 var _animation := BoyAnimation.new()
-# The last way he was facing. Starts looking down.
 var _facing := &"D"
-# True while a dig animation is playing.
-var _digging := false
+var _busy := false
+var _pickup_target: Node = null
 
 func _ready() -> void:
 	_animation.setup(_sprite)
 	_sprite.animation_finished.connect(_on_animation_finished)
 
 func _physics_process(_delta: float) -> void:
-	# Stand still until the dig animation ends.
-	if _digging:
+	if _busy:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
-	# Read the stick or the arrow keys.
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	velocity = direction * speed
 	move_and_slide()
-	# Walk while moving. Idle in the same direction when he stops.
 	if direction != Vector2.ZERO:
 		_facing = _facing_name(direction)
 		_animation.play_walk(_facing)
 	else:
 		_animation.play_idle(_facing)
 
-# Play the dig that matches the way he is facing.
 func dig() -> void:
-	if _digging:
+	if _busy:
 		return
-	_digging = true
+	_busy = true
+	_pickup_target = null
 	velocity = Vector2.ZERO
 	_animation.play_dig(_facing)
 
-# Pick right, left, up, or down. The stronger axis wins.
+func pickup(pack: Node) -> void:
+	if _busy:
+		return
+	_busy = true
+	_pickup_target = pack
+	velocity = Vector2.ZERO
+	_animation.play_pickup(_facing)
+
 func _facing_name(direction: Vector2) -> StringName:
 	if abs(direction.x) > abs(direction.y):
 		return &"R" if direction.x > 0.0 else &"L"
@@ -51,15 +54,19 @@ func _facing_name(direction: Vector2) -> StringName:
 	return &"D"
 
 func _on_animation_finished() -> void:
-	if not _digging:
+	if not _busy:
 		return
-	_digging = false
-	var action_tile := get_tree().get_first_node_in_group("action_tile")
-	if action_tile != null:
-		action_tile.dig_here()
+	var pack := _pickup_target
+	_busy = false
+	_pickup_target = null
+	if pack != null and is_instance_valid(pack):
+		pack.take()
+	else:
+		var action_tile := get_tree().get_first_node_in_group("action_tile")
+		if action_tile != null:
+			action_tile.dig_here()
 	_animation.play_idle(_facing)
 
-# Tell the square which tile is in front of him.
 func get_facing_cell() -> Vector2i:
 	match _facing:
 		&"R":

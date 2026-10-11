@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://dgdlya015cetr"]
 
 [ext_resource type="Texture2D" uid="uid://b8tqracnspdkt" path="res://assets/Tailmap/TailMap.png" id="1_8j60k"]
+[ext_resource type="PackedScene" uid="uid://blf8ods3xb6k0" path="res://src/gameplay/pickups/pickup.tscn" id="1_8k84k"]
 [ext_resource type="PackedScene" uid="uid://ds0rbtr8es0d2" path="res://src/gameplay/boy/boy.tscn" id="1_a02cp"]
 [ext_resource type="Script" uid="uid://t3eg8wc6moop" path="res://src/gameplay/boy/boy_movement.gd" id="2_5a7ea"]
 [ext_resource type="Script" uid="uid://ctbkugej15esq" path="res://src/levels/dig_spot.gd" id="2_fo5ed"]
 [ext_resource type="PackedScene" uid="uid://b01bjvv18ncx1" path="res://src/ui/touch_controls/touch_controls.tscn" id="2_go701"]
+[ext_resource type="PackedScene" uid="uid://cfx5pv2jqd1ay" path="res://src/ui/inventory/Inventory.tscn" id="6_hkv0b"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8j60k"]
 texture = ExtResource("1_8j60k")
@@ -35,3 +37,11 @@ script = ExtResource("2_fo5ed")
 script = ExtResource("2_5a7ea")
 
 [node name="TouchControls" parent="." unique_id=1122109103 instance=ExtResource("2_go701")]
+
+[node name="Inventory" parent="." unique_id=1886149991 instance=ExtResource("6_hkv0b")]
+
+[node name="Pickup" parent="." unique_id=1196185494 instance=ExtResource("1_8k84k")]
+position = Vector2(200, 80)
+
+[node name="Pickup2" parent="." unique_id=406406279 instance=ExtResource("1_8k84k")]
+position = Vector2(340, 80)

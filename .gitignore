@@ -9,3 +9,7 @@ android/
 
 # macOS
 .DS_Store
+
+# Python cache and old cut copies
+tools/__pycache__/
+tools/need cutting/

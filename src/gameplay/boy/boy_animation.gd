@@ -18,6 +18,19 @@ func play_idle(facing: StringName) -> void:
 
 func play_dig(facing: StringName) -> void:
 	_sprite.play(_dig_name(facing))
+func play_pickup(facing: StringName) -> void:
+	_sprite.play(_pickup_name(facing))
+
+func _pickup_name(facing: StringName) -> StringName:
+	match facing:
+		&"R":
+			return &"pickup_r"
+		&"L":
+			return &"pickup_L"
+		&"UP":
+			return &"pickup_up"
+		_:
+			return &"pickup_d"
 
 func _dig_name(facing: StringName) -> StringName:
 	match facing:
