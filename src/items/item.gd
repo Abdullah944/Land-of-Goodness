@@ -6,3 +6,4 @@ extends Resource
 
 @export var id: StringName
 @export var icon: Texture2D
+@export var sprout: Texture2D

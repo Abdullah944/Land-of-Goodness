@@ -1,5 +1,5 @@
 # File: src/gameplay/boy/boy_animation.gd
-# Purpose: play the boy's walk, idle, and dig pictures.
+# Purpose: play the boy's walk, idle, dig, and pickup pictures.
 
 class_name BoyAnimation
 extends RefCounted
@@ -18,6 +18,7 @@ func play_idle(facing: StringName) -> void:
 
 func play_dig(facing: StringName) -> void:
 	_sprite.play(_dig_name(facing))
+
 func play_pickup(facing: StringName) -> void:
 	_sprite.play(_pickup_name(facing))
 

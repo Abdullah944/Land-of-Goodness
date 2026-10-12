@@ -1,16 +1,16 @@
-# File: src/ui/Inventory/inventory.gd
-# Purpose: open the bag, and stack whatever the boy picks up.
+# File: src/ui/inventory/inventory.gd
+# Purpose: open the bag, stack items, and equip one slot.
 
 extends Control
 
 const BLOCK := preload("res://assets/UI/inventory/general/normal_block.png")
+const CHOSEN := preload("res://assets/UI/inventory/general/choosen_block.png")
 
 @onready var _window: TextureRect = $CanvasLayer/Window
-@onready var _slots: Control = $CanvasLayer/Window/Slots
+@onready var _slots_row: Control = $CanvasLayer/Window/Slots
 
-var _order: Array[StringName] = []
-var _counts := {}
-var _icons := {}
+var _slots: Array[BagSlot] = []
+var _equipped: GameItem
 
 func _ready() -> void:
 	_window.visible = false
@@ -24,38 +24,64 @@ func _close() -> void:
 	_window.visible = false
 
 func add_item(item: GameItem) -> void:
-	if _counts.has(item.id):
-		_counts[item.id] += 1
-	else:
-		_counts[item.id] = 1
-		_order.append(item.id)
-		_icons[item.id] = item.icon
+	for slot in _slots:
+		if slot.item.id == item.id:
+			slot.count += 1
+			_redraw()
+			return
+	var slot := BagSlot.new()
+	slot.item = item
+	slot.count = 1
+	_slots.append(slot)
 	_redraw()
 
+func has_seed_equipped() -> bool:
+	return _equipped != null
+
+func equipped_icon() -> Texture2D:
+	if _equipped == null:
+		return null
+	return _equipped.icon
+
+func equipped_item() -> GameItem:
+	return _equipped
+
+func _equip(item: GameItem) -> void:
+	if _equipped == item:
+		_equipped = null
+	else:
+		_equipped = item
+	_redraw.call_deferred()
+
 func _redraw() -> void:
-	for child in _slots.get_children():
+	for child in _slots_row.get_children():
 		child.free()
 	var index := 0
-	for id in _order:
-		var slot := TextureRect.new()
-		slot.texture = BLOCK
-		slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		slot.position = Vector2(index * 136, 0)
-		slot.size = Vector2(120, 120)
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for slot in _slots:
+		var button := TextureButton.new()
+		button.texture_normal = CHOSEN if slot.item == _equipped else BLOCK
+		button.ignore_texture_size = true
+		button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		button.position = Vector2(index * 136, 0)
+		button.size = Vector2(120, 120)
+		button.pressed.connect(_equip.bind(slot.item))
 		var icon := TextureRect.new()
-		icon.texture = _icons[id]
+		icon.texture = slot.item.icon
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.position = Vector2(18, 18)
 		icon.size = Vector2(84, 84)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		slot.add_child(icon)
+		button.add_child(icon)
 		var count := Label.new()
-		count.text = str(_counts[id])
+		count.text = str(slot.count)
 		count.position = Vector2(78, 82)
+		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		count.add_theme_color_override("font_color", Color("7A4F32"))
-		slot.add_child(count)
-		_slots.add_child(slot)
+		button.add_child(count)
+		_slots_row.add_child(button)
 		index += 1
+
+class BagSlot:
+	var item: GameItem
+	var count: int

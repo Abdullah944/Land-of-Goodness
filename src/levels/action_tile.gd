@@ -1,20 +1,28 @@
-# File: src/levels/dig_spot.gd
-# Purpose: show a small square on sand, and turn only that quarter into soil.
+# File: src/levels/action_tile.gd
+# Purpose: show a small square on sand, turn that quarter into soil, and plant a sprout.
 
 extends Polygon2D
+
+const DIG_COLOR := Color(1, 0.75686276, 0.30588236, 0.43137255)
+const PLANT_COLOR := Color(0.369, 0.608, 0.384, 0.45)
 
 @onready var _player: CharacterBody2D = $"../../Player"
 @onready var _ground: TileMapLayer = $".."
 
 # Quarters that have already been dug.
 var _dug := {}
+# Quarters that already have a sprout.
+var _planted := {}
 
 func _physics_process(_delta: float) -> void:
 	var spot := _spot_in_front()
 	var can_dig := _is_sand(_cell_for_spot(spot)) and not _dug.has(spot)
-	visible = can_dig
-	if can_dig:
-		global_position = _ground.to_global(_spot_center(spot))
+	var show_plant := can_plant() and _seed_ready()
+	visible = can_dig or show_plant
+	if not visible:
+		return
+	global_position = _ground.to_global(_spot_center(spot))
+	color = PLANT_COLOR if show_plant else DIG_COLOR
 
 # Put a small soil picture on the quarter in front of him.
 func dig_here() -> void:
@@ -31,6 +39,34 @@ func dig_here() -> void:
 	soil.scale = Vector2(0.5, 0.5)
 	soil.position = _spot_center(spot)
 	_ground.add_child(soil)
+
+func can_plant() -> bool:
+	var spot := _spot_in_front()
+	return _dug.has(spot) and not _planted.has(spot)
+
+func plant_here() -> void:
+	if not can_plant():
+		return
+	var item := _equipped_item()
+	if item == null or item.sprout == null:
+		return
+	var spot := _spot_in_front()
+	_planted[spot] = true
+	var sprout := Sprite2D.new()
+	sprout.texture = item.sprout
+	sprout.scale = Vector2(0.35, 0.35)
+	sprout.position = _spot_center(spot)
+	_ground.add_child(sprout)
+
+func _seed_ready() -> bool:
+	var item := _equipped_item()
+	return item != null and item.sprout != null
+
+func _equipped_item() -> GameItem:
+	var inventory := get_tree().get_first_node_in_group("inventory")
+	if inventory == null or not inventory.has_seed_equipped():
+		return null
+	return inventory.equipped_item()
 
 func _spot_in_front() -> Vector2i:
 	var spot_size := _spot_size()

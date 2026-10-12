@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b01bjvv18ncx1"]
 
-[ext_resource type="Script" uid="uid://cggek0xnksc8" path="res://src/ui/touch_controls/dig_button.gd" id="1_d0q8r"]
+[ext_resource type="Script" uid="uid://cggek0xnksc8" path="res://src/ui/touch_controls/action_button.gd" id="1_d0q8r"]
 [ext_resource type="Texture2D" uid="uid://ds2lcnqr4sg3l" path="res://assets/tools/Empty_btn.png" id="1_fkxxd"]
 [ext_resource type="Texture2D" uid="uid://3cnpr41vohr0" path="res://assets/tools/hoe.png" id="2_6gex4"]
 
@@ -61,7 +61,7 @@ theme_override_styles/normal_tip = SubResource("StyleBoxFlat_0ea8m")
 joystick_mode = 1
 visibility_mode = 1
 
-[node name="dig_btn" type="Button" parent="CanvasLayer" unique_id=1961377833]
+[node name="action_btn" type="Button" parent="CanvasLayer" unique_id=1961377833]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
