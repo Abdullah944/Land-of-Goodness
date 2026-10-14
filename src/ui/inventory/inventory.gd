@@ -70,8 +70,13 @@ func _equip(item: GameItem) -> void:
 		return
 	if _equipped == item:
 		_equipped = null
+		if tools != null:
+			tools.clear_last_if(item)
 	else:
 		_equipped = item
+		if tools != null:
+			tools.put_in_last(item)
+		_close()
 	_redraw.call_deferred()
 
 func _cancel_tool_wait() -> void:

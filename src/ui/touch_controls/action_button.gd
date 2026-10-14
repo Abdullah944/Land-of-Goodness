@@ -8,6 +8,7 @@ var _player: Node
 var _inventory: Node
 var _tools: Node
 var _hoe_icon: Texture2D
+var _can_icon: Texture2D = preload("res://assets/tools/waterCan.png")
 
 func _ready() -> void:
 	_action_tile = get_tree().get_first_node_in_group("action_tile")
@@ -23,6 +24,10 @@ func _process(_delta: float) -> void:
 	if pack != null:
 		visible = true
 		icon = pack.item.icon
+		return
+	if _tool_is(&"water") and _action_tile != null and _action_tile.can_water():
+		visible = true
+		icon = _can_icon
 		return
 	if _tool_is(&"hoe") and _action_tile != null and _action_tile.visible:
 		visible = true
@@ -40,6 +45,8 @@ func _on_pressed() -> void:
 	var pack := _pack_in_front()
 	if pack != null:
 		_player.pickup(pack)
+	elif _tool_is(&"water") and _action_tile != null and _action_tile.can_water():
+		_action_tile.water_here()
 	elif _tool_is(&"hoe"):
 		_player.dig()
 	elif _tool_is(&"seed") and _can_plant():

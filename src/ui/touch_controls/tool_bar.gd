@@ -6,9 +6,11 @@ extends Control
 const BLOCK := preload("res://assets/UI/inventory/general/normal_block.png")
 const CHOSEN := preload("res://assets/UI/inventory/general/choosen_block.png")
 const HOE := preload("res://assets/tools/hoe.png")
+const CAN := preload("res://assets/tools/waterCan.png")
+const LAST_SQUARE := 4
 
-var _tools: Array[StringName] = [&"hoe", &"", &"", &"", &""]
-var _icons: Array[Texture2D] = [HOE, null, null, null, null]
+var _tools: Array[StringName] = [&"hoe", &"water", &"", &"", &""]
+var _icons: Array[Texture2D] = [HOE, CAN, null, null, null]
 var _items: Array[GameItem] = [null, null, null, null, null]
 var _selected := 0
 var _waiting := -1
@@ -51,10 +53,26 @@ func cancel_wait() -> void:
 func give_item(item: GameItem) -> void:
 	if _waiting < 0:
 		return
-	_items[_waiting] = item
-	_icons[_waiting] = item.icon
-	_tools[_waiting] = &"seed" if item.sprout != null else &"item"
-	_selected = _waiting
+	_fill(_waiting, item)
+
+func put_in_last(item: GameItem) -> void:
+	_fill(LAST_SQUARE, item)
+
+func clear_last_if(item: GameItem) -> void:
+	if _items[LAST_SQUARE] != item:
+		return
+	_items[LAST_SQUARE] = null
+	_icons[LAST_SQUARE] = null
+	_tools[LAST_SQUARE] = &""
+	if _selected == LAST_SQUARE:
+		_selected = 0
+	_refresh()
+
+func _fill(index: int, item: GameItem) -> void:
+	_items[index] = item
+	_icons[index] = item.icon
+	_tools[index] = &"seed" if item.sprout != null else &"item"
+	_selected = index
 	_waiting = -1
 	_refresh()
 
@@ -71,7 +89,7 @@ func _select(index: int) -> void:
 	if inventory == null:
 		_refresh()
 		return
-	if index == 0:
+	if index < 2:
 		inventory.clear_equipped()
 	else:
 		inventory.equip_item(_items[index])
