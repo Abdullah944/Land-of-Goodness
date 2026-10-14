@@ -1,5 +1,5 @@
 # File: src/ui/inventory/inventory.gd
-# Purpose: open the bag, stack items, and equip one slot.
+# Purpose: open the bag, stack items, and put one into a tool square.
 
 extends Control
 
@@ -19,9 +19,15 @@ func _ready() -> void:
 
 func _toggle() -> void:
 	_window.visible = not _window.visible
+	if not _window.visible:
+		_cancel_tool_wait()
+
+func open_bag() -> void:
+	_window.visible = true
 
 func _close() -> void:
 	_window.visible = false
+	_cancel_tool_wait()
 
 func add_item(item: GameItem) -> void:
 	for slot in _slots:
@@ -46,12 +52,32 @@ func equipped_icon() -> Texture2D:
 func equipped_item() -> GameItem:
 	return _equipped
 
+func equip_item(item: GameItem) -> void:
+	_equipped = item
+	_redraw.call_deferred()
+
+func clear_equipped() -> void:
+	_equipped = null
+	_redraw.call_deferred()
+
 func _equip(item: GameItem) -> void:
+	var tools := get_tree().get_first_node_in_group("tool_bar")
+	if tools != null and tools.is_waiting():
+		tools.give_item(item)
+		_equipped = item
+		_close()
+		_redraw.call_deferred()
+		return
 	if _equipped == item:
 		_equipped = null
 	else:
 		_equipped = item
 	_redraw.call_deferred()
+
+func _cancel_tool_wait() -> void:
+	var tools := get_tree().get_first_node_in_group("tool_bar")
+	if tools != null:
+		tools.cancel_wait()
 
 func _redraw() -> void:
 	for child in _slots_row.get_children():

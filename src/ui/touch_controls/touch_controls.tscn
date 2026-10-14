@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cggek0xnksc8" path="res://src/ui/touch_controls/action_button.gd" id="1_d0q8r"]
 [ext_resource type="Texture2D" uid="uid://ds2lcnqr4sg3l" path="res://assets/tools/Empty_btn.png" id="1_fkxxd"]
 [ext_resource type="Texture2D" uid="uid://3cnpr41vohr0" path="res://assets/tools/hoe.png" id="2_6gex4"]
+[ext_resource type="Script" uid="uid://c1vbwwgvtqklk" path="res://src/ui/touch_controls/tool_bar.gd" id="4_hs0we"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_isujq"]
 bg_color = Color(0.90588236, 0.7882353, 0.6039216, 0.69803923)
@@ -81,3 +82,18 @@ icon = ExtResource("2_6gex4")
 icon_alignment = 1
 expand_icon = true
 script = ExtResource("1_d0q8r")
+
+[node name="ToolBar" type="Control" parent="CanvasLayer" unique_id=264935153 groups=["tool_bar"]]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -520.0
+offset_top = -104.0
+offset_right = -168.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("4_hs0we")
