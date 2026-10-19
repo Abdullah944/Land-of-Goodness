@@ -10,6 +10,12 @@ android/
 # macOS
 .DS_Store
 
+# Editor files
+.cursor/
+
+# Debug scenes
+scenes/debug/
+
 # Python cache and old cut copies
 tools/__pycache__/
 tools/need cutting/
