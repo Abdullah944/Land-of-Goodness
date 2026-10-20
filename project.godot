@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="ArdAlKhair"
-run/main_scene="uid://nsyej5gfqkfs"
+run/main_scene="uid://b4w5vss6vxsxa"
 config/features=PackedStringArray("4.7", "Mobile")
 
 [display]
@@ -26,8 +26,9 @@ window/stretch/mode="canvas_items"
 
 folder_colors={
 "res://assets/": "orange",
-"res://scenes/": "green",
-"res://scripts/": "yellow"
+"res://src/": "teal",
+"res://src/scenes/": "green",
+"res://src/scripts/": "yellow"
 }
 
 [input]

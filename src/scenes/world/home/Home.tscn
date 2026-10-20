@@ -1,9 +1,8 @@
 [gd_scene format=4 uid="uid://nsyej5gfqkfs"]
 
 [ext_resource type="Texture2D" uid="uid://do5aw3qvpko7o" path="res://assets/Basic pack/Tilesets/Grass.png" id="1_rwkni"]
-[ext_resource type="PackedScene" uid="uid://dtaem1phpmk7t" path="res://scenes/player/player.tscn" id="1_t01os"]
 [ext_resource type="Texture2D" uid="uid://raohnf3gd8eq" path="res://assets/Basic pack/Tilesets/Tilled Dirt.png" id="2_83bga"]
-[ext_resource type="PackedScene" uid="uid://cmpjhm6ipm15w" path="res://scenes/world/home/house.tscn" id="3_p43sb"]
+[ext_resource type="PackedScene" uid="uid://cmpjhm6ipm15w" path="res://src/scenes/world/house/House.tscn" id="3_p43sb"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_83bga"]
 texture = ExtResource("1_rwkni")
@@ -551,5 +550,7 @@ tile_set = SubResource("TileSet_rwkni")
 tile_map_data = PackedByteArray("AADx////AAAAAAAAAQA=")
 tile_set = SubResource("TileSet_ubrcs")
 
-[node name="Player" parent="." unique_id=1950149959 instance=ExtResource("1_t01os")]
-position = Vector2(-141, 49)
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=778287540]
+
+[node name="HouseDoor" type="Marker2D" parent="." unique_id=1692684332]
+position = Vector2(-236, -88)

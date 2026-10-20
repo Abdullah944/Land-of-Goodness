@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bitq6w4maknkg"
-path="res://.godot/imported/Desert Adobe Rooftop House Sprite.png-8b8dda192c840a4bb3c4fc6fd56ae192.ctex"
+uid="uid://fwwykhfnhcpn"
+path="res://.godot/imported/HomeInterior_Tileset.png-db7579cb3e09c11c82dc0127f53bf00c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/building/Desert Adobe Rooftop House Sprite.png"
-dest_files=["res://.godot/imported/Desert Adobe Rooftop House Sprite.png-8b8dda192c840a4bb3c4fc6fd56ae192.ctex"]
+source_file="res://assets/building/house/HomeInterior_Tileset.png"
+dest_files=["res://.godot/imported/HomeInterior_Tileset.png-db7579cb3e09c11c82dc0127f53bf00c.ctex"]
 
 [params]
 
