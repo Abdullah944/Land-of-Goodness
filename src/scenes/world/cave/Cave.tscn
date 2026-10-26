@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="1_door"]
+[ext_resource type="Script" path="res://src/scripts/World/rock.gd" id="2_rock"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(32, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock"]
+size = Vector2(16, 16)
+
+[node name="Cave" type="Node2D"]
+
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.247, 0.176, 0.153, 1)
+polygon = PackedVector2Array(-160, -90, 160, -90, 160, 140, -160, 140)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(0, 20)
+
+[node name="Exit" type="Area2D" parent="."]
+position = Vector2(0, 110)
+script = ExtResource("1_door")
+next_scene_path = "uid://nsyej5gfqkfs"
+spawn_name = "CaveDoor"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="Rock" type="Area2D" parent="."]
+position = Vector2(48, 40)
+script = ExtResource("2_rock")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rock"]
+shape = SubResource("RectangleShape2D_rock")

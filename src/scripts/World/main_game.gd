@@ -1,4 +1,4 @@
-# src/scripts/world/main_game.gd
+# src/scripts/World/main_game.gd
 # Purpose: Puts the boy on the current place's spawn point.
 
 extends Node
@@ -6,9 +6,16 @@ extends Node
 @onready var player: Player = $Player
 
 func _ready() -> void:
-	var spawn: Marker2D = _find_spawn()
-	if spawn:
-		player.global_position = spawn.global_position
+	var save: SaveGame = get_node("Systems/SaveGame") as SaveGame
+	var loaded: bool = save.load_game()
+	var farm: FarmField = get_node("Systems/FarmField") as FarmField
+	farm.apply()
+	if loaded and save.has_position:
+		player.global_position = save.saved_position
+	else:
+		var spawn: Marker2D = _find_spawn()
+		if spawn:
+			player.global_position = spawn.global_position
 
 func _find_spawn() -> Marker2D:
 	var world: Node = get_node("World")

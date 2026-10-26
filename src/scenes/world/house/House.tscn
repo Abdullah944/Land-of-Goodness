@@ -25,10 +25,10 @@ texture = ExtResource("1_j04ud")
 position = Vector2(28.5, -256.75)
 shape = SubResource("RectangleShape2D_ubrcs")
 
-[node name="Enternce" type="Area2D" parent="." unique_id=1018236657]
+[node name="Entrance" type="Area2D" parent="." unique_id=1018236657]
 script = ExtResource("2_0snax")
 next_scene = ExtResource("3_f2osk")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Enternce" unique_id=1150618844]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Entrance" unique_id=1150618844]
 position = Vector2(5, -144)
 shape = SubResource("RectangleShape2D_ddwlq")

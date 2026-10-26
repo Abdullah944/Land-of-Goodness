@@ -101,6 +101,7 @@
 [ext_resource type="Script" uid="uid://cjwdu6gpeu3tm" path="res://src/scripts/player/state_machine/idle_state.gd" id="99_cqtae"]
 [ext_resource type="Script" uid="uid://brpqilllrjwdj" path="res://src/scripts/player/state_machine/walk_state.gd" id="100_fyilf"]
 [ext_resource type="Script" uid="uid://c5qjyib6pucwl" path="res://src/scripts/player/state_machine/tool_state.gd" id="101_hdbgt"]
+[ext_resource type="Script" uid="uid://1km8whnb1baq" path="res://src/scripts/player/dig_target.gd" id="102_mg6l1"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ubrcs"]
 animations = [{
@@ -557,3 +558,6 @@ script = ExtResource("101_hdbgt")
 player = NodePath("../..")
 animated_sprite_2d = NodePath("../../CharacterSprite")
 animation_prefix = "water_"
+
+[node name="DigTarget" type="Node2D" parent="." unique_id=527013079]
+script = ExtResource("102_mg6l1")

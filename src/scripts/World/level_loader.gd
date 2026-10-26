@@ -1,4 +1,4 @@
-# src/scripts/world/level_loader.gd
+# src/scripts/World/level_loader.gd
 # Purpose: Swaps the place inside World and keeps the same boy.
 
 class_name LevelLoader
@@ -24,4 +24,7 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var spawn: Node = next_place.get_node_or_null(spawn_name)
 	if spawn is Marker2D:
 		player.global_position = spawn.global_position
+	var farm: FarmField = main.get_node_or_null("Systems/FarmField") as FarmField
+	if farm != null:
+		farm.apply()
 	_busy = false

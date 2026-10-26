@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://b4w5vss6vxsxa"]
+
+[ext_resource type="Script" uid="uid://eekl1sqfbofe" path="res://src/scripts/World/main_game.gd" id="1_dmksn"]
+[ext_resource type="PackedScene" uid="uid://nsyej5gfqkfs" path="res://src/scenes/world/home/Home.tscn" id="1_eaqnx"]
+[ext_resource type="PackedScene" uid="uid://dtaem1phpmk7t" path="res://src/scenes/player/player.tscn" id="2_4qh4t"]
+[ext_resource type="Script" uid="uid://j6puo7ddaqv8" path="res://src/scripts/World/level_loader.gd" id="2_ii484"]
+[ext_resource type="Script" path="res://src/scripts/farm/farm_field.gd" id="3_farm"]
+[ext_resource type="Script" path="res://src/scripts/farm/inventory.gd" id="4_bag"]
+[ext_resource type="Script" path="res://src/scripts/World/clock.gd" id="5_clock"]
+[ext_resource type="Script" path="res://src/scripts/World/activities.gd" id="6_act"]
+[ext_resource type="Script" path="res://src/scripts/World/save_game.gd" id="7_save"]
+[ext_resource type="Script" path="res://src/scripts/ui/hud.gd" id="8_hud"]
+[ext_resource type="Script" path="res://src/scripts/ui/dialogue.gd" id="9_talk"]
+
+[node name="MainGame" type="Node" unique_id=159932284]
+process_mode = 1
+script = ExtResource("1_dmksn")
+
+[node name="Systems" type="Node" parent="." unique_id=1128582280]
+process_mode = 3
+
+[node name="LevelLoader" type="Node" parent="Systems" unique_id=810032645]
+script = ExtResource("2_ii484")
+
+[node name="FarmField" type="Node" parent="Systems"]
+script = ExtResource("3_farm")
+
+[node name="Inventory" type="Node" parent="Systems"]
+script = ExtResource("4_bag")
+
+[node name="Clock" type="Node" parent="Systems"]
+script = ExtResource("5_clock")
+
+[node name="Activities" type="Node" parent="Systems"]
+script = ExtResource("6_act")
+
+[node name="SaveGame" type="Node" parent="Systems"]
+script = ExtResource("7_save")
+
+[node name="World" type="Node" parent="." unique_id=51229956]
+
+[node name="Home" parent="World" unique_id=1665288054 instance=ExtResource("1_eaqnx")]
+
+[node name="UI" type="Node" parent="." unique_id=642942500]
+process_mode = 2
+
+[node name="HUD" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("8_hud")
+
+[node name="Dialogue" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("9_talk")
+
+[node name="Player" parent="." unique_id=1950149959 instance=ExtResource("2_4qh4t")]
