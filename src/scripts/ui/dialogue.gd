@@ -33,7 +33,7 @@ func open_lines(lines: PackedStringArray) -> void:
 	_index = 0
 	visible = true
 	_show_line()
-	var player: Player = get_tree().current_scene.get_node("Player") as Player
+	var player: Player = get_tree().current_scene.find_child("Player", true, false) as Player
 	player.busy = true
 	player.cancel_tap()
 
@@ -41,7 +41,7 @@ func _advance() -> void:
 	_index += 1
 	if _index >= _lines.size():
 		visible = false
-		var player: Player = get_tree().current_scene.get_node("Player") as Player
+		var player: Player = get_tree().current_scene.find_child("Player", true, false) as Player
 		player.busy = false
 		return
 	_show_line()

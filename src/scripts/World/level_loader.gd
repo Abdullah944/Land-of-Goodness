@@ -15,8 +15,10 @@ func go_to(next_scene: PackedScene, spawn_name: String = "PlayerSpawn") -> void:
 func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var main: Node = get_tree().current_scene
 	var world: Node = main.get_node("World")
-	var player: Player = main.get_node("Player")
+	var player: Player = main.find_child("Player", true, false) as Player
 	for place: Node in world.get_children():
+		if place == player:
+			continue
 		world.remove_child(place)
 		place.queue_free()
 	var next_place: Node = next_scene.instantiate()

@@ -1,6 +1,7 @@
 # src/scripts/World/clock.gd
 # Purpose: Moves the day forward and tells the field when morning comes.
 
+class_name GameClock
 extends Node
 
 const SEASONS: Array[String] = ["Spring", "Summer", "Autumn", "Winter"]
@@ -14,22 +15,28 @@ func _process(delta: float) -> void:
 	# Stardew on iPhone: ten game minutes take about seven real seconds.
 	minute += delta * (10.0 / 7.0)
 	if minute >= 26.0 * 60.0:
-		minute = 6.0 * 60.0
-		day += 1
-		season = SEASONS[(day / 7) % SEASONS.size()]
-		weather = "Rain" if randf() < 0.25 else "Clear"
-		var farm: FarmField = get_parent().get_node("FarmField") as FarmField
-		farm.advance_day(season, weather == "Rain")
-		var activities: Activities = get_parent().get_node("Activities") as Activities
-		activities.on_new_day()
-		var bag: Inventory = get_parent().get_node("Inventory") as Inventory
-		bag.refill_hearts()
-		var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame
-		save.write_now()
+		_begin_morning()
 	_paint_sky()
 	var hud: Node = get_tree().current_scene.get_node_or_null("UI/HUD")
 	if hud != null and hud.has_method("refresh"):
 		hud.refresh()
+
+func sleep_now() -> void:
+	_begin_morning()
+
+func _begin_morning() -> void:
+	minute = 6.0 * 60.0
+	day += 1
+	season = SEASONS[(day / 7) % SEASONS.size()]
+	weather = "Rain" if randf() < 0.25 else "Clear"
+	var farm: FarmField = get_parent().get_node("FarmField") as FarmField
+	farm.advance_day(season, weather == "Rain")
+	var activities: Activities = get_parent().get_node("Activities") as Activities
+	activities.on_new_day()
+	var bag: Inventory = get_parent().get_node("Inventory") as Inventory
+	bag.refill_hearts()
+	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame
+	save.write_now()
 
 func hour_text() -> String:
 	var hour: int = int(minute / 60.0) % 24

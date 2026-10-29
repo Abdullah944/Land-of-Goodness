@@ -514,9 +514,8 @@ animations = [{
 "speed": 4.0
 }]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dovo2"]
-radius = 15.0
-height = 50.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_feet"]
+size = Vector2(12, 6)
 
 [node name="Player" type="CharacterBody2D" unique_id=1950149959]
 script = ExtResource("1_n5vqm")
@@ -528,8 +527,8 @@ animation = &"water_Right"
 autoplay = "idle_Down"
 
 [node name="body" type="CollisionShape2D" parent="." unique_id=30146074]
-position = Vector2(0, 1)
-shape = SubResource("CapsuleShape2D_dovo2")
+position = Vector2(0, 17)
+shape = SubResource("RectangleShape2D_feet")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=373283980]
 
@@ -558,6 +557,18 @@ script = ExtResource("101_hdbgt")
 player = NodePath("../..")
 animated_sprite_2d = NodePath("../../CharacterSprite")
 animation_prefix = "water_"
+
+[node name="Axe" type="Node" parent="NodeStateMachine" node_paths=PackedStringArray("player", "animated_sprite_2d")]
+script = ExtResource("101_hdbgt")
+player = NodePath("../..")
+animated_sprite_2d = NodePath("../../CharacterSprite")
+animation_prefix = "axe_"
+
+[node name="Pick" type="Node" parent="NodeStateMachine" node_paths=PackedStringArray("player", "animated_sprite_2d")]
+script = ExtResource("101_hdbgt")
+player = NodePath("../..")
+animated_sprite_2d = NodePath("../../CharacterSprite")
+animation_prefix = "pick_"
 
 [node name="DigTarget" type="Node2D" parent="." unique_id=527013079]
 script = ExtResource("102_mg6l1")

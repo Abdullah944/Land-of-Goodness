@@ -13,7 +13,7 @@ func write_now() -> void:
 	var main: Node = get_tree().current_scene
 	if main == null:
 		return
-	var player: Player = main.get_node_or_null("Player") as Player
+	var player: Player = main.find_child("Player", true, false) as Player
 	if player != null and player.find_dirt() != null:
 		saved_position = player.global_position
 		has_position = true

@@ -37,7 +37,8 @@ script = ExtResource("6_act")
 [node name="SaveGame" type="Node" parent="Systems"]
 script = ExtResource("7_save")
 
-[node name="World" type="Node" parent="." unique_id=51229956]
+[node name="World" type="Node2D" parent="." unique_id=51229956]
+y_sort_enabled = true
 
 [node name="Home" parent="World" unique_id=1665288054 instance=ExtResource("1_eaqnx")]
 
@@ -52,4 +53,5 @@ script = ExtResource("8_hud")
 process_mode = 3
 script = ExtResource("9_talk")
 
-[node name="Player" parent="." unique_id=1950149959 instance=ExtResource("2_4qh4t")]
+[node name="Player" parent="World" unique_id=1950149959 instance=ExtResource("2_4qh4t")]
+z_index = 1

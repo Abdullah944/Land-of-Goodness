@@ -40,10 +40,11 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 		var gap: Vector2i = cell - mark_cell
 		var distance: int = maxi(absi(gap.x), absi(gap.y))
 		var close: bool = distance <= 1
-		if spot.get("person") != null:
-			var reach_x: int = 2 if spot.is_in_group("tree") else 1
-			var reach_up: int = 4 if spot.is_in_group("tree") else 3
-			close = absi(gap.x) <= reach_x and gap.y <= 0 and gap.y >= -reach_up
+		if spot.is_in_group("tree"):
+			close = absi(gap.x) <= 2 and gap.y <= 0 and gap.y >= -5
+			distance = absi(gap.x) + absi(gap.y)
+		elif spot.get("person") != null:
+			close = absi(gap.x) <= 1 and gap.y <= 0 and gap.y >= -3
 			distance = absi(gap.x) + absi(gap.y)
 		if close and distance < best_distance:
 			best = mark_cell
@@ -165,9 +166,13 @@ func _matches(place: Node, node_name: String, dirt: TileMapLayer, cell: Vector2i
 
 func _place() -> Node:
 	var world: Node = get_tree().current_scene.get_node_or_null("World")
-	if world == null or world.get_child_count() == 0:
+	if world == null:
 		return null
-	return world.get_child(0)
+	for child: Node in world.get_children():
+		if child.name == "Player":
+			continue
+		return child
+	return null
 
 func _inventory() -> Inventory:
 	return get_parent().get_node("Inventory") as Inventory

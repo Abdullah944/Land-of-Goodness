@@ -3,7 +3,7 @@
 
 extends Node
 
-@onready var player: Player = $Player
+@onready var player: Player = $World/Player
 
 func _ready() -> void:
 	var save: SaveGame = get_node("Systems/SaveGame") as SaveGame

@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://br3ynv3a5l7dt" path="res://assets/Basic pack/Tilesets/Wooden House.png" id="1_go882"]
 [ext_resource type="Script" uid="uid://dg760j5xi0drc" path="res://src/scripts/house/door.gd" id="2_hjggx"]
+[ext_resource type="Script" path="res://src/scripts/house/bed.gd" id="3_bed"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hj0lt"]
 texture = ExtResource("1_go882")
@@ -44,6 +45,7 @@ sources/1 = SubResource("TileSetAtlasSource_hj0lt")
 size = Vector2(48, 17)
 
 [node name="HouseInside" type="Node2D" unique_id=154480110]
+y_sort_enabled = true
 
 [node name="TileMaps" type="Node2D" parent="." unique_id=901785038]
 
@@ -62,3 +64,7 @@ spawn_name = "HouseDoor"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exit" unique_id=82139591]
 position = Vector2(8, 151.5)
 shape = SubResource("RectangleShape2D_ubrcs")
+
+[node name="Bed" type="Node2D" parent="."]
+position = Vector2(64, 40)
+script = ExtResource("3_bed")

@@ -63,6 +63,14 @@ func _on_next_transitions() -> void:
 		player.wants_hoe = false
 		transition.emit("Hoe")
 		return
+	if player.wants_axe:
+		player.wants_axe = false
+		transition.emit("Axe")
+		return
+	if player.wants_pick:
+		player.wants_pick = false
+		transition.emit("Pick")
+		return
 	if player.has_tapped_cell:
 		return
 	if player.get_move_direction() == Vector2.ZERO:

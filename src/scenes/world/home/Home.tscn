@@ -546,7 +546,11 @@ sources/0 = SubResource("TileSetScenesCollectionSource_p43sb")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cave"]
 size = Vector2(24, 16)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jassim"]
+size = Vector2(16, 12)
+
 [node name="Home" type="Node2D" unique_id=1665288054]
+y_sort_enabled = true
 
 [node name="TileMaps" type="Node2D" parent="." unique_id=668750302]
 
@@ -572,12 +576,20 @@ script = ExtResource("4_mark")
 person = ExtResource("7_jassim")
 person_scale = 0.039
 stand_on_feet = true
+z_index = 1
+
+[node name="Body" type="StaticBody2D" parent="Neighbor"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Neighbor/Body"]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_jassim")
 
 [node name="FishingSpot" type="Node2D" parent="."]
 position = Vector2(128, 80)
 script = ExtResource("4_mark")
 person = ExtResource("9_water")
 fit_pixels = 32
+z_index = 1
 
 [node name="CaveDoor" type="Marker2D" parent="."]
 position = Vector2(-48, 170)
@@ -596,6 +608,7 @@ position = Vector2(-48, 96)
 script = ExtResource("4_mark")
 person = ExtResource("10_cave")
 fit_pixels = 48
+z_index = 1
 
 [node name="Tree" type="Node2D" parent="."]
 position = Vector2(40, -24)
@@ -604,6 +617,7 @@ person = ExtResource("11_tree")
 fit_pixels = 64
 stand_on_feet = true
 group_name = "tree"
+z_index = 1
 
 [node name="Tree2" type="Node2D" parent="."]
 position = Vector2(120, -56)
@@ -612,6 +626,7 @@ person = ExtResource("11_tree")
 fit_pixels = 64
 stand_on_feet = true
 group_name = "tree"
+z_index = 1
 
 [node name="Rock" type="Node2D" parent="."]
 position = Vector2(96, 8)
@@ -619,3 +634,4 @@ script = ExtResource("4_mark")
 person = ExtResource("8_rock")
 fit_pixels = 16
 group_name = "rock"
+z_index = 1
