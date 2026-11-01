@@ -128,12 +128,35 @@ func arrive_indoors() -> void:
 			chest.call("open_storage")
 		return
 	var bed: Node = place.get_node_or_null("Bed")
-	if bed == null or not bed.has_method("foot_point"):
+	if bed != null and bed.has_method("foot_point"):
+		if feet.distance_to(bed.call("foot_point")) <= 8.0 and bed.has_method("_ask"):
+			bed.call("_ask")
 		return
-	if feet.distance_to(bed.call("foot_point")) > 8.0:
+	_arrive_role(place, feet)
+
+func _arrive_role(place: Node, feet: Vector2) -> void:
+	var activities: Activities = get_tree().current_scene.get_node_or_null("Systems/Activities") as Activities
+	if activities == null:
 		return
-	if bed.has_method("_ask"):
-		bed.call("_ask")
+	for child: Node in place.get_children():
+		if not child is Node2D:
+			continue
+		var spot: Node2D = child as Node2D
+		if feet.distance_to(spot.global_position) > 22.0:
+			continue
+		if tapped_point.distance_to(spot.global_position) > 30.0:
+			continue
+		var role: String = str(spot.get("role"))
+		if role != "":
+			activities.talk_role(role)
+			return
+		var kind: String = str(spot.get("group_name"))
+		if kind == "date" or kind == "forage" or kind == "ore":
+			activities.gather_node(spot)
+			return
+		if spot.name == "FishingSpot":
+			activities.fish_at(place.name)
+			return
 
 func reached_indoor_point() -> bool:
 	var feet: Vector2 = global_position + Vector2(0, 20)
@@ -196,7 +219,15 @@ func _snap_indoor(world_position: Vector2) -> Vector2:
 	if chest != null and chest.has_method("covers_point") and bool(chest.call("covers_point", world_position)):
 		return chest.call("foot_point")
 	for child: Node in place.get_children():
-		if child.name != "Exit" and child.name != "Rock":
+		if not child is Node2D:
+			continue
+		var spot: Node2D = child as Node2D
+		var kind: String = str(spot.get("group_name"))
+		var interesting: bool = str(spot.get("role")) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore"
+		if interesting and world_position.distance_to(spot.global_position) <= 28.0:
+			return spot.global_position + Vector2(0, 18)
+	for child: Node in place.get_children():
+		if not str(child.name).begins_with("Exit") and child.name != "Rock":
 			continue
 		if not child is Area2D:
 			continue

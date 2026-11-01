@@ -79,12 +79,13 @@ func _ready() -> void:
 	_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	content.add_child(_scroll)
 	var body: Control = Control.new()
-	body.custom_minimum_size = Vector2(content.size.x, ROW_H * Inventory.STORED_GOODS.size())
+	body.custom_minimum_size = Vector2(content.size.x, ROW_H * Inventory.all_stored_ids().size())
 	body.mouse_filter = Control.MOUSE_FILTER_STOP
 	body.gui_input.connect(_on_drag)
 	_scroll.add_child(body)
-	for i: int in Inventory.STORED_GOODS.size():
-		_add_row(body, Inventory.STORED_GOODS[i], i)
+	var stored_ids: PackedStringArray = Inventory.all_stored_ids()
+	for i: int in stored_ids.size():
+		_add_row(body, stored_ids[i], i)
 
 func is_open() -> bool:
 	return _open
@@ -298,9 +299,14 @@ func _item_name(item_id: String) -> String:
 		"forage":
 			return "Herb"
 		_:
+			if GoodsCatalog.icon_path(item_id) != "":
+				return Locale.item(item_id)
 			return item_id
 
 func _icon(item_id: String) -> Texture2D:
+	var extra_icon: String = GoodsCatalog.icon_path(item_id)
+	if extra_icon != "" and item_id in GoodsCatalog.extra_ids():
+		return _fit_icon(extra_icon)
 	match item_id:
 		"seeds":
 			return _fit_icon("res://assets/farming/Six Pixel Farm Seeds.png")

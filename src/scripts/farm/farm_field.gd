@@ -25,8 +25,10 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 	if activities != null and activities.note == OUTSIDE_NOTE:
 		activities.note = ""
 	var plot: Dictionary = _plot(cell)
+	var watered_now: bool = false
 	if watering_only:
 		_water(plot)
+		watered_now = true
 	elif not bool(plot["tilled"]):
 		plot["tilled"] = true
 	elif int(plot["stage"]) < 0:
@@ -35,7 +37,10 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 		_harvest(plot)
 	elif not bool(plot["watered"]):
 		_water(plot)
+		watered_now = true
 	_store(cell, plot)
+	if watered_now:
+		_spread_water(cell)
 	apply()
 	_save()
 
@@ -164,6 +169,18 @@ func _plant(plot: Dictionary) -> void:
 	var seasons: Array = crop.get("seasons", [])
 	if activities != null and not seasons.has(_season()):
 		activities.note = "%s waits for its season." % str(crop.get("name", "This crop"))
+
+func _spread_water(cell: Vector2i) -> void:
+	var stead: Node = get_parent().get_node_or_null("Stead")
+	if stead == null or int(stead.get("tool_level")) < 1:
+		return
+	for offset: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+		var next: Vector2i = cell + offset
+		if not plots.has(_key(next)):
+			continue
+		var plot: Dictionary = plots[_key(next)]
+		_water(plot)
+		plots[_key(next)] = plot
 
 func _water(plot: Dictionary) -> void:
 	var stage: int = int(plot["stage"])

@@ -20,6 +20,7 @@ var wood: int = 0
 var dates: int = 0
 var forage: int = 0
 var hearts: float = 5.0
+var extra: Dictionary = {}
 
 const STORED_GOODS: Array[String] = [
 	"seeds", "tomato_seeds", "wheat_seeds", "watermelon_seeds",
@@ -42,6 +43,23 @@ func try_craft_seeds() -> bool:
 	stone -= 2
 	seeds += 3
 	return true
+
+static func all_stored_ids() -> PackedStringArray:
+	var ids: PackedStringArray = PackedStringArray(STORED_GOODS)
+	for item_id: String in GoodsCatalog.extra_ids():
+		ids.append(item_id)
+	return ids
+
+func sell_stack(item_id: String) -> int:
+	var price: int = GoodsCatalog.sell_price(item_id)
+	var have: int = count_of(item_id)
+	if price < 1 or have < 1:
+		return 0
+	if not take_item(item_id, have):
+		return 0
+	var earned: int = price * have
+	dinars += earned
+	return earned
 
 func sell_turnips() -> int:
 	var price: int = int(CropCatalog.get_crop(CropCatalog.TURNIP).get("sell_price", 20))
@@ -90,7 +108,7 @@ func count_of(item_id: String) -> int:
 		"forage":
 			return forage
 		_:
-			return 0
+			return maxi(0, int(extra.get(item_id, 0)))
 
 func add_item(item_id: String, amount: int) -> void:
 	_set_item(item_id, count_of(item_id) + amount)
@@ -102,7 +120,7 @@ func take_item(item_id: String, amount: int) -> bool:
 	return true
 
 func can_store(item_id: String) -> bool:
-	return item_id in STORED_GOODS
+	return item_id in all_stored_ids()
 
 func store_in(holder: Dictionary, item_id: String) -> bool:
 	if not can_store(item_id):
@@ -140,6 +158,7 @@ func to_data() -> Dictionary:
 		"dates": dates,
 		"forage": forage,
 		"hearts": hearts,
+		"extra": extra.duplicate(),
 	}
 
 func from_data(data: Dictionary) -> void:
@@ -161,6 +180,12 @@ func from_data(data: Dictionary) -> void:
 	dates = int(data.get("dates", 0))
 	forage = int(data.get("forage", 0))
 	hearts = float(data.get("hearts", 5.0))
+	extra.clear()
+	var stored_extra: Variant = data.get("extra", {})
+	if stored_extra is Dictionary:
+		for key: Variant in stored_extra:
+			if GoodsCatalog.is_extra(str(key)):
+				extra[str(key)] = maxi(0, int(stored_extra[key]))
 
 func _set_item(item_id: String, amount: int) -> void:
 	match item_id:
@@ -190,3 +215,6 @@ func _set_item(item_id: String, amount: int) -> void:
 			dates = amount
 		"forage":
 			forage = amount
+		_:
+			if GoodsCatalog.is_extra(item_id):
+				extra[item_id] = maxi(0, amount)

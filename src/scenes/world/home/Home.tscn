@@ -13,6 +13,9 @@
 [ext_resource type="Texture2D" path="res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png" id="11_tree"]
 [ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="12_palm"]
 [ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="13_herb"]
+[ext_resource type="Texture2D" path="res://assets/building/Farm/Workbench.png" id="14_bench"]
+[ext_resource type="Texture2D" path="res://assets/building/Farm/Chicken coop.png" id="15_coop"]
+[ext_resource type="Texture2D" path="res://assets/building/Farm/Barn.png" id="16_barn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_83bga"]
 texture = ExtResource("1_rwkni")
@@ -652,4 +655,40 @@ script = ExtResource("4_mark")
 person = ExtResource("13_herb")
 stand_on_feet = true
 group_name = "forage"
+z_index = 1
+
+[node name="VillageReturn" type="Marker2D" parent="."]
+position = Vector2(148, 48)
+
+[node name="ExitVillage" type="Area2D" parent="."]
+position = Vector2(168, 40)
+script = ExtResource("5_door")
+next_scene_path = "res://src/scenes/world/village/Village.tscn"
+spawn_name = "PlayerSpawn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitVillage"]
+shape = SubResource("RectangleShape2D_cave")
+
+[node name="Workbench" type="Node2D" parent="."]
+position = Vector2(-16, 48)
+script = ExtResource("4_mark")
+person = ExtResource("14_bench")
+fit_pixels = 32
+role = "workbench"
+z_index = 1
+
+[node name="Coop" type="Node2D" parent="."]
+visible = false
+position = Vector2(40, 120)
+script = ExtResource("4_mark")
+person = ExtResource("15_coop")
+fit_pixels = 48
+z_index = 1
+
+[node name="Barn" type="Node2D" parent="."]
+visible = false
+position = Vector2(96, 120)
+script = ExtResource("4_mark")
+person = ExtResource("16_barn")
+fit_pixels = 64
 z_index = 1

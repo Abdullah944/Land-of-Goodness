@@ -34,12 +34,14 @@ func _ready() -> void:
 	_label.add_theme_color_override("font_color", Color("3f2d27"))
 	_panel.add_child(_label)
 	_next = Button.new()
-	_next.text = "Next"
+	_next.text = Locale.t("next")
+	Locale.apply_control(_label)
+	Locale.apply_control(_next)
 	_next.position = Vector2(360, 40)
 	_next.pressed.connect(_advance)
 	_panel.add_child(_next)
-	_yes = _choice_button("Yes", Vector2(250, 40))
-	_no = _choice_button("No", Vector2(340, 40))
+	_yes = _choice_button(Locale.t("yes"), Vector2(250, 40))
+	_no = _choice_button(Locale.t("no"), Vector2(340, 40))
 	_yes.pressed.connect(_choose.bind(true))
 	_no.pressed.connect(_choose.bind(false))
 
@@ -63,6 +65,9 @@ func ask(text: String) -> void:
 	_index = 0
 	visible = true
 	_label.text = text
+	_yes.text = Locale.t("yes")
+	_no.text = Locale.t("no")
+	Locale.apply_control(_label)
 	_fit_actions(2)
 	_yes.position = Vector2(8, 46)
 	_yes.size = Vector2(414, 34)
@@ -81,12 +86,14 @@ func offer(text: String, choices: PackedStringArray) -> void:
 	_label.text = text
 	_fit_actions(choices.size())
 	for i: int in choices.size():
+		var parts: PackedStringArray = _choice_parts(choices[i])
 		var button: Button = Button.new()
-		button.text = choices[i]
+		button.text = parts[1]
 		button.position = Vector2(8, 46.0 + 36.0 * i)
 		button.size = Vector2(414, 34)
 		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(_pick.bind(choices[i]))
+		Locale.apply_control(button)
+		button.pressed.connect(_pick.bind(parts[0]))
 		_panel.add_child(button)
 		_offer_buttons.append(button)
 	_hold_player()
@@ -105,6 +112,12 @@ func _close_offer() -> void:
 	_panel.position = _PANEL_AT
 	_panel.size = _PANEL_SIZE
 	_label.size = Vector2(414, 32)
+
+func _choice_parts(raw: String) -> PackedStringArray:
+	var parts: PackedStringArray = raw.split("|", true, 1)
+	if parts.size() < 2:
+		return PackedStringArray([raw, raw])
+	return parts
 
 func _pick(choice: String) -> void:
 	if not _offering:
@@ -155,4 +168,6 @@ func _advance() -> void:
 	_show_line()
 
 func _show_line() -> void:
+	_next.text = Locale.t("next")
+	Locale.apply_control(_label)
 	_label.text = _lines[_index]

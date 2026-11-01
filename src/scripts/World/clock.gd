@@ -33,6 +33,11 @@ func _begin_morning() -> void:
 	farm.advance_day(season, weather == "Rain")
 	var activities: Activities = get_parent().get_node("Activities") as Activities
 	activities.on_new_day()
+	var stead: Stead = get_parent().get_node_or_null("Stead") as Stead
+	if stead != null:
+		var morning: String = stead.on_new_day()
+		if morning != "":
+			activities.note = morning
 	var bag: Inventory = get_parent().get_node("Inventory") as Inventory
 	bag.refill_hearts()
 	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame

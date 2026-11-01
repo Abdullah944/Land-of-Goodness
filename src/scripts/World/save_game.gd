@@ -1,11 +1,16 @@
 # src/scripts/World/save_game.gd
-# Purpose: Writes the field, the bag, the chest, and the day, then reads them back.
+# Purpose: Writes the field, the bag, the chest, the day, and the farm progress, then reads them back.
 
 class_name SaveGame
 extends Node
 
 const PATH: String = "user://land_of_khair.json"
 var path: String = PATH
+
+func _ready() -> void:
+	var override_path: String = OS.get_environment("KHAIR_SAVE")
+	if override_path != "":
+		path = override_path
 
 var saved_position: Vector2 = Vector2.ZERO
 var has_position: bool = false
@@ -23,6 +28,7 @@ func write_now() -> void:
 	var clock: Variant = get_parent().get_node("Clock")
 	var activities: Variant = get_parent().get_node("Activities")
 	var chest: Variant = get_parent().get_node("ChestStore")
+	var stead: Variant = get_parent().get_node_or_null("Stead")
 	var data: Dictionary = {
 		"plots": farm.export_plots(),
 		"bag": inventory.to_data(),
@@ -33,6 +39,8 @@ func write_now() -> void:
 		"y": saved_position.y,
 		"has_position": has_position,
 	}
+	if stead != null:
+		data["stead"] = stead.to_data()
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		return
@@ -58,6 +66,9 @@ func load_game() -> bool:
 	chest.from_data(data.get("chest", {}))
 	clock.from_data(data.get("clock", {}))
 	activities.from_data(data.get("activities", {}))
+	var stead: Variant = get_parent().get_node_or_null("Stead")
+	if stead != null:
+		stead.from_data(data.get("stead", {}))
 	has_position = bool(data.get("has_position", false))
 	saved_position = Vector2(float(data.get("x", 0.0)), float(data.get("y", 0.0)))
 	return true

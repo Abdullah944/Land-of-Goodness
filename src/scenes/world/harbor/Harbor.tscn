@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="1_door"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="2_mark"]
+[ext_resource type="Script" path="res://src/scripts/World/fish_spot.gd" id="3_fish"]
+[ext_resource type="Texture2D" path="res://assets/characters/village/Fisherman.png" id="4_fisher"]
+[ext_resource type="Texture2D" path="res://assets/nature/Cozy pixel-art fishing water tile.png" id="5_water"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
+size = Vector2(28, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_water"]
+size = Vector2(36, 20)
+
+[node name="Harbor" type="Node2D"]
+y_sort_enabled = true
+
+[node name="Sand" type="Polygon2D" parent="."]
+color = Color(0.905882, 0.788235, 0.603922, 1)
+polygon = PackedVector2Array(-180, -40, 180, -40, 180, 130, -180, 130)
+
+[node name="Gulf" type="Polygon2D" parent="."]
+color = Color(0.333333, 0.686275, 0.768627, 1)
+polygon = PackedVector2Array(-180, -110, 180, -110, 180, -40, -180, -40)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(-20, 50)
+
+[node name="ExitVillage" type="Area2D" parent="."]
+position = Vector2(-140, 70)
+script = ExtResource("1_door")
+next_scene_path = "res://src/scenes/world/village/Village.tscn"
+spawn_name = "PlayerSpawn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitVillage"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="FishingSpot" type="Area2D" parent="."]
+position = Vector2(40, -20)
+script = ExtResource("3_fish")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FishingSpot"]
+shape = SubResource("RectangleShape2D_water")
+
+[node name="Water" type="Node2D" parent="."]
+position = Vector2(40, -28)
+script = ExtResource("2_mark")
+person = ExtResource("5_water")
+fit_pixels = 32
+
+[node name="Fisherman" type="Node2D" parent="."]
+position = Vector2(-10, 24)
+script = ExtResource("2_mark")
+person = ExtResource("4_fisher")
+fit_pixels = 32
+stand_on_feet = true
+role = "fisherman"

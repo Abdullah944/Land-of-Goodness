@@ -29,6 +29,8 @@ var _tab: String = "bag"
 var _craft: Button
 var _bag_money: Label
 var _zoom_in: Button
+var _language: Button
+var _sound: Button
 var _zoom_out: Button
 var _list: Control
 var _bag_scroll: ScrollContainer
@@ -138,19 +140,26 @@ func refresh() -> void:
 	var shown: String = clock.hour_text()
 	if int(float(Time.get_ticks_msec()) / 500.0) % 2 == 1:
 		shown = shown.replace(":", " ")
-	_time.text = "%s %d   %s" % [clock.season, clock.day, shown]
-	_gold.text = "%d dinars" % inventory.dinars
+	_time.text = "%s %d   %s" % [Locale.t(clock.season), clock.day, shown]
+	_gold.text = Locale.t("dinars") % inventory.dinars
 	if _bag_money != null:
-		_bag_money.text = "%d dinars" % inventory.dinars
+		_bag_money.text = Locale.t("dinars") % inventory.dinars
+	var stead: Stead = systems.get_node_or_null("Stead") as Stead
 	if activities.display_note() != "":
 		_note.text = activities.display_note()
+	elif stead != null:
+		_note.text = stead.goal_text()
 	elif activities.quest_done:
 		_note.text = ""
 	else:
-		_note.text = "Quest: sell a turnip to Jassim"
+		_note.text = Locale.t("quest_turnip")
+	Locale.apply_control(_note)
 	for row: Dictionary in _bag_rows:
 		var count_label: Label = row["count"]
 		count_label.text = str(inventory.count_of(str(row["item"])))
+		if row.has("name"):
+			var name_label: Label = row["name"]
+			name_label.text = Locale.item(str(row["item"]))
 		count_label.visible = _tab == "bag"
 		var slot: CanvasItem = row["slot"]
 		var chosen: bool = str(row["kind"]) == "seed" and str(row["crop_id"]) == inventory.selected_seed
@@ -160,6 +169,12 @@ func refresh() -> void:
 	_craft.visible = _tab == "bag"
 	_zoom_in.visible = _tab == "settings"
 	_zoom_out.visible = _tab == "settings"
+	if _language != null:
+		_language.visible = _tab == "settings"
+		_language.text = Locale.t("language")
+	if _sound != null:
+		_sound.visible = _tab == "settings"
+		_sound.text = Locale.t("sound")
 	for i: int in _slots.size():
 		_slots[i].modulate = Color("d9a441") if _player().tool == TOOLS[i] else Color.WHITE
 	for i: int in _hearts.size():
@@ -319,6 +334,14 @@ func _build_menu() -> void:
 	page.add_child(zoom_out)
 	_zoom_in = zoom_in
 	_zoom_out = zoom_out
+	var language: Button = _tab_button(Locale.t("language"), Vector2(180, 142))
+	language.pressed.connect(_toggle_language)
+	page.add_child(language)
+	_language = language
+	var sound: Button = _tab_button(Locale.t("sound"), Vector2(260, 142))
+	sound.pressed.connect(_toggle_sound)
+	page.add_child(sound)
+	_sound = sound
 
 func _picture_button(path: String, height_px: int) -> Button:
 	var button: Button = Button.new()
@@ -441,6 +464,29 @@ func _show_tab(tab: String) -> void:
 	_tab = tab
 	refresh()
 
+func _toggle_language() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null:
+		return
+	stead.language = "en" if stead.language == "ar" else "ar"
+	Locale.language = stead.language
+	var save: SaveGame = get_tree().current_scene.get_node_or_null("Systems/SaveGame") as SaveGame
+	if save != null:
+		save.write_now()
+	refresh()
+
+func _toggle_sound() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null:
+		return
+	stead.sfx = not stead.sfx
+	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
+	if bank != null and stead.sfx:
+		bank.call("play", "ui")
+	var save: SaveGame = get_tree().current_scene.get_node_or_null("Systems/SaveGame") as SaveGame
+	if save != null:
+		save.write_now()
+
 func _zoom(multiplier: float) -> void:
 	_player().change_zoom(multiplier)
 
@@ -546,6 +592,14 @@ func _build_bag_rows(list: Panel) -> void:
 	specs.append({"kind": "item", "crop_id": "", "item": "wood", "label": "Wood", "icon": "res://assets/nature/Pixel art cut wood log.png"})
 	specs.append({"kind": "item", "crop_id": "", "item": "dates", "label": "Date", "icon": "res://assets/farming/Date inventory icon.png"})
 	specs.append({"kind": "item", "crop_id": "", "item": "forage", "label": "Herb", "icon": "res://assets/farming/Wild herb inventory icon.png"})
+	for extra_id: String in GoodsCatalog.extra_ids():
+		specs.append({
+			"kind": "item",
+			"crop_id": "",
+			"item": extra_id,
+			"label": Locale.item(extra_id),
+			"icon": GoodsCatalog.icon_path(extra_id),
+		})
 	var row_h: float = 24.0
 	_bag_row_h = row_h
 	var qty_w: float = 48.0
@@ -583,7 +637,7 @@ func _build_bag_rows(list: Panel) -> void:
 		icon.size = Vector2(16, 16)
 		slot.add_child(icon)
 		var name: Label = _make_label(Vector2(28, 0), Color("3f2d27"))
-		name.text = str(spec["label"])
+		name.text = Locale.item(str(spec["item"]))
 		name.size = Vector2(button.size.x - 28.0 - qty_w - 8.0, row_h)
 		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name.clip_text = true
@@ -600,6 +654,7 @@ func _build_bag_rows(list: Panel) -> void:
 			"slot": slot,
 			"count": count,
 			"item": str(spec["item"]),
+			"name": name,
 			"kind": str(spec["kind"]),
 			"crop_id": str(spec["crop_id"]),
 		})

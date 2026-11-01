@@ -10,6 +10,7 @@ extends Node2D
 @export var person_scale: float = 1.0
 @export var stand_on_feet: bool = false
 @export var fit_pixels: int = 0
+@export var role: String = ""
 
 var _picture: Texture2D
 var _player: Player
@@ -45,7 +46,7 @@ func _process(_delta: float) -> void:
 	if _picture == null:
 		return
 	z_index = 2000 + int(global_position.y)
-	if name == "Neighbor":
+	if name == "Neighbor" or role != "":
 		var show_talk: bool = _near_player()
 		if show_talk != _show_talk or show_talk:
 			_show_talk = show_talk
@@ -63,11 +64,16 @@ func _process(_delta: float) -> void:
 	modulate.a = 0.45 if behind and covered else 1.0
 
 func _unhandled_input(event: InputEvent) -> void:
-	if name != "Neighbor" or not _show_talk:
+	if not _show_talk:
+		return
+	if name != "Neighbor" and role == "":
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_E:
 		var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-		activities.call("_talk")
+		if role != "":
+			activities.talk_role(role)
+		else:
+			activities.call("_talk")
 		get_viewport().set_input_as_handled()
 
 func _near_player() -> bool:

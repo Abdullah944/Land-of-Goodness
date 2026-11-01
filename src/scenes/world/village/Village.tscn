@@ -1,0 +1,78 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="1_door"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="2_mark"]
+[ext_resource type="Texture2D" path="res://assets/characters/village/Elder.png" id="3_elder"]
+[ext_resource type="Texture2D" path="res://assets/characters/village/Merchant.png" id="4_merchant"]
+[ext_resource type="Texture2D" path="res://assets/characters/village/Carpenter.png" id="5_carpenter"]
+[ext_resource type="Texture2D" path="res://assets/building/village/Market stall.png" id="6_stall"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
+size = Vector2(28, 16)
+
+[node name="Village" type="Node2D"]
+y_sort_enabled = true
+
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.905882, 0.788235, 0.603922, 1)
+polygon = PackedVector2Array(-180, -110, 180, -110, 180, 130, -180, 130)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(0, 20)
+
+[node name="ExitFarm" type="Area2D" parent="."]
+position = Vector2(0, 110)
+script = ExtResource("1_door")
+next_scene_path = "res://src/scenes/world/home/Home.tscn"
+spawn_name = "VillageReturn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitFarm"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="ExitHarbor" type="Area2D" parent="."]
+position = Vector2(150, 20)
+script = ExtResource("1_door")
+next_scene_path = "res://src/scenes/world/harbor/Harbor.tscn"
+spawn_name = "PlayerSpawn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitHarbor"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="ExitOrchard" type="Area2D" parent="."]
+position = Vector2(-150, 20)
+script = ExtResource("1_door")
+next_scene_path = "res://src/scenes/world/orchard/Orchard.tscn"
+spawn_name = "PlayerSpawn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitOrchard"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="Stall" type="Node2D" parent="."]
+position = Vector2(0, -20)
+script = ExtResource("2_mark")
+person = ExtResource("6_stall")
+fit_pixels = 32
+
+[node name="Elder" type="Node2D" parent="."]
+position = Vector2(-40, 10)
+script = ExtResource("2_mark")
+person = ExtResource("3_elder")
+fit_pixels = 32
+stand_on_feet = true
+role = "elder"
+
+[node name="Merchant" type="Node2D" parent="."]
+position = Vector2(36, 8)
+script = ExtResource("2_mark")
+person = ExtResource("4_merchant")
+fit_pixels = 32
+stand_on_feet = true
+role = "merchant"
+
+[node name="Carpenter" type="Node2D" parent="."]
+position = Vector2(8, 48)
+script = ExtResource("2_mark")
+person = ExtResource("5_carpenter")
+fit_pixels = 32
+stand_on_feet = true
+role = "carpenter"

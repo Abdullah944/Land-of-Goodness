@@ -35,4 +35,11 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var activities: Activities = main.get_node_or_null("Systems/Activities") as Activities
 	if activities != null:
 		activities.apply_gathered()
+	var stead: Stead = main.get_node_or_null("Systems/Stead") as Stead
+	if stead != null:
+		stead.note_place(str(next_place.name))
+		stead.apply_buildings()
+	var save: SaveGame = main.get_node_or_null("Systems/SaveGame") as SaveGame
+	if save != null:
+		save.write_now()
 	_busy = false

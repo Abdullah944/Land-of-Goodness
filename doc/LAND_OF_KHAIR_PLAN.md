@@ -145,11 +145,24 @@ The following are **reported by Cursor**; verify again after meaningful changes.
 
 **Gate:** Cursor should not install packages, replace large art sets, rewrite architecture, commit, push, or upload builds without explicit approval for that step.
 
-## 6. Next action — waiting for approval
+## 6. Next action
 
-Phase 2.3 is in the house and verified on a side save. One chest stores and returns goods one at a time. Old saves keep the bag and start with an empty chest. Phase 2.3 stays open until the chest artwork is approved and the iPhone test passes. Do not start Phase 2.4.
+Local branch `production-v1` holds the first complete farm loop beyond the chest. `main` was not changed. Nothing was pushed.
 
-**Approval gate:** The next slice should stay inside Phase 2. It should not add animals or a new map in the same step.
+Played and tested on a side save, 38 checks passed, real save left as it was:
+
+- Jassim buys any stored crop, fish, dates, herbs, eggs, milk, wool, wood, stone, or copper. Turnip sales still finish his first quest.
+- The workbench crafts feed, then builds a coop, a barn, a 4×4 field, and a watering can that also waters one neighbor.
+- Chickens, goats, sheep, and cows eat feed and produce the next morning. A hungry animal produces nothing.
+- The east gate leads to the village, then the harbor and the palm orchard. Each fishing spot pays once per day. Orchard dates and herbs wait until morning. The cave has one copper vein.
+- Arabic is the starting language, with English in Settings. The Noto Naskh Arabic font is included under the SIL Open Font License.
+- Old saves keep the bag and dinars, start with an empty chest, and have no animals.
+
+Phase 2.3 is still open until the iPhone test of the chest passes. This branch was started because the full production request replaced the old “do not start the next slice” gate.
+
+**Not release-ready yet.** The new places are walkable color grounds with original sprites, not finished tile maps. Arabic lines still need a native review. There is no reviewed Quran audio, so prayer and reading are not in the game. Android export still needs an approved keystore. No iPhone or Android run has been done for this branch.
+
+**Exact next action:** On `production-v1`, replace the flat village, harbor, and orchard grounds with tile maps and walking schedules for the elder, merchant, carpenter, and fisherman. Then play from a new save through the quest line and fix what breaks. Do not push, do not spend image credits, and do not upload a build unless asked.
 
 ## 7. Open decisions
 
@@ -179,6 +192,7 @@ Phase 2.3 is in the house and verified on a side save. One chest stores and retu
 | 2026-10-31 | Phase 2.2: a date palm and a wild herb on the farm each give one item, then wait until morning. The bag saves dates and herbs. Local tests passed. The iPhone playtest is still required, so Phase 2.2 stays open. Phase 2.3 has not started. |
 | 2026-10-31 | Phase 2.2 passed on iPhone in TestFlight build 8. Dates, herbs, repeatable gathering, and bag scrolling worked on the phone. Phase 2.2 is complete. Phase 2.3 has not started. |
 | 2026-10-31 | Phase 2.3: a chest inside the house stores or returns one item at a time. The bag and the chest save together. An old save keeps its bag and starts with an empty chest. Local tests passed. The chest artwork and the iPhone test are still required, so Phase 2.3 stays open. Phase 2.4 has not started. |
+| 2026-11-01 | Production branch: crafting, animals, selling every good, a larger field, and paths to the village, harbor, and orchard. Side-save tests passed 38 of 38. The real save was not changed. The new maps are still simple grounds. Arabic copy, device tests, and Android signing are still open. |
 
 ### How to maintain this file
 

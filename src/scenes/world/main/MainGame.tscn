@@ -13,6 +13,8 @@
 [ext_resource type="Script" path="res://src/scripts/ui/dialogue.gd" id="9_talk"]
 [ext_resource type="Script" path="res://src/scripts/farm/chest_store.gd" id="10_chest"]
 [ext_resource type="Script" path="res://src/scripts/ui/chest_panel.gd" id="11_panel"]
+[ext_resource type="Script" path="res://src/scripts/farm/stead.gd" id="12_stead"]
+[ext_resource type="Script" path="res://src/scripts/ui/sound_bank.gd" id="13_sound"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -43,6 +45,12 @@ script = ExtResource("7_save")
 
 [node name="ChestStore" type="Node" parent="Systems"]
 script = ExtResource("10_chest")
+
+[node name="Stead" type="Node" parent="Systems"]
+script = ExtResource("12_stead")
+
+[node name="SoundBank" type="Node" parent="Systems"]
+script = ExtResource("13_sound")
 
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true
