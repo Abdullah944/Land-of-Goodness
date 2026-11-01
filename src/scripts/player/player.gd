@@ -18,6 +18,8 @@ var busy: bool = false
 var tool: String = ""
 var tool_locked: bool = false
 var holding_touch: bool = false
+var tapped_point: Vector2 = Vector2.ZERO
+var walking_indoors: bool = false
 
 func get_move_direction() -> Vector2:
 	return Vector2(
@@ -44,13 +46,36 @@ func get_action_cell(dirt: TileMapLayer) -> Vector2i:
 		return tapped_cell
 	return get_front_cell(dirt)
 
+func set_walk_target(world_position: Vector2) -> void:
+	if busy:
+		return
+	var dirt: TileMapLayer = find_dirt()
+	if dirt != null:
+		set_tapped_cell(dirt.local_to_map(dirt.to_local(world_position)))
+		return
+	tapped_point = _snap_indoor(world_position)
+	walking_indoors = true
+	has_tapped_cell = true
+	wants_hoe = false
+	wants_water = false
+	wants_axe = false
+	wants_pick = false
+	tool = ""
+
 func set_tapped_cell(cell: Vector2i) -> void:
 	if busy:
 		return
+	walking_indoors = false
 	var dirt: TileMapLayer = find_dirt()
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
 	if dirt != null:
 		cell = activities.snap_cell(dirt, cell)
+	var farm: FarmField = get_tree().current_scene.get_node_or_null("Systems/FarmField") as FarmField
+	if farm != null and farm.ignores_tap(cell):
+		has_tapped_cell = false
+		wants_hoe = false
+		wants_water = false
+		return
 	tapped_cell = cell
 	has_tapped_cell = true
 	wants_hoe = false
@@ -66,6 +91,7 @@ func set_tapped_cell(cell: Vector2i) -> void:
 
 func cancel_tap() -> void:
 	has_tapped_cell = false
+	walking_indoors = false
 	wants_hoe = false
 	wants_water = false
 	wants_axe = false
@@ -91,6 +117,28 @@ func ask_for_tool() -> void:
 		return
 	wants_hoe = true
 
+func arrive_indoors() -> void:
+	var place: Node = _current_place()
+	if place == null:
+		return
+	var feet: Vector2 = global_position + Vector2(0, 20)
+	var chest: Node = place.get_node_or_null("Chest")
+	if chest != null and chest.has_method("foot_point") and tapped_point.distance_to(chest.call("foot_point")) <= 4.0:
+		if feet.distance_to(chest.call("foot_point")) <= 12.0 and chest.has_method("open_storage"):
+			chest.call("open_storage")
+		return
+	var bed: Node = place.get_node_or_null("Bed")
+	if bed == null or not bed.has_method("foot_point"):
+		return
+	if feet.distance_to(bed.call("foot_point")) > 8.0:
+		return
+	if bed.has_method("_ask"):
+		bed.call("_ask")
+
+func reached_indoor_point() -> bool:
+	var feet: Vector2 = global_position + Vector2(0, 20)
+	return feet.distance_to(tapped_point) <= 2.0
+
 func reached_walk_spot(dirt: TileMapLayer) -> bool:
 	return get_stand_cell(dirt) == tapped_cell
 
@@ -115,8 +163,8 @@ func _add_swing(sprite: AnimatedSprite2D, path: String, prefix: String) -> void:
 	if picture == null:
 		return
 	var sheet: Image = picture.get_image()
-	var cell_w: int = sheet.get_width() / 4
-	var cell_h: int = sheet.get_height() / 4
+	var cell_w: int = int(sheet.get_width() / 4.0)
+	var cell_h: int = int(sheet.get_height() / 4.0)
 	var frames: SpriteFrames = sprite.sprite_frames
 	var faces: Array[String] = ["Down", "Left", "Right", "Up"]
 	for row: int in 4:
@@ -136,6 +184,69 @@ func _add_swing(sprite: AnimatedSprite2D, path: String, prefix: String) -> void:
 			var height: int = maxi(1, int(round(float(cell.get_height()) * 68.0 / float(longest))))
 			cell.resize(width, height, Image.INTERPOLATE_LANCZOS)
 			frames.add_frame(anim, ImageTexture.create_from_image(cell))
+
+func _snap_indoor(world_position: Vector2) -> Vector2:
+	var place: Node = _current_place()
+	if place == null:
+		return _grid_point(world_position)
+	var bed: Node = place.get_node_or_null("Bed")
+	if bed != null and bed.has_method("covers_point") and bool(bed.call("covers_point", world_position)):
+		return bed.call("foot_point")
+	var chest: Node = place.get_node_or_null("Chest")
+	if chest != null and chest.has_method("covers_point") and bool(chest.call("covers_point", world_position)):
+		return chest.call("foot_point")
+	for child: Node in place.get_children():
+		if child.name != "Exit" and child.name != "Rock":
+			continue
+		if not child is Area2D:
+			continue
+		var spot: Variant = _area_point(child as Area2D, world_position)
+		if spot is Vector2:
+			return spot
+	return _grid_point(world_position)
+
+func _area_point(area: Area2D, world_position: Vector2) -> Variant:
+	var shape_node: CollisionShape2D = area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node == null or not shape_node.shape is RectangleShape2D:
+		return null
+	var box: RectangleShape2D = shape_node.shape as RectangleShape2D
+	var center: Vector2 = shape_node.global_position
+	var rect: Rect2 = Rect2(center - box.size * 0.5, box.size)
+	if rect.grow(16.0).has_point(world_position):
+		return center
+	return null
+
+func _grid_point(world_position: Vector2) -> Vector2:
+	var floor_layer: TileMapLayer = _floor_layer()
+	if floor_layer != null:
+		var cell: Vector2i = floor_layer.local_to_map(floor_layer.to_local(world_position))
+		return floor_layer.to_global(floor_layer.map_to_local(cell))
+	return Vector2(
+		floor(world_position.x / 16.0) * 16.0 + 8.0,
+		floor(world_position.y / 16.0) * 16.0 + 8.0
+	)
+
+func _floor_layer() -> TileMapLayer:
+	var place: Node = _current_place()
+	if place == null:
+		return null
+	var found: Node = place.find_child("Floor", true, false)
+	if found is TileMapLayer:
+		return found
+	return null
+
+func _current_place() -> Node:
+	var main: Node = get_tree().current_scene
+	if main == null:
+		return null
+	var world: Node = main.get_node_or_null("World")
+	if world == null:
+		return null
+	for child: Node in world.get_children():
+		if child.name == "Player":
+			continue
+		return child
+	return null
 
 func find_dirt() -> TileMapLayer:
 	var main: Node = get_tree().current_scene

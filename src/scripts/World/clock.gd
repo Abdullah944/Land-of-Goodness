@@ -27,7 +27,7 @@ func sleep_now() -> void:
 func _begin_morning() -> void:
 	minute = 6.0 * 60.0
 	day += 1
-	season = SEASONS[(day / 7) % SEASONS.size()]
+	season = SEASONS[int(float(day) / 7.0) % SEASONS.size()]
 	weather = "Rain" if randf() < 0.25 else "Clear"
 	var farm: FarmField = get_parent().get_node("FarmField") as FarmField
 	farm.advance_day(season, weather == "Rain")
@@ -40,7 +40,7 @@ func _begin_morning() -> void:
 
 func hour_text() -> String:
 	var hour: int = int(minute / 60.0) % 24
-	var mins: int = (int(minute) % 60) / 10 * 10
+	var mins: int = int((int(minute) % 60) / 10.0) * 10
 	var suffix: String = "am" if hour < 12 else "pm"
 	var shown_hour: int = hour % 12
 	if shown_hour == 0:

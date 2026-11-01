@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://src/scripts/World/save_game.gd" id="7_save"]
 [ext_resource type="Script" path="res://src/scripts/ui/hud.gd" id="8_hud"]
 [ext_resource type="Script" path="res://src/scripts/ui/dialogue.gd" id="9_talk"]
+[ext_resource type="Script" path="res://src/scripts/farm/chest_store.gd" id="10_chest"]
+[ext_resource type="Script" path="res://src/scripts/ui/chest_panel.gd" id="11_panel"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -24,6 +26,8 @@ script = ExtResource("2_ii484")
 
 [node name="FarmField" type="Node" parent="Systems"]
 script = ExtResource("3_farm")
+farm_origin = Vector2i(-11, -4)
+farm_size = Vector2i(3, 3)
 
 [node name="Inventory" type="Node" parent="Systems"]
 script = ExtResource("4_bag")
@@ -37,6 +41,9 @@ script = ExtResource("6_act")
 [node name="SaveGame" type="Node" parent="Systems"]
 script = ExtResource("7_save")
 
+[node name="ChestStore" type="Node" parent="Systems"]
+script = ExtResource("10_chest")
+
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true
 
@@ -48,6 +55,10 @@ process_mode = 2
 [node name="HUD" type="CanvasLayer" parent="UI"]
 process_mode = 3
 script = ExtResource("8_hud")
+
+[node name="ChestPanel" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("11_panel")
 
 [node name="Dialogue" type="CanvasLayer" parent="UI"]
 process_mode = 3

@@ -3,6 +3,10 @@
 # Export builds
 export/
 export_presets.cfg
+build/
+*.ipa
+*.xcarchive
+*.mobileprovision
 
 # Android build folder Godot creates
 android/

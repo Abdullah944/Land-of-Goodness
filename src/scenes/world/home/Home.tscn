@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" path="res://assets/nature/Cozy pixel-art fishing water tile.png" id="9_water"]
 [ext_resource type="Texture2D" path="res://assets/building/Cave/Sandstone Cave Entrance.png" id="10_cave"]
 [ext_resource type="Texture2D" path="res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png" id="11_tree"]
+[ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="12_palm"]
+[ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="13_herb"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_83bga"]
 texture = ExtResource("1_rwkni")
@@ -634,4 +636,20 @@ script = ExtResource("4_mark")
 person = ExtResource("8_rock")
 fit_pixels = 16
 group_name = "rock"
+z_index = 1
+
+[node name="DatePalm" type="Node2D" parent="."]
+position = Vector2(-120, 64)
+script = ExtResource("4_mark")
+person = ExtResource("12_palm")
+stand_on_feet = true
+group_name = "date"
+z_index = 1
+
+[node name="Herb" type="Node2D" parent="."]
+position = Vector2(24, 112)
+script = ExtResource("4_mark")
+person = ExtResource("13_herb")
+stand_on_feet = true
+group_name = "forage"
 z_index = 1

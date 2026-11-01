@@ -13,6 +13,7 @@ extends Node2D
 
 var _picture: Texture2D
 var _player: Player
+var _show_talk: bool = false
 
 func _ready() -> void:
 	if group_name != "":
@@ -44,6 +45,11 @@ func _process(_delta: float) -> void:
 	if _picture == null:
 		return
 	z_index = 2000 + int(global_position.y)
+	if name == "Neighbor":
+		var show_talk: bool = _near_player()
+		if show_talk != _show_talk or show_talk:
+			_show_talk = show_talk
+			queue_redraw()
 	if group_name != "tree":
 		return
 	if _player == null or not is_instance_valid(_player):
@@ -55,6 +61,43 @@ func _process(_delta: float) -> void:
 	var behind: bool = feet_y < global_position.y + 4.0
 	var covered: bool = _sprite_rect().intersects(_player_rect())
 	modulate.a = 0.45 if behind and covered else 1.0
+
+func _unhandled_input(event: InputEvent) -> void:
+	if name != "Neighbor" or not _show_talk:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_E:
+		var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
+		activities.call("_talk")
+		get_viewport().set_input_as_handled()
+
+func _near_player() -> bool:
+	var player: Player = _hero()
+	if player == null or player.busy:
+		return false
+	var feet: Vector2 = player.global_position + Vector2(0, 20)
+	return feet.distance_to(global_position) <= 40.0
+
+func _hero() -> Player:
+	if _player != null and is_instance_valid(_player):
+		return _player
+	var scene: Node = get_tree().current_scene
+	_player = scene.find_child("Player", true, false) as Player if scene != null else null
+	return _player
+
+func _draw_talk_mark() -> void:
+	if not _show_talk:
+		return
+	var player: Player = _hero()
+	if player == null:
+		return
+	var at: Vector2 = to_local(player.global_position + Vector2(0, -20))
+	draw_set_transform(at)
+	var font: Font = ThemeDB.fallback_font
+	draw_circle(Vector2.ZERO, 8, Color("fff3dc"))
+	draw_arc(Vector2.ZERO, 8, 0, TAU, 16, Color("d9a441"), 1.0)
+	var size: Vector2 = font.get_string_size("E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+	draw_string(font, Vector2(-size.x * 0.5, size.y * 0.35), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("3f2d27"))
+	draw_set_transform(Vector2.ZERO)
 
 func _sprite_rect() -> Rect2:
 	var size: Vector2 = _picture.get_size()
@@ -73,6 +116,7 @@ func _draw() -> void:
 			size *= person_scale
 		var origin: Vector2 = Vector2(-size.x * 0.5, -size.y) if stand_on_feet else -size * 0.5
 		draw_texture_rect(_picture, Rect2(origin, size), false)
+		_draw_talk_mark()
 		return
 	draw_rect(Rect2(-8, -8, 16, 16), mark_color)
 	if title != "":

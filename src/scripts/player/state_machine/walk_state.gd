@@ -39,6 +39,8 @@ func _move_direction() -> Vector2:
 		return keys
 	if player.busy or not player.has_tapped_cell:
 		return Vector2.ZERO
+	if player.walking_indoors:
+		return _indoor_direction()
 	var dirt: TileMapLayer = player.find_dirt()
 	if dirt == null:
 		player.cancel_tap()
@@ -53,6 +55,14 @@ func _move_direction() -> Vector2:
 		player.ask_for_tool()
 		return Vector2.ZERO
 	return player.direction_to_cell(dirt, player.tapped_cell)
+
+func _indoor_direction() -> Vector2:
+	if player.reached_indoor_point():
+		player.arrive_indoors()
+		player.cancel_tap()
+		return Vector2.ZERO
+	var feet: Vector2 = player.global_position + Vector2(0, 20)
+	return feet.direction_to(player.tapped_point)
 
 func _on_next_transitions() -> void:
 	if player.wants_water:

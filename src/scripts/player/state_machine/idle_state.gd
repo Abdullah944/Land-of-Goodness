@@ -38,6 +38,13 @@ func _on_next_transitions() -> void:
 		transition.emit("Water")
 		return
 	if player.has_tapped_cell:
+		if player.walking_indoors:
+			if player.reached_indoor_point():
+				player.arrive_indoors()
+				player.cancel_tap()
+				return
+			transition.emit("Walk")
+			return
 		var dirt: TileMapLayer = player.find_dirt()
 		if dirt != null and player.tool == "" and player.reached_walk_spot(dirt):
 			player.cancel_tap()

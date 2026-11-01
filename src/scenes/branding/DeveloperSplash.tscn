@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/scripts/branding/developer_splash.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/branding/Abdullah Dev logo with gold divider (1).png" id="2_brand"]
+[ext_resource type="PackedScene" uid="uid://b4w5vss6vxsxa" path="res://src/scenes/world/main/MainGame.tscn" id="3_next"]
+
+[node name="DeveloperSplash" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+branding = ExtResource("2_brand")
+next_scene = ExtResource("3_next")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Branding" type="TextureRect" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

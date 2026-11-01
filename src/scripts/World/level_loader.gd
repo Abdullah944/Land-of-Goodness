@@ -14,6 +14,9 @@ func go_to(next_scene: PackedScene, spawn_name: String = "PlayerSpawn") -> void:
 
 func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var main: Node = get_tree().current_scene
+	var chest_panel: Node = main.get_node_or_null("UI/ChestPanel")
+	if chest_panel != null and chest_panel.has_method("close_panel"):
+		chest_panel.call("close_panel")
 	var world: Node = main.get_node("World")
 	var player: Player = main.find_child("Player", true, false) as Player
 	for place: Node in world.get_children():
@@ -29,4 +32,7 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var farm: FarmField = main.get_node_or_null("Systems/FarmField") as FarmField
 	if farm != null:
 		farm.apply()
+	var activities: Activities = main.get_node_or_null("Systems/Activities") as Activities
+	if activities != null:
+		activities.apply_gathered()
 	_busy = false

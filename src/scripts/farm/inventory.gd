@@ -1,16 +1,31 @@
 # src/scripts/farm/inventory.gd
-# Purpose: Keeps seeds, crops, fish, stone, and dinars.
+# Purpose: Keeps seeds, crops, gathered goods, and dinars.
 
 class_name Inventory
 extends Node
 
 var seeds: int = 8
 var turnips: int = 0
+var tomato_seeds: int = 4
+var tomatoes: int = 0
+var wheat_seeds: int = 4
+var wheat: int = 0
+var watermelon_seeds: int = 2
+var watermelons: int = 0
+var selected_seed: String = "turnip"
 var fish: int = 0
 var stone: int = 0
 var dinars: int = 0
 var wood: int = 0
+var dates: int = 0
+var forage: int = 0
 var hearts: float = 5.0
+
+const STORED_GOODS: Array[String] = [
+	"seeds", "tomato_seeds", "wheat_seeds", "watermelon_seeds",
+	"turnips", "tomatoes", "wheat", "watermelons",
+	"wood", "stone", "fish", "dates", "forage",
+]
 
 func spend_heart() -> bool:
 	if hearts < 1.0:
@@ -29,27 +44,149 @@ func try_craft_seeds() -> bool:
 	return true
 
 func sell_turnips() -> int:
-	var earned: int = turnips * 20
+	var price: int = int(CropCatalog.get_crop(CropCatalog.TURNIP).get("sell_price", 20))
+	var earned: int = turnips * price
 	dinars += earned
 	turnips = 0
 	return earned
+
+func try_buy_seed(crop_id: String) -> bool:
+	var crop: Dictionary = CropCatalog.get_crop(crop_id)
+	if crop.is_empty():
+		return false
+	var price: int = int(crop.get("seed_price", 0))
+	if dinars < price:
+		return false
+	dinars -= price
+	add_item(str(crop.get("seed_item", "")), 1)
+	return true
+
+func count_of(item_id: String) -> int:
+	match item_id:
+		"seeds":
+			return seeds
+		"turnips":
+			return turnips
+		"tomato_seeds":
+			return tomato_seeds
+		"tomatoes":
+			return tomatoes
+		"wheat_seeds":
+			return wheat_seeds
+		"wheat":
+			return wheat
+		"watermelon_seeds":
+			return watermelon_seeds
+		"watermelons":
+			return watermelons
+		"fish":
+			return fish
+		"stone":
+			return stone
+		"wood":
+			return wood
+		"dates":
+			return dates
+		"forage":
+			return forage
+		_:
+			return 0
+
+func add_item(item_id: String, amount: int) -> void:
+	_set_item(item_id, count_of(item_id) + amount)
+
+func take_item(item_id: String, amount: int) -> bool:
+	if amount < 1 or count_of(item_id) < amount:
+		return false
+	_set_item(item_id, count_of(item_id) - amount)
+	return true
+
+func can_store(item_id: String) -> bool:
+	return item_id in STORED_GOODS
+
+func store_in(holder: Dictionary, item_id: String) -> bool:
+	if not can_store(item_id):
+		return false
+	if not take_item(item_id, 1):
+		return false
+	holder[item_id] = int(holder.get(item_id, 0)) + 1
+	return true
+
+func take_from(holder: Dictionary, item_id: String) -> bool:
+	if not can_store(item_id):
+		return false
+	var have: int = int(holder.get(item_id, 0))
+	if have < 1:
+		return false
+	holder[item_id] = have - 1
+	add_item(item_id, 1)
+	return true
 
 func to_data() -> Dictionary:
 	return {
 		"seeds": seeds,
 		"turnips": turnips,
+		"tomato_seeds": tomato_seeds,
+		"tomatoes": tomatoes,
+		"wheat_seeds": wheat_seeds,
+		"wheat": wheat,
+		"watermelon_seeds": watermelon_seeds,
+		"watermelons": watermelons,
+		"selected_seed": selected_seed,
 		"fish": fish,
 		"stone": stone,
 		"dinars": dinars,
 		"wood": wood,
+		"dates": dates,
+		"forage": forage,
 		"hearts": hearts,
 	}
 
 func from_data(data: Dictionary) -> void:
 	seeds = int(data.get("seeds", 8))
 	turnips = int(data.get("turnips", 0))
+	tomato_seeds = int(data.get("tomato_seeds", 4))
+	tomatoes = int(data.get("tomatoes", 0))
+	wheat_seeds = int(data.get("wheat_seeds", 4))
+	wheat = int(data.get("wheat", 0))
+	watermelon_seeds = int(data.get("watermelon_seeds", 2))
+	watermelons = int(data.get("watermelons", 0))
+	selected_seed = str(data.get("selected_seed", CropCatalog.TURNIP))
+	if not CropCatalog.has_crop(selected_seed):
+		selected_seed = CropCatalog.TURNIP
 	fish = int(data.get("fish", 0))
 	stone = int(data.get("stone", 0))
 	dinars = int(data.get("dinars", 0))
 	wood = int(data.get("wood", 0))
+	dates = int(data.get("dates", 0))
+	forage = int(data.get("forage", 0))
 	hearts = float(data.get("hearts", 5.0))
+
+func _set_item(item_id: String, amount: int) -> void:
+	match item_id:
+		"seeds":
+			seeds = amount
+		"turnips":
+			turnips = amount
+		"tomato_seeds":
+			tomato_seeds = amount
+		"tomatoes":
+			tomatoes = amount
+		"wheat_seeds":
+			wheat_seeds = amount
+		"wheat":
+			wheat = amount
+		"watermelon_seeds":
+			watermelon_seeds = amount
+		"watermelons":
+			watermelons = amount
+		"fish":
+			fish = amount
+		"stone":
+			stone = amount
+		"wood":
+			wood = amount
+		"dates":
+			dates = amount
+		"forage":
+			forage = amount

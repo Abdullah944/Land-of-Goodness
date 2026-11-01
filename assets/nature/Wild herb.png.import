@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwkcgdc3l17mm"
-path="res://.godot/imported/Basic tools and meterials.png-668541f81b36ca7817d8c5006ebc5050.ctex"
+uid="uid://dyx5p5pj6v7da"
+path="res://.godot/imported/Wild herb.png-6aabbef2a7327c4c8f11740979500a83.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Basic pack/Objects/Basic tools and meterials.png"
-dest_files=["res://.godot/imported/Basic tools and meterials.png-668541f81b36ca7817d8c5006ebc5050.ctex"]
+source_file="res://assets/nature/Wild herb.png"
+dest_files=["res://.godot/imported/Wild herb.png-6aabbef2a7327c4c8f11740979500a83.ctex"]
 
 [params]
 

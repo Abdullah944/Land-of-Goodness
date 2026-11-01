@@ -10,8 +10,9 @@ config_version=5
 
 [application]
 
-config/name="ArdAlKhair"
-run/main_scene="uid://b4w5vss6vxsxa"
+config/name="أرض الخير"
+config/version="1.0.0"
+run/main_scene="res://src/scenes/world/main/MainGame.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 
 [display]
@@ -20,7 +21,10 @@ window/size/viewport_width=512
 window/size/viewport_height=288
 window/size/window_width_override=1280
 window/size/window_height_override=720
+window/handheld/orientation=4
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
 
 [file_customization]
 
@@ -102,6 +106,7 @@ pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
