@@ -1,43 +1,180 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="1_door"]
-[ext_resource type="Script" path="res://src/scripts/World/rock.gd" id="2_rock"]
-[ext_resource type="Script" path="res://src/scripts/World/copper_vein.gd" id="3_copper"]
+[ext_resource type="Texture2D" path="res://assets/props/ground_cave.png" id="1_ground_cave"]
+[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="2_place_bounds"]
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="3_door"]
+[ext_resource type="Script" path="res://src/scripts/World/rock.gd" id="4_rock"]
+[ext_resource type="Script" path="res://src/scripts/World/copper_vein.gd" id="5_copper_vein"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="6_spot_mark"]
+[ext_resource type="Texture2D" path="res://assets/props/cave_wall.png" id="7_cave_wall"]
+[ext_resource type="Texture2D" path="res://assets/props/torch.png" id="8_torch"]
+[ext_resource type="Texture2D" path="res://assets/props/mine_cart.png" id="9_mine_cart"]
+[ext_resource type="Texture2D" path="res://assets/props/pot_big.png" id="10_pot_big"]
+[ext_resource type="Texture2D" path="res://assets/props/sack.png" id="11_sack"]
+[ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="12_barrel"]
+[ext_resource type="Texture2D" path="res://assets/props/crate.png" id="13_crate"]
+[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="14_lantern"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+[sub_resource type="RectangleShape2D" id="Rect_32x16"]
 size = Vector2(32, 16)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock"]
+[sub_resource type="RectangleShape2D" id="Rect_16x16"]
 size = Vector2(16, 16)
 
 [node name="Cave" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Floor" type="Polygon2D" parent="."]
-color = Color(0.247, 0.176, 0.153, 1)
-polygon = PackedVector2Array(-160, -90, 160, -90, 160, 140, -160, 140)
+texture_filter = 1
+texture_repeat = 2
+texture = ExtResource("1_ground_cave")
+polygon = PackedVector2Array(-352, -272, 352, -272, 352, 272, -352, 272)
+
+[node name="Bounds" type="Node2D" parent="."]
+script = ExtResource("2_place_bounds")
+area = Rect2(-160, -80, 320, 220)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
-position = Vector2(0, 20)
+position = Vector2(0, 80)
 
 [node name="Exit" type="Area2D" parent="."]
-position = Vector2(0, 110)
-script = ExtResource("1_door")
+position = Vector2(0, 128)
+script = ExtResource("3_door")
 next_scene_path = "uid://nsyej5gfqkfs"
 spawn_name = "CaveDoor"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
-shape = SubResource("RectangleShape2D_exit")
+shape = SubResource("Rect_32x16")
 
 [node name="Rock" type="Area2D" parent="."]
 position = Vector2(48, 40)
-script = ExtResource("2_rock")
+script = ExtResource("4_rock")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rock"]
-shape = SubResource("RectangleShape2D_rock")
+shape = SubResource("Rect_16x16")
 
 [node name="Copper" type="Area2D" parent="."]
 position = Vector2(-48, 24)
-script = ExtResource("3_copper")
+script = ExtResource("5_copper_vein")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Copper"]
-shape = SubResource("RectangleShape2D_rock")
+shape = SubResource("Rect_16x16")
+
+[node name="Wall0" type="Node2D" parent="."]
+position = Vector2(-144, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall1" type="Node2D" parent="."]
+position = Vector2(-112, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall2" type="Node2D" parent="."]
+position = Vector2(-80, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall3" type="Node2D" parent="."]
+position = Vector2(-48, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall4" type="Node2D" parent="."]
+position = Vector2(-16, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall5" type="Node2D" parent="."]
+position = Vector2(16, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall6" type="Node2D" parent="."]
+position = Vector2(48, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall7" type="Node2D" parent="."]
+position = Vector2(80, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall8" type="Node2D" parent="."]
+position = Vector2(112, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Wall9" type="Node2D" parent="."]
+position = Vector2(144, -64)
+script = ExtResource("6_spot_mark")
+person = ExtResource("7_cave_wall")
+stand_on_feet = true
+
+[node name="Prop0" type="Node2D" parent="."]
+position = Vector2(-100, -40)
+script = ExtResource("6_spot_mark")
+person = ExtResource("8_torch")
+stand_on_feet = true
+
+[node name="Prop1" type="Node2D" parent="."]
+position = Vector2(100, -40)
+script = ExtResource("6_spot_mark")
+person = ExtResource("8_torch")
+stand_on_feet = true
+
+[node name="Prop2" type="Node2D" parent="."]
+position = Vector2(110, 60)
+script = ExtResource("6_spot_mark")
+person = ExtResource("9_mine_cart")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop3" type="Node2D" parent="."]
+position = Vector2(-120, 40)
+script = ExtResource("6_spot_mark")
+person = ExtResource("10_pot_big")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop4" type="Node2D" parent="."]
+position = Vector2(130, -10)
+script = ExtResource("6_spot_mark")
+person = ExtResource("11_sack")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop5" type="Node2D" parent="."]
+position = Vector2(-130, 100)
+script = ExtResource("6_spot_mark")
+person = ExtResource("12_barrel")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop6" type="Node2D" parent="."]
+position = Vector2(130, 110)
+script = ExtResource("6_spot_mark")
+person = ExtResource("13_crate")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop7" type="Node2D" parent="."]
+position = Vector2(-20, 112)
+script = ExtResource("6_spot_mark")
+person = ExtResource("14_lantern")
+stand_on_feet = true
+
+[node name="Prop8" type="Node2D" parent="."]
+position = Vector2(20, 112)
+script = ExtResource("6_spot_mark")
+person = ExtResource("14_lantern")
+stand_on_feet = true

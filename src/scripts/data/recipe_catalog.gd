@@ -10,7 +10,14 @@ const RECIPES: Dictionary = {
 		"costs": {"wheat": 1, "forage": 1},
 		"outputs": {"feed": 3},
 	},
+	"feed_herbs": {
+		"name_key": "craft_feed_herbs",
+		"costs": {"forage": 2},
+		"outputs": {"feed": 2},
+	},
 }
+
+const FEED_PRICE: int = 10
 
 const BUILDINGS: Dictionary = {
 	"coop": {"name_key": "coop", "costs": {"wood": 12, "stone": 6}, "requires": ""},

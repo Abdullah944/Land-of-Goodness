@@ -6,6 +6,7 @@ extends Node
 @onready var player: Player = $World/Player
 
 func _ready() -> void:
+	_add_arabic_fallback()
 	var save: SaveGame = get_node("Systems/SaveGame") as SaveGame
 	var loaded: bool = save.load_game()
 	var farm: FarmField = get_node("Systems/FarmField") as FarmField
@@ -26,6 +27,16 @@ func _ready() -> void:
 		var spawn: Marker2D = _find_spawn()
 		if spawn:
 			player.global_position = spawn.global_position
+
+## The default font has no Arabic letters on every phone, so the bundled Naskh font fills them in.
+func _add_arabic_fallback() -> void:
+	var base: Font = ThemeDB.fallback_font
+	var naskh: Font = load(Locale.FONT_PATH) as Font if ResourceLoader.exists(Locale.FONT_PATH) else null
+	if base == null or naskh == null or base.fallbacks.has(naskh):
+		return
+	var chain: Array[Font] = base.fallbacks.duplicate()
+	chain.append(naskh)
+	base.fallbacks = chain
 
 func _find_spawn() -> Marker2D:
 	var world: Node = get_node("World")

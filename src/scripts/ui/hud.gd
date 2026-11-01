@@ -31,6 +31,9 @@ var _bag_money: Label
 var _zoom_in: Button
 var _language: Button
 var _sound: Button
+var _journal_tab: Button
+var _journal: Label
+var _journal2: Label
 var _zoom_out: Button
 var _list: Control
 var _bag_scroll: ScrollContainer
@@ -111,8 +114,11 @@ func dismiss_sale() -> void:
 		_sale_panel.visible = false
 
 func dismiss_menu() -> void:
-	if _menu != null:
+	if _menu != null and _menu.visible:
 		_menu.visible = false
+		var clock: Node = get_tree().current_scene.get_node_or_null("Systems/Clock")
+		if clock != null:
+			clock.set_process(true)
 
 func set_world_chrome(shown: bool) -> void:
 	for box: CanvasItem in [_clock_panel, _heart_bar, _toolbar, _burger, _note]:
@@ -122,6 +128,9 @@ func set_world_chrome(shown: bool) -> void:
 func blocks_point(screen_position: Vector2) -> bool:
 	var chest: Node = get_parent().get_node_or_null("ChestPanel")
 	if chest != null and chest.has_method("is_open") and bool(chest.call("is_open")):
+		return true
+	var title: Node = get_parent().get_node_or_null("TitleMenu")
+	if title != null and title.has_method("is_open") and bool(title.call("is_open")):
 		return true
 	if _menu.visible:
 		return true
@@ -175,6 +184,18 @@ func refresh() -> void:
 	if _sound != null:
 		_sound.visible = _tab == "settings"
 		_sound.text = Locale.t("sound")
+	if _journal != null:
+		_journal_tab.text = Locale.t("journal")
+		Locale.apply_control(_journal_tab)
+		_journal.visible = _tab == "quests"
+		_journal2.visible = _tab == "quests"
+		if _journal.visible:
+			var lines: PackedStringArray = _journal_text(stead).split("\n")
+			var half: int = int(ceil(lines.size() / 2.0))
+			_journal.text = "\n".join(lines.slice(0, half))
+			_journal2.text = "\n".join(lines.slice(half))
+			Locale.apply_control(_journal)
+			Locale.apply_control(_journal2)
 	for i: int in _slots.size():
 		_slots[i].modulate = Color("d9a441") if _player().tool == TOOLS[i] else Color.WHITE
 	for i: int in _hearts.size():
@@ -308,6 +329,20 @@ func _build_menu() -> void:
 	page.add_child(bag_tab)
 	page.add_child(settings_tab)
 	page.add_child(close_tab)
+	var journal_tab: Button = _tab_button(Locale.t("journal"), Vector2(settings_tab.position.x + settings_tab.size.x + 6.0, inner.position.y))
+	journal_tab.size = Vector2(60, 18)
+	journal_tab.pressed.connect(_show_tab.bind("quests"))
+	page.add_child(journal_tab)
+	_journal_tab = journal_tab
+	var column_w: float = (inner.size.x - 30.0) * 0.5
+	_journal = _make_label(Vector2(inner.position.x + 10.0, 52), Color("3f2d27"))
+	_journal2 = _make_label(Vector2(inner.position.x + 20.0 + column_w, 52), Color("3f2d27"))
+	for column: Label in [_journal, _journal2]:
+		column.size = Vector2(column_w, 104)
+		column.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_theme_font_size_override("font_size", 11)
+		column.visible = false
+		page.add_child(column)
 	var list: Panel = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", Vector2(inner.position.x, 48), Vector2(inner.size.x, 108), 11, 2)
 	page.add_child(list)
 	_list = list
@@ -458,11 +493,25 @@ func _toggle_menu() -> void:
 	boy.busy = _menu.visible
 	if _menu.visible:
 		boy.cancel_tap()
+	var clock: Node = get_tree().current_scene.get_node_or_null("Systems/Clock")
+	if clock != null:
+		clock.set_process(not _menu.visible)
 	refresh()
 
 func _show_tab(tab: String) -> void:
 	_tab = tab
 	refresh()
+
+func _journal_text(stead: Stead) -> String:
+	if stead == null:
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	for step: Dictionary in stead.steps():
+		var mark: String = "[x]" if bool(step["done"]) else "[  ]"
+		lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
+	if stead.is_established():
+		lines.append(Locale.t("quest_established"))
+	return "\n".join(lines)
 
 func _toggle_language() -> void:
 	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead

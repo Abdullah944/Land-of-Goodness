@@ -11,7 +11,10 @@ extends Node2D
 @export var stand_on_feet: bool = false
 @export var fit_pixels: int = 0
 @export var role: String = ""
+## Solid footprint at the feet. Zero means the boy walks through.
+@export var block_size: Vector2 = Vector2.ZERO
 
+var bob: float = 0.0
 var _picture: Texture2D
 var _player: Player
 var _show_talk: bool = false
@@ -26,7 +29,21 @@ func _ready() -> void:
 	else:
 		_picture = person
 	_block_tree()
+	_block_footprint()
 	queue_redraw()
+
+func _block_footprint() -> void:
+	if block_size == Vector2.ZERO:
+		return
+	var body: StaticBody2D = StaticBody2D.new()
+	body.name = "Block"
+	var shape_node: CollisionShape2D = CollisionShape2D.new()
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = block_size
+	shape_node.shape = shape
+	shape_node.position = Vector2(0, -block_size.y * 0.5) if stand_on_feet else Vector2.ZERO
+	body.add_child(shape_node)
+	add_child(body)
 
 func _block_tree() -> void:
 	if group_name != "tree" or _picture == null:
@@ -121,7 +138,7 @@ func _draw() -> void:
 		if fit_pixels == 0:
 			size *= person_scale
 		var origin: Vector2 = Vector2(-size.x * 0.5, -size.y) if stand_on_feet else -size * 0.5
-		draw_texture_rect(_picture, Rect2(origin, size), false)
+		draw_texture_rect(_picture, Rect2(origin + Vector2(0, -bob), size), false)
 		_draw_talk_mark()
 		return
 	draw_rect(Rect2(-8, -8, 16, 16), mark_color)

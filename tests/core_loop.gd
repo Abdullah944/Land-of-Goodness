@@ -10,6 +10,11 @@ func _init() -> void:
 	_run()
 
 func _run() -> void:
+	if OS.get_environment("KHAIR_SAVE") == "" or OS.get_environment("KHAIR_SAVE").get_file() == "land_of_khair.json":
+		print("CORE_TEST refused: set KHAIR_SAVE to a side save so the player's farm is never touched")
+		quit(2)
+		return
+	TitleMenu.dismissed = true
 	change_scene_to_file("res://src/scenes/world/main/MainGame.tscn")
 	await process_frame
 	await process_frame
@@ -118,6 +123,17 @@ func _run() -> void:
 	inventory.dinars += 25
 	check(save.load_game() and inventory.dinars == saved_dinars, "reload restores dinars")
 	check(stead.coop and stead.barn and stead.count_kind("chicken") == 1, "reload keeps buildings and animals")
+	check(bool(stead.flags.get("celebrated", false)), "the farm milestone was celebrated")
+	var after_party: int = inventory.dinars
+	check(not stead.check_milestone() and inventory.dinars == after_party, "the milestone pays only once")
+	inventory.take_item("feed", inventory.count_of("feed"))
+	inventory.forage = 2
+	check(stead.craft("feed_herbs") and inventory.count_of("feed") == 2 and inventory.forage == 0, "herbs alone make feed")
+	inventory.dinars = RecipeCatalog.FEED_PRICE
+	check(stead.buy_feed() and inventory.count_of("feed") == 3 and inventory.dinars == 0, "the merchant sells one feed")
+	check(not stead.buy_feed() and inventory.count_of("feed") == 3, "feed cannot be bought without dinars")
+	await _check_places(main, loader, clock)
+	_check_save_safety(save, inventory)
 	if OS.get_environment("KHAIR_SHOT") == "1":
 		loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "VillageReturn")
 		await process_frame
@@ -129,9 +145,81 @@ func _run() -> void:
 		await process_frame
 		await process_frame
 		await _shot("/tmp/khair-village.png")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(save.path))
+		for place: String in ["harbor", "orchard"]:
+			loader.go_to(load("res://src/scenes/world/%s/%s.tscn" % [place, place.capitalize()]) as PackedScene, "PlayerSpawn")
+			for i: int in 4:
+				await process_frame
+			await _shot("/tmp/khair-%s.png" % place)
+		loader.go_to(load("res://src/scenes/world/cave/Cave.tscn") as PackedScene, "PlayerSpawn")
+		for i: int in 4:
+			await process_frame
+		await _shot("/tmp/khair-cave.png")
+	_remove_side_files(save)
 	print("CORE_TEST passed=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
+
+func _check_places(main: Node, loader: LevelLoader, clock: GameClock) -> void:
+	var places: Dictionary = {
+		"Village": ["Elder", "Merchant", "Carpenter"],
+		"Harbor": ["Fisherman"],
+		"Orchard": [],
+		"Cave": [],
+	}
+	for place_name: String in places:
+		var path: String = "res://src/scenes/world/%s/%s.tscn" % [place_name.to_lower(), place_name]
+		clock.minute = 6.5 * 60.0
+		loader.go_to(load(path) as PackedScene, "PlayerSpawn")
+		for i: int in 3:
+			await process_frame
+		var place: Node = _place(main)
+		check(place != null and place.name == place_name and place.get_node_or_null("Bounds/Walls") != null, "%s has walls at its edges" % place_name)
+		var exits: int = 0
+		for child: Node in place.get_children():
+			if str(child.name).begins_with("Exit"):
+				exits += 1
+		check(exits > 0, "%s has a way out" % place_name)
+		var starts: Dictionary = {}
+		for person_name: String in places[place_name]:
+			var person: Node2D = place.get_node(person_name) as Node2D
+			var morning: Vector2 = person.get_node("Route").get("spots")[0]
+			check(person.position.distance_to(morning) < 1.0, "%s starts the day at the first spot" % person_name)
+			starts[person_name] = person.position
+		clock.minute = 12.5 * 60.0
+		for i: int in 10:
+			await process_frame
+		for person_name: String in starts:
+			check((place.get_node(person_name) as Node2D).position != starts[person_name], "%s walks when the hour changes" % person_name)
+		clock.minute = 6.5 * 60.0
+
+func _check_save_safety(save: SaveGame, inventory: Inventory) -> void:
+	inventory.dinars = 77
+	save.write_now()
+	save.write_now()
+	var broken: FileAccess = FileAccess.open(save.path, FileAccess.WRITE)
+	broken.store_string("{not json")
+	broken.close()
+	inventory.dinars = 1
+	check(save.load_game() and save.recovered and inventory.dinars == 77, "a damaged save recovers from the backup")
+	check(FileAccess.file_exists(save.path.get_basename() + ".damaged.json"), "the damaged save is kept for repair")
+	var odd: FileAccess = FileAccess.open(save.path, FileAccess.WRITE)
+	odd.store_string(JSON.stringify({"bag": {"seeds": -5, "dinars": -20, "turnips": "x"}, "clock": {"day": -3, "minute": 99999, "season": "Moon"}}))
+	odd.close()
+	check(save.load_game() and inventory.seeds == 0 and inventory.dinars == 0, "negative counts load as zero")
+	save.write_now()
+	save.start_new()
+	var kept: int = 0
+	for file_name: String in DirAccess.get_files_at(save.path.get_base_dir()):
+		if file_name.begins_with(save.path.get_file().get_basename() + ".before-new-"):
+			kept += 1
+	check(kept >= 1, "a new game keeps a copy of the old save")
+	check(save._read_dictionary(save.path) is Dictionary, "the new save is a valid empty farm")
+
+func _remove_side_files(save: SaveGame) -> void:
+	var folder: String = save.path.get_base_dir()
+	var stem: String = save.path.get_file().get_basename()
+	for file_name: String in DirAccess.get_files_at(folder):
+		if file_name.begins_with(stem + "."):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(folder.path_join(file_name)))
 
 func _shot(path: String) -> void:
 	await RenderingServer.frame_post_draw

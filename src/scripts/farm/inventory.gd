@@ -186,6 +186,10 @@ func from_data(data: Dictionary) -> void:
 		for key: Variant in stored_extra:
 			if GoodsCatalog.is_extra(str(key)):
 				extra[str(key)] = maxi(0, int(stored_extra[key]))
+	for item_id: String in all_stored_ids():
+		_set_item(item_id, maxi(0, count_of(item_id)))
+	dinars = maxi(0, dinars)
+	hearts = clampf(hearts, 0.0, 5.0)
 
 func _set_item(item_id: String, amount: int) -> void:
 	match item_id:

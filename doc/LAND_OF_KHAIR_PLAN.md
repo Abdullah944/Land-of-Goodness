@@ -147,22 +147,46 @@ The following are **reported by Cursor**; verify again after meaningful changes.
 
 ## 6. Next action
 
-Local branch `production-v1` holds the first complete farm loop beyond the chest. `main` was not changed. Nothing was pushed.
+Local branch `production-v1` holds the production work. `main` was not changed. Nothing was pushed or uploaded.
 
-Played and tested on a side save, 38 checks passed, real save left as it was:
+**Milestone 1 (commit 54a4d9b):** crafting, animals, selling every good, a 4×4 field upgrade, a watering-can upgrade, and paths to the village, harbor, and orchard. Arabic first, English in Settings.
 
-- Jassim buys any stored crop, fish, dates, herbs, eggs, milk, wool, wood, stone, or copper. Turnip sales still finish his first quest.
-- The workbench crafts feed, then builds a coop, a barn, a 4×4 field, and a watering can that also waters one neighbor.
-- Chickens, goats, sheep, and cows eat feed and produce the next morning. A hungry animal produces nothing.
-- The east gate leads to the village, then the harbor and the palm orchard. Each fishing spot pays once per day. Orchard dates and herbs wait until morning. The cave has one copper vein.
-- Arabic is the starting language, with English in Settings. The Noto Naskh Arabic font is included under the SIL Open Font License.
-- Old saves keep the bag and dinars, start with an empty chest, and have no animals.
+**Milestone 2 (this commit), tested on side saves only:**
 
-Phase 2.3 is still open until the iPhone test of the chest passes. This branch was started because the full production request replaced the old “do not start the next slice” gate.
+- The village, harbor, orchard, and cave are built from `tools/build_places.py`. They have textured ground, Gulf houses, market stalls, a dock with dhows, an oasis, cave walls, and solid props. Invisible walls keep the boy inside each place and off deep water.
+- The elder, merchant, carpenter, and fisherman walk between daily spots by the hour and stop while talking.
+- Chickens, goats, sheep, and cows wander beside the coop and barn. Unfed animals look paler. The coop and barn block walking once built.
+- A title screen offers Continue, New game (with a confirmation), and language. A new game keeps a dated copy of the old save and never deletes it.
+- The pause menu stops the clock. A Quests tab lists every step of the main goal with a check mark.
+- Herbs alone make feed, and the merchant sells feed for 10 dinars, so animals can be fed before the wheat season.
+- Reaching the main goal pays 300 dinars once.
+- Saves write to a temporary file, then replace the old one. The last good save is kept as a backup. A damaged save is kept aside and the backup loads instead. Negative or broken values load as safe defaults.
+- A tap the boy cannot reach (behind a wall or stall) now stops him instead of pushing forever.
+- Android: a local preset exports a debug APK signed with the local debug keystore. The project icon is set.
 
-**Not release-ready yet.** The new places are walkable color grounds with original sprites, not finished tile maps. Arabic lines still need a native review. There is no reviewed Quran audio, so prayer and reading are not in the game. Android export still needs an approved keystore. No iPhone or Android run has been done for this branch.
+**Tests:**
 
-**Exact next action:** On `production-v1`, replace the flat village, harbor, and orchard grounds with tile maps and walking schedules for the elder, merchant, carpenter, and fisherman. Then play from a new save through the quest line and fix what breaks. Do not push, do not spend image credits, and do not upload a build unless asked.
+- `tests/core_loop.gd`: 64 of 64 passed.
+- `tests/playthrough.gd`: a brand-new farm with an ordinary daily routine reaches the main goal on day 19. Dinars never go negative, and the first sale is on day 4.
+- Both tests refuse to run without a side save in `KHAIR_SAVE`. The real save was checked by hash before and after every run and was unchanged.
+- Screenshots of the farm, village, harbor, orchard, and cave were taken and viewed.
+
+**Known issues found by the playthrough:** The farm ends the goal with about 2,300 dinars. Income outpaces what there is to buy, so more money sinks are needed (sheep and cow upgrades, house upgrades, decorations, a second coop). Date sell price was lowered from 25 to 15. Wood (two trees a day) is the slowest step before the barn.
+
+**Not release-ready yet.**
+- The fisherman and other villagers are small sprites and need better art.
+- Arabic lines still need a native review.
+- There is no reviewed Quran or adhan content, so prayer and reading are not in the game.
+- A release Android keystore needs your approval.
+- No iPhone or Android run has been done for this branch. The APK was built, but no Android device or emulator was available.
+
+Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
+
+**Exact next action:** On `production-v1`:
+1. Add money sinks and buy them in `tests/playthrough.gd`: a carpenter wood bundle, a house upgrade, and a second animal of each kind.
+2. Pause the clock during the chest and dialogue.
+3. Add harvest sounds and a separate music and effects volume.
+4. Then ask before any push, TestFlight upload, or Android release signing.
 
 ## 7. Open decisions
 
@@ -192,6 +216,7 @@ Phase 2.3 is still open until the iPhone test of the chest passes. This branch w
 | 2026-10-31 | Phase 2.2: a date palm and a wild herb on the farm each give one item, then wait until morning. The bag saves dates and herbs. Local tests passed. The iPhone playtest is still required, so Phase 2.2 stays open. Phase 2.3 has not started. |
 | 2026-10-31 | Phase 2.2 passed on iPhone in TestFlight build 8. Dates, herbs, repeatable gathering, and bag scrolling worked on the phone. Phase 2.2 is complete. Phase 2.3 has not started. |
 | 2026-10-31 | Phase 2.3: a chest inside the house stores or returns one item at a time. The bag and the chest save together. An old save keeps its bag and starts with an empty chest. Local tests passed. The chest artwork and the iPhone test are still required, so Phase 2.3 stays open. Phase 2.4 has not started. |
+| 2026-11-01 | Production branch milestone 2: built places with walls, walking villagers, visible animals, title screen, quest list, safe saves with backup, herb feed, and a debug Android APK. Core test 64 of 64 and new-farm playthrough passed. The real save was not changed. |
 | 2026-11-01 | Production branch: crafting, animals, selling every good, a larger field, and paths to the village, harbor, and orchard. Side-save tests passed 38 of 38. The real save was not changed. The new maps are still simple grounds. Arabic copy, device tests, and Android signing are still open. |
 
 ### How to maintain this file

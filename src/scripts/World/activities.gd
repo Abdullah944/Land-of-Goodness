@@ -235,7 +235,7 @@ func talk_role(role: String) -> void:
 			dialogue.open_lines(PackedStringArray([Locale.t("fisherman")]))
 		"merchant":
 			_shop = "menu"
-			dialogue.offer(Locale.t("merchant"), _labeled(["sell_goods", "buy_seeds", "cancel"]))
+			dialogue.offer(Locale.t("merchant"), _labeled(["sell_goods", "buy_seeds", "buy_feed", "cancel"]))
 		_:
 			_talk()
 
@@ -249,6 +249,17 @@ func _on_shop_choice(choice: String) -> void:
 		elif choice == "buy_seeds" or choice == "Buy Seeds":
 			_shop = "seeds"
 			_dialogue().offer(Locale.t("which_seed"), _seed_choices())
+		elif choice == "buy_feed":
+			_shop = ""
+			var stead: Stead = _stead()
+			if stead != null and stead.buy_feed():
+				note = Locale.t("bought") % Locale.item("feed")
+				_chime("coin")
+				_save()
+			else:
+				note = Locale.t("need_dinars") % RecipeCatalog.FEED_PRICE
+			_dialogue().open_lines(PackedStringArray([note]))
+			_refresh()
 		return
 	if _shop == "sell":
 		if choice == "cancel" or choice == "Cancel":
@@ -380,7 +391,7 @@ func _work_choice(choice: String) -> void:
 		return
 	if choice == "craft":
 		_shop = "craft"
-		_dialogue().offer(Locale.t("craft"), _labeled(["craft_feed", "cancel"]))
+		_dialogue().offer(Locale.t("craft"), _labeled(["craft_feed", "craft_feed_herbs", "cancel"]))
 		return
 	if choice == "build":
 		_shop = "build"
@@ -403,8 +414,8 @@ func _work_action(choice: String) -> void:
 		return
 	var ok: bool = false
 	var line: String = Locale.t("cannot")
-	if shop == "craft" and choice == "craft_feed":
-		ok = stead.craft("feed")
+	if shop == "craft" and (choice == "craft_feed" or choice == "craft_feed_herbs"):
+		ok = stead.craft("feed" if choice == "craft_feed" else "feed_herbs")
 		line = Locale.t("made") % Locale.item("feed")
 	elif shop == "build":
 		ok = stead.build(choice)
@@ -567,5 +578,9 @@ func _inventory() -> Inventory:
 	return get_parent().get_node("Inventory") as Inventory
 
 func _save() -> void:
+	var stead: Stead = _stead()
+	if stead != null and stead.check_milestone():
+		note = Locale.t("milestone")
+		_chime("coin")
 	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame
 	save.write_now()

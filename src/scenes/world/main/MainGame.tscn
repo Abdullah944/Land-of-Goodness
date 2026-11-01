@@ -15,6 +15,7 @@
 [ext_resource type="Script" path="res://src/scripts/ui/chest_panel.gd" id="11_panel"]
 [ext_resource type="Script" path="res://src/scripts/farm/stead.gd" id="12_stead"]
 [ext_resource type="Script" path="res://src/scripts/ui/sound_bank.gd" id="13_sound"]
+[ext_resource type="Script" path="res://src/scripts/ui/title_menu.gd" id="14_title"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -71,6 +72,11 @@ script = ExtResource("11_panel")
 [node name="Dialogue" type="CanvasLayer" parent="UI"]
 process_mode = 3
 script = ExtResource("9_talk")
+
+[node name="TitleMenu" type="CanvasLayer" parent="UI"]
+process_mode = 3
+layer = 2
+script = ExtResource("14_title")
 
 [node name="Player" parent="World" unique_id=1950149959 instance=ExtResource("2_4qh4t")]
 z_index = 1

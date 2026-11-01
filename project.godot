@@ -14,6 +14,7 @@ config/name="أرض الخير"
 config/version="1.0.0"
 run/main_scene="res://src/scenes/world/main/MainGame.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://assets/appIcon/icon_1024.png"
 
 [display]
 

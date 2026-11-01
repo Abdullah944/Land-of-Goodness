@@ -6,6 +6,7 @@ extends Area2D
 const MARK: String = "Cave/Copper"
 
 func _ready() -> void:
+	_add_picture()
 	add_to_group("daily_spot")
 	body_entered.connect(_on_body_entered)
 	_apply()
@@ -30,5 +31,12 @@ func _apply() -> void:
 		return
 	apply_day(activities.gathered, activities._day())
 
-func _draw() -> void:
-	draw_rect(Rect2(-8, -8, 16, 16), Color("c96f4a"))
+func _add_picture() -> void:
+	var ore: Texture2D = load("res://assets/props/ore_copper.png") as Texture2D
+	if ore == null:
+		return
+	var picture: Sprite2D = Sprite2D.new()
+	picture.name = "Picture"
+	picture.texture = ore
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(picture)

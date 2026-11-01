@@ -111,16 +111,18 @@ func export_plots() -> Array:
 func import_plots(rows: Array) -> void:
 	plots.clear()
 	for row: Variant in rows:
-		if row is Dictionary:
+		if row is Dictionary and row.has("x") and row.has("y"):
 			var cell: Vector2i = Vector2i(int(row["x"]), int(row["y"]))
-			var stage: int = int(row["stage"])
+			var stage: int = maxi(-1, int(row.get("stage", -1)))
 			var crop_id: String = str(row.get("crop", ""))
 			if stage >= 0 and not CropCatalog.has_crop(crop_id):
 				crop_id = CropCatalog.TURNIP
+			if stage >= 0:
+				stage = mini(stage, int(CropCatalog.get_crop(crop_id).get("mature_stage", 3)))
 			plots[_key(cell)] = {
 				"tilled": true,
 				"stage": stage,
-				"watered": bool(row["watered"]),
+				"watered": bool(row.get("watered", false)),
 				"crop": crop_id,
 			}
 

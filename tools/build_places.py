@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+# tools/build_places.py
+# Purpose: Writes the village, harbor, orchard, and cave scenes from one readable layout list.
+# Run from the project root: python3 tools/build_places.py
+
+import os
+import random
+import struct
+import zlib
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HOME = "res://src/scenes/world/home/Home.tscn"
+VILLAGE = "res://src/scenes/world/village/Village.tscn"
+HARBOR = "res://src/scenes/world/harbor/Harbor.tscn"
+ORCHARD = "res://src/scenes/world/orchard/Orchard.tscn"
+
+
+def write_png(path, width, height, pixels):
+    rows = b"".join(b"\x00" + bytes(c for px in pixels[y * width:(y + 1) * width] for c in px) for y in range(height))
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    header = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    with open(path, "wb") as out:
+        out.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b""))
+
+
+def draw_grass():
+    path = os.path.join(ROOT, "assets/props/ground_grass.png")
+    rng = random.Random(7)
+    shades = [(126, 166, 92, 255), (118, 158, 86, 255), (134, 174, 98, 255)]
+    pixels = [shades[0]] * 256
+    for i in range(256):
+        pixels[i] = shades[rng.choice([0, 0, 0, 1, 2])]
+    for x, y in [(3, 4), (11, 2), (7, 10), (13, 12), (2, 13)]:
+        pixels[y * 16 + x] = (98, 140, 72, 255)
+        pixels[(y - 1) * 16 + x] = (108, 150, 78, 255)
+    write_png(path, 16, 16, pixels)
+
+
+class Scene:
+    def __init__(self, name, sort=True):
+        self.name = name
+        self.sort = sort
+        self.ext = []
+        self.sub = []
+        self.nodes = []
+
+    def res(self, kind, path):
+        for rid, k, p in self.ext:
+            if p == path:
+                return rid
+        rid = "%d_%s" % (len(self.ext) + 1, os.path.splitext(os.path.basename(path))[0].replace(" ", "_").lower()[:12])
+        self.ext.append((rid, kind, path))
+        return rid
+
+    def box(self, w, h):
+        sid = "Rect_%dx%d" % (w, h)
+        if not any(s[0] == sid for s in self.sub):
+            self.sub.append((sid, "RectangleShape2D", "size = Vector2(%d, %d)" % (w, h)))
+        return sid
+
+    def node(self, name, kind, parent=".", props=None):
+        self.nodes.append((name, kind, parent, props or []))
+
+    def ground(self, name, texture, points):
+        self.node(name, "Polygon2D", props=[
+            "texture_filter = 1",
+            "texture_repeat = 2",
+            'texture = ExtResource("%s")' % self.res("Texture2D", texture),
+            "polygon = PackedVector2Array(%s)" % ", ".join("%d, %d" % p for p in points),
+        ])
+
+    def rect_ground(self, name, texture, x, y, w, h):
+        self.ground(name, texture, [(x, y), (x + w, y), (x + w, y + h), (x, y + h)])
+
+    def mark(self, name, texture, x, y, fit=0, feet=True, block=None, group="", role=""):
+        props = [
+            "position = Vector2(%d, %d)" % (x, y),
+            'script = ExtResource("%s")' % self.res("Script", "res://src/scripts/World/spot_mark.gd"),
+            'person = ExtResource("%s")' % self.res("Texture2D", texture),
+        ]
+        if fit:
+            props.append("fit_pixels = %d" % fit)
+        if feet:
+            props.append("stand_on_feet = true")
+        if group:
+            props.append('group_name = "%s"' % group)
+        if role:
+            props.append('role = "%s"' % role)
+        if block:
+            props.append("block_size = Vector2(%d, %d)" % block)
+        self.node(name, "Node2D", props=props)
+
+    def route(self, person, spots, hours):
+        self.node("Route", "Node", parent=person, props=[
+            'script = ExtResource("%s")' % self.res("Script", "res://src/scripts/World/npc_route.gd"),
+            "spots = PackedVector2Array(%s)" % ", ".join("%d, %d" % s for s in spots),
+            "hours = PackedFloat32Array(%s)" % ", ".join("%g" % h for h in hours),
+        ])
+
+    def door(self, name, x, y, scene, spawn, w=28, h=16):
+        self.node(name, "Area2D", props=[
+            "position = Vector2(%d, %d)" % (x, y),
+            'script = ExtResource("%s")' % self.res("Script", "res://src/scripts/house/door.gd"),
+            'next_scene_path = "%s"' % scene,
+            'spawn_name = "%s"' % spawn,
+        ])
+        self.node("CollisionShape2D", "CollisionShape2D", parent=name, props=['shape = SubResource("%s")' % self.box(w, h)])
+
+    def area(self, name, script, x, y, w=16, h=16):
+        self.node(name, "Area2D", props=[
+            "position = Vector2(%d, %d)" % (x, y),
+            'script = ExtResource("%s")' % self.res("Script", script),
+        ])
+        self.node("CollisionShape2D", "CollisionShape2D", parent=name, props=['shape = SubResource("%s")' % self.box(w, h)])
+
+    def spawn(self, name, x, y):
+        self.node(name, "Marker2D", props=["position = Vector2(%d, %d)" % (x, y)])
+
+    def bounds(self, x, y, w, h, blocks=()):
+        props = [
+            'script = ExtResource("%s")' % self.res("Script", "res://src/scripts/World/place_bounds.gd"),
+            "area = Rect2(%d, %d, %d, %d)" % (x, y, w, h),
+        ]
+        if blocks:
+            props.append("blocks = Array[Rect2]([%s])" % ", ".join("Rect2(%d, %d, %d, %d)" % b for b in blocks))
+        self.node("Bounds", "Node2D", props=props)
+
+    def save(self, rel_path):
+        lines = ["[gd_scene format=3]", ""]
+        for rid, kind, path in self.ext:
+            lines.append('[ext_resource type="%s" path="%s" id="%s"]' % (kind, path, rid))
+        lines.append("")
+        for sid, kind, body in self.sub:
+            lines += ['[sub_resource type="%s" id="%s"]' % (kind, sid), body, ""]
+        lines.append('[node name="%s" type="Node2D"]' % self.name)
+        if self.sort:
+            lines.append("y_sort_enabled = true")
+        lines.append("")
+        for name, kind, parent, props in self.nodes:
+            lines.append('[node name="%s" type="%s" parent="%s"]' % (name, kind, parent))
+            lines += props
+            lines.append("")
+        with open(os.path.join(ROOT, rel_path), "w") as out:
+            out.write("\n".join(lines).rstrip() + "\n")
+
+
+PROP = "res://assets/props/%s.png"
+PALM = "res://assets/nature/Date palm.png"
+HERB = "res://assets/nature/Wild herb.png"
+HOUSE = "res://assets/building/house/Desert Adobe Rooftop House Sprite.png"
+PEOPLE = "res://assets/characters/village/%s.png"
+
+
+def village():
+    s = Scene("Village")
+    s.rect_ground("Floor", PROP % "ground_sand", -432, -288, 864, 576)
+    s.rect_ground("Road", PROP % "ground_cobble", -432, -8, 864, 40)
+    s.rect_ground("Lane", PROP % "ground_cobble", -20, 32, 40, 264)
+    s.rect_ground("Square", PROP % "ground_cobble", -64, -56, 128, 48)
+    s.rect_ground("Rug", PROP % "ground_mat", -16, -48, 32, 16)
+    s.bounds(-240, -150, 480, 300)
+    s.spawn("PlayerSpawn", 0, 70)
+    s.spawn("HarborReturn", 196, 0)
+    s.spawn("OrchardReturn", -196, 0)
+    s.door("ExitFarm", 0, 140, HOME, "VillageReturn", 40, 16)
+    s.door("ExitHarbor", 228, 10, HARBOR, "PlayerSpawn", 16, 40)
+    s.door("ExitOrchard", -228, 10, ORCHARD, "PlayerSpawn", 16, 40)
+    s.mark("HouseWest", HOUSE, -170, -64, fit=84, block=(70, 26))
+    s.mark("HouseElder", HOUSE, -96, -84, fit=76, block=(62, 24))
+    for i, part in enumerate(["wall_window", "wall_door", "wall_plain", "wall_window", "wall_door"]):
+        s.mark("Shop%d" % i, PROP % part, 88 + i * 32, -96, block=(32, 14))
+    s.mark("LanternA", PROP % "lantern", 72, -96)
+    s.mark("LanternB", PROP % "lantern", 248 - 16, -96)
+    s.mark("Stall", "res://assets/building/village/Market stall.png", 0, -60, fit=36, block=(32, 12))
+    s.mark("StallProduce", PROP % "stall_produce", -44, -58, block=(40, 12))
+    s.mark("StallPots", PROP % "stall_pots", 46, -58, block=(40, 12))
+    s.mark("ShelfSeeds", PROP % "shelf_seeds", 196, -40, block=(36, 10))
+    s.mark("Counter", PROP % "counter", 140, -40, block=(60, 10))
+    s.mark("Workyard", PROP % "table", 96, 72, block=(24, 8))
+    for i, (name, x, y) in enumerate([("crate", 120, 70), ("crate", 124, 82), ("sack", 70, 76), ("barrel", -80, 72),
+                                      ("barrel", -94, 76), ("pot_big", -150, 40), ("pot_green", -136, 44),
+                                      ("basket", 70, -40), ("sack", -70, -40), ("plant", -60, 120), ("plant", 60, 120)]):
+        s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6))
+    for i, (x, y) in enumerate([(-220, -120), (-210, 120), (210, 120), (-140, 100), (150, 104), (226, -124)]):
+        s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
+    s.mark("Elder", PEOPLE % "Elder", -110, -40, fit=32, role="elder")
+    s.route("Elder", [(-110, -40), (-180, 40), (-40, 50), (-96, -50)], [6, 11, 15, 19])
+    s.mark("Merchant", PEOPLE % "Merchant", 0, -34, fit=32, role="merchant")
+    s.route("Merchant", [(0, -34), (140, -20), (0, -34), (152, -72)], [6, 12, 14, 20])
+    s.mark("Carpenter", PEOPLE % "Carpenter", 100, 92, fit=32, role="carpenter")
+    s.route("Carpenter", [(100, 92), (36, 60), (100, 92), (120, -72)], [6, 12, 13, 18])
+    s.save("src/scenes/world/village/Village.tscn")
+
+
+def harbor():
+    s = Scene("Harbor")
+    s.rect_ground("Gulf", PROP % "ground_water", -432, -352, 864, 312)
+    s.rect_ground("Sand", PROP % "ground_sand", -432, -40, 864, 336)
+    s.rect_ground("Dock", PROP % "ground_planks", 16, -144, 64, 112)
+    s.bounds(-240, -150, 480, 300, [(-240, -150, 256, 102), (80, -150, 160, 102)])
+    s.spawn("PlayerSpawn", -190, 60)
+    s.door("ExitVillage", -228, 70, VILLAGE, "HarborReturn", 16, 40)
+    s.area("FishingSpot", "res://src/scripts/World/fish_spot.gd", 48, -128, 40, 20)
+    s.mark("Dhow", "res://assets/building/harbor/Dhow.png", 150, -70, fit=96)
+    s.mark("DhowSmall", "res://assets/building/harbor/Dhow.png", -130, -76, fit=56)
+    for i, (name, x, y) in enumerate([("crate_fish", 60, -36), ("crate_fish", -20, 20), ("barrel", 20, -36),
+                                      ("barrel", -36, 30), ("crate", 110, 20), ("crate", 122, 30), ("sack", 96, 30),
+                                      ("basket", -60, 24), ("lantern", 14, -60), ("lantern", 82, -60)]):
+        s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6) if name != "lantern" else None)
+    s.mark("Hut", HOUSE, -150, 20, fit=72, block=(60, 22))
+    for i, (x, y) in enumerate([(200, 120), (-60, 130), (180, 40)]):
+        s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
+    s.mark("Fisherman", PEOPLE % "Fisherman", 48, -90, fit=32, role="fisherman")
+    s.route("Fisherman", [(48, -90), (-10, 50), (48, -90), (-150, 40)], [6, 11, 15, 19])
+    s.save("src/scenes/world/harbor/Harbor.tscn")
+
+
+def orchard():
+    s = Scene("Orchard")
+    s.rect_ground("Floor", PROP % "ground_grass", -432, -288, 864, 576)
+    s.rect_ground("Path", PROP % "ground_sand", -432, -8, 864, 32)
+    s.rect_ground("Track", PROP % "ground_sand", 120, 24, 32, 272)
+    s.bounds(-240, -150, 480, 300)
+    s.spawn("PlayerSpawn", 186, 8)
+    s.door("ExitVillage", 228, 10, VILLAGE, "OrchardReturn", 16, 40)
+    s.mark("Oasis", PROP % "oasis", -150, -70, fit=96, block=(80, 30))
+    s.mark("DatePalm", PALM, -40, -40, group="date")
+    s.mark("DatePalm2", PALM, 40, -70, group="date")
+    s.mark("DatePalm3", PALM, -90, 90, group="date")
+    s.mark("Herb", HERB, -10, 70, group="forage")
+    s.mark("Herb2", HERB, 60, 60, group="forage")
+    s.mark("Herb3", HERB, -180, 40, group="forage")
+    for i, (x, y) in enumerate([(-220, -120), (110, -120), (180, -90), (-200, 120), (60, 130), (210, 130),
+                                (-120, -120), (0, -120)]):
+        s.mark("Palm%d" % i, PALM, x, y, fit=34, block=(10, 6))
+    for i, (name, x, y) in enumerate([("basket", 90, -10), ("sack", 104, -12), ("pot_big", -60, 40), ("plant", 150, 80)]):
+        s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6))
+    s.save("src/scenes/world/orchard/Orchard.tscn")
+
+
+def cave():
+    s = Scene("Cave")
+    s.rect_ground("Floor", PROP % "ground_cave", -352, -272, 704, 544)
+    s.bounds(-160, -80, 320, 220)
+    s.spawn("PlayerSpawn", 0, 80)
+    s.door("Exit", 0, 128, "uid://nsyej5gfqkfs", "CaveDoor", 32, 16)
+    s.area("Rock", "res://src/scripts/World/rock.gd", 48, 40)
+    s.area("Copper", "res://src/scripts/World/copper_vein.gd", -48, 24)
+    for i in range(10):
+        s.mark("Wall%d" % i, PROP % "cave_wall", -144 + i * 32, -64)
+    for i, (name, x, y) in enumerate([("torch", -100, -40), ("torch", 100, -40), ("mine_cart", 110, 60),
+                                      ("pot_big", -120, 40), ("sack", 130, -10), ("barrel", -130, 100),
+                                      ("crate", 130, 110), ("lantern", -20, 112), ("lantern", 20, 112)]):
+        s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6) if name not in ("torch", "lantern") else None)
+    s.save("src/scenes/world/cave/Cave.tscn")
+
+
+if __name__ == "__main__":
+    draw_grass()
+    village()
+    harbor()
+    orchard()
+    cave()

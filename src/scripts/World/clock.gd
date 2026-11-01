@@ -38,6 +38,8 @@ func _begin_morning() -> void:
 		var morning: String = stead.on_new_day()
 		if morning != "":
 			activities.note = morning
+		if stead.check_milestone():
+			activities.note = Locale.t("milestone")
 	var bag: Inventory = get_parent().get_node("Inventory") as Inventory
 	bag.refill_hearts()
 	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame
@@ -46,20 +48,23 @@ func _begin_morning() -> void:
 func hour_text() -> String:
 	var hour: int = int(minute / 60.0) % 24
 	var mins: int = int((int(minute) % 60) / 10.0) * 10
-	var suffix: String = "am" if hour < 12 else "pm"
+	var suffix: String = Locale.t("am") if hour < 12 else Locale.t("pm")
 	var shown_hour: int = hour % 12
 	if shown_hour == 0:
 		shown_hour = 12
-	return "%d:%02d %s" % [shown_hour, mins, suffix]
+	# Isolated left-to-right so Arabic text keeps "6:00" in reading order.
+	return "\u2066%d:%02d\u2069 %s" % [shown_hour, mins, suffix]
 
 func to_data() -> Dictionary:
 	return {"day": day, "minute": minute, "season": season, "weather": weather}
 
 func from_data(data: Dictionary) -> void:
-	day = int(data.get("day", 1))
-	minute = float(data.get("minute", 6.0 * 60.0))
+	day = maxi(1, int(data.get("day", 1)))
+	minute = clampf(float(data.get("minute", 6.0 * 60.0)), 6.0 * 60.0, 26.0 * 60.0 - 1.0)
 	season = str(data.get("season", "Spring"))
-	weather = str(data.get("weather", "Clear"))
+	if not season in SEASONS:
+		season = SEASONS[int(float(day) / 7.0) % SEASONS.size()]
+	weather = "Rain" if str(data.get("weather", "Clear")) == "Rain" else "Clear"
 
 func _paint_sky() -> void:
 	var hud: Node = get_tree().current_scene.get_node_or_null("UI/HUD")

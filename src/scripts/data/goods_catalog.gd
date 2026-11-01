@@ -8,7 +8,7 @@ const _EXTRAS: Dictionary = {
 	"fish": {"sell": 30, "icon": "res://assets/fish/Cozy Gulf Fish Pixel Icon.png"},
 	"wood": {"sell": 4, "icon": "res://assets/nature/Pixel art cut wood log.png"},
 	"stone": {"sell": 4, "icon": "res://assets/nature/Tiny pixel stone chunk.png"},
-	"dates": {"sell": 25, "icon": "res://assets/farming/Date inventory icon.png"},
+	"dates": {"sell": 15, "icon": "res://assets/farming/Date inventory icon.png"},
 	"forage": {"sell": 12, "icon": "res://assets/farming/Wild herb inventory icon.png"},
 	"eggs": {"sell": 18, "icon": "res://assets/items/Egg.png"},
 	"milk": {"sell": 45, "icon": "res://assets/items/Milk.png"},

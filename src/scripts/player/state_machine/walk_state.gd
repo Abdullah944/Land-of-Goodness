@@ -6,6 +6,8 @@ extends NodeState
 @export var player: Player
 @export var animated_sprite_2d: AnimatedSprite2D
 
+var _blocked: float = 0.0
+
 func _on_physics_process(_delta: float) -> void:
 	var keys: Vector2 = player.get_move_direction()
 	var direction: Vector2 = _move_direction()
@@ -18,6 +20,17 @@ func _on_physics_process(_delta: float) -> void:
 			animated_sprite_2d.play(anim)
 	player.velocity = direction * player.move_speed
 	player.move_and_slide()
+	_give_up_when_blocked(_delta, direction)
+
+## A tap behind a wall or stall would push the boy into it forever.
+func _give_up_when_blocked(delta: float, direction: Vector2) -> void:
+	if direction == Vector2.ZERO or not player.walking_indoors or player.get_real_velocity().length() > 4.0:
+		_blocked = 0.0
+		return
+	_blocked += delta
+	if _blocked > 0.4:
+		_blocked = 0.0
+		player.cancel_tap()
 
 func _set_facing(direction: Vector2, from_keys: bool) -> void:
 	if direction == Vector2.ZERO:

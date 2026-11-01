@@ -36,8 +36,16 @@ func craft(recipe_id: String) -> bool:
 	if spec.is_empty() or not _pay(spec.get("costs", {})):
 		return false
 	_grant(spec.get("outputs", {}))
-	if recipe_id == "feed":
+	if spec.get("outputs", {}).has("feed"):
 		flags["crafted_feed"] = true
+	return true
+
+func buy_feed() -> bool:
+	var bag: Inventory = _bag()
+	if bag == null or bag.dinars < RecipeCatalog.FEED_PRICE:
+		return false
+	bag.dinars -= RecipeCatalog.FEED_PRICE
+	bag.add_item("feed", 1)
 	return true
 
 func build(building_id: String) -> bool:
@@ -84,6 +92,7 @@ func buy_animal(kind: String) -> bool:
 		return false
 	bag.dinars -= price
 	animals.append({"kind": kind, "fed": false})
+	apply_buildings()
 	return true
 
 func feed_kind(kind: String) -> int:
@@ -104,6 +113,8 @@ func feed_kind(kind: String) -> int:
 		animal["fed"] = true
 		animals[index] = animal
 		fed_count += 1
+	if fed_count > 0:
+		apply_buildings()
 	return fed_count
 
 func on_new_day() -> String:
@@ -129,6 +140,7 @@ func on_new_day() -> String:
 			flags["got_egg"] = true
 		else:
 			flags["got_barn_product"] = true
+	apply_buildings()
 	if produced:
 		return Locale.t("produced")
 	if hungry > 0:
@@ -161,9 +173,36 @@ func goal_text() -> String:
 		return Locale.t("quest_orchard")
 	if not barn:
 		return Locale.t("quest_barn")
-	if count_kind("goat") + count_kind("sheep") + count_kind("cow") < 1:
+	if count_kind("goat") + count_kind("sheep") + count_kind("cow") < 1 and not bool(flags.get("got_barn_product", false)):
 		return Locale.t("quest_barn_animal")
+	if not bool(flags.get("got_barn_product", false)):
+		return Locale.t("quest_barn_product")
 	return Locale.t("quest_established")
+
+## Pays the one-time village thanks when the farm goal is first reached.
+func check_milestone() -> bool:
+	if bool(flags.get("celebrated", false)) or not is_established():
+		return false
+	flags["celebrated"] = true
+	var bag: Inventory = _bag()
+	if bag != null:
+		bag.dinars += 300
+	return true
+
+func steps() -> Array[Dictionary]:
+	var activities: Node = get_parent().get_node_or_null("Activities")
+	var quest_done: bool = activities != null and bool(activities.get("quest_done"))
+	return [
+		{"key": "quest_turnip", "done": quest_done},
+		{"key": "quest_feed", "done": bool(flags.get("crafted_feed", false))},
+		{"key": "quest_coop", "done": coop},
+		{"key": "quest_chicken", "done": count_kind("chicken") > 0 or bool(flags.get("got_egg", false))},
+		{"key": "quest_egg", "done": bool(flags.get("got_egg", false))},
+		{"key": "quest_harbor", "done": bool(visited.get("Harbor", false))},
+		{"key": "quest_orchard", "done": bool(visited.get("Orchard", false))},
+		{"key": "quest_barn", "done": barn},
+		{"key": "quest_barn_animal", "done": bool(flags.get("got_barn_product", false)) or count_kind("goat") + count_kind("sheep") + count_kind("cow") > 0},
+	]
 
 func is_established() -> bool:
 	return bool(flags.get("got_egg", false)) \
@@ -185,6 +224,15 @@ func apply_buildings() -> void:
 	var barn_node: CanvasItem = place.get_node_or_null("Barn") as CanvasItem
 	if barn_node != null:
 		barn_node.visible = barn
+	for building: CanvasItem in [coop_node, barn_node]:
+		if building == null:
+			continue
+		var block: StaticBody2D = building.get_node_or_null("Block") as StaticBody2D
+		if block != null:
+			block.set_collision_layer_value(1, building.visible)
+	var pen: Node = place.get_node_or_null("Pen")
+	if pen != null and pen.has_method("sync"):
+		pen.call("sync", animals)
 
 func to_data() -> Dictionary:
 	return {

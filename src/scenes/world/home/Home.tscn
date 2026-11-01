@@ -16,6 +16,7 @@
 [ext_resource type="Texture2D" path="res://assets/building/Farm/Workbench.png" id="14_bench"]
 [ext_resource type="Texture2D" path="res://assets/building/Farm/Chicken coop.png" id="15_coop"]
 [ext_resource type="Texture2D" path="res://assets/building/Farm/Barn.png" id="16_barn"]
+[ext_resource type="Script" path="res://src/scripts/farm/animal_pen.gd" id="17_pen"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_83bga"]
 texture = ExtResource("1_rwkni")
@@ -683,6 +684,7 @@ position = Vector2(40, 120)
 script = ExtResource("4_mark")
 person = ExtResource("15_coop")
 fit_pixels = 48
+block_size = Vector2(40, 18)
 z_index = 1
 
 [node name="Barn" type="Node2D" parent="."]
@@ -691,4 +693,8 @@ position = Vector2(96, 120)
 script = ExtResource("4_mark")
 person = ExtResource("16_barn")
 fit_pixels = 64
+block_size = Vector2(56, 24)
 z_index = 1
+
+[node name="Pen" type="Node2D" parent="."]
+script = ExtResource("17_pen")

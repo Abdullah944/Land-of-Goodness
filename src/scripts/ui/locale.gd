@@ -56,6 +56,17 @@ const _EN: Dictionary = {
 	"quest_barn": "Quest: build a barn",
 	"quest_barn_animal": "Quest: buy a goat, sheep, or cow",
 	"quest_established": "The farm is established.",
+	"quest_barn_product": "Quest: feed the barn animal, then sleep",
+	"milestone": "The village thanks you: the farm is established. +300 dinars.",
+	"buy_feed": "Buy feed  10",
+	"craft_feed_herbs": "Feed from 2 herbs",
+	"journal": "Quests",
+	"title": "Land of Khair",
+	"continue": "Continue",
+	"new_game": "New game",
+	"new_confirm": "Start a new farm? Your old save is kept as a backup.",
+	"am": "am",
+	"pm": "pm",
 	"quests_body": "Keep going. The note under the day shows the next step.",
 	"dinars": "%d dinars",
 	"language": "العربية / English",
@@ -149,6 +160,17 @@ const _AR: Dictionary = {
 	"quest_barn": "المهمة: ابنِ الحظيرة",
 	"quest_barn_animal": "المهمة: اشترِ عنزة أو خروفاً أو بقرة",
 	"quest_established": "المزرعة قائمة.",
+	"quest_barn_product": "المهمة: أطعم حيوان الحظيرة ثم نَم",
+	"milestone": "القرية تشكرك: المزرعة قائمة. +300 دينار.",
+	"buy_feed": "شراء علف  10",
+	"craft_feed_herbs": "علف من عشبتين",
+	"journal": "المهام",
+	"title": "أرض الخير",
+	"continue": "متابعة",
+	"new_game": "لعبة جديدة",
+	"new_confirm": "تبدأ مزرعة جديدة؟ نحتفظ بحفظك القديم نسخةً احتياطية.",
+	"am": "ص",
+	"pm": "م",
 	"quests_body": "تابع. السطر تحت اليوم يريك الخطوة التالية.",
 	"dinars": "%d دينار",
 	"language": "العربية / English",
@@ -205,12 +227,22 @@ static func t(key: String) -> String:
 static func item(item_id: String) -> String:
 	return t(item_id)
 
+static var _arabic_face: FontVariation
+
 static func font() -> Font:
 	if language != "ar":
 		return null
+	if _arabic_face != null:
+		return _arabic_face
 	if not ResourceLoader.exists(FONT_PATH):
 		return null
-	return load(FONT_PATH) as Font
+	# The Naskh font has no colon or Latin letters; the phone's own font fills those in.
+	var latin: SystemFont = SystemFont.new()
+	latin.font_names = PackedStringArray(["Helvetica Neue", "Roboto", "Arial", "sans-serif"])
+	_arabic_face = FontVariation.new()
+	_arabic_face.base_font = load(FONT_PATH) as Font
+	_arabic_face.fallbacks = [latin]
+	return _arabic_face
 
 static func apply_control(control: Control) -> void:
 	var face: Font = font()

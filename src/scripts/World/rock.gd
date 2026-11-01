@@ -4,6 +4,7 @@
 extends Area2D
 
 func _ready() -> void:
+	_add_picture()
 	body_entered.connect(_on_body_entered)
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
 	if activities.rock_mined:
@@ -24,5 +25,12 @@ func _hide_rock() -> void:
 	if shape != null:
 		shape.set_deferred("disabled", true)
 
-func _draw() -> void:
-	draw_rect(Rect2(-8, -8, 16, 16), Color("7a4f32"))
+func _add_picture() -> void:
+	var ore: Texture2D = load("res://assets/props/ore_rock.png") as Texture2D
+	if ore == null:
+		return
+	var picture: Sprite2D = Sprite2D.new()
+	picture.name = "Picture"
+	picture.texture = ore
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(picture)
