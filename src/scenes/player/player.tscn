@@ -519,7 +519,7 @@ size = Vector2(12, 6)
 
 [node name="Player" type="CharacterBody2D" unique_id=1950149959]
 script = ExtResource("1_n5vqm")
-move_speed = 100.0
+move_speed = 125.0
 
 [node name="CharacterSprite" type="AnimatedSprite2D" parent="." unique_id=28678946]
 sprite_frames = SubResource("SpriteFrames_ubrcs")

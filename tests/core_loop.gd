@@ -415,7 +415,7 @@ func _check_walks(main: Node, clock: GameClock) -> void:
 	for i: int in 3:
 		await process_frame
 	player.busy = false
-	player.set_walk_target(Vector2(500, 40))
+	player.set_walk_target(Vector2(608, 40))
 	for i: int in 900:
 		await physics_frame
 		if _place_name(main) == "Road":
@@ -569,17 +569,19 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	for i: int in 3:
 		await process_frame
 	home = _place(main)
-	check(PlaceDecor.farm_edge(Vector2(0, 0)) < 1.0 and PlaceDecor.farm_edge(Vector2(590, 410)) > 1.0, "the clearing is inside the forest")
+	check(WorldShapes.edge("Home", Vector2(0, 0)) < 1.0 and WorldShapes.edge("Home", Vector2(690, 560)) > 1.0, "the clearing is inside the forest")
+	check(WorldShapes.water_depth("Harbor", Vector2(-300, 200)) > 0.0 and WorldShapes.water_depth("Harbor", Vector2(-300, -100)) < 0.0, "the sea lies south of the harbor")
+	check(WorldShapes.on_planks("Village", Vector2(540, -40)) and WorldShapes.water_depth("Village", Vector2(540, -40)) > 0.0, "a bridge crosses the village inlet")
 	var blocked_exit: bool = false
 	for mark: Node in home.get_children():
 		if str(mark.name).begins_with("Forest") and mark is Node2D and not mark is Marker2D:
-			blocked_exit = blocked_exit or PlaceDecor.in_exit((mark as Node2D).global_position)
+			blocked_exit = blocked_exit or WorldShapes.in_exit("Home", (mark as Node2D).global_position)
 	check(not blocked_exit, "no forest tree stands in a way out")
 	var player: Player = main.find_child("Player", true, false) as Player
-	player.global_position = Vector2(0, 260)
+	player.global_position = Vector2(0, 420)
 	player.busy = false
 	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
-	player.set_walk_target(Vector2(0, 330))
+	player.set_walk_target(Vector2(0, 490))
 	for i: int in 500:
 		await physics_frame
 		if _place_name(main) == "Forest":
@@ -597,6 +599,22 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 		if main.get_node("Systems/Inventory").wood > before:
 			break
 	check(main.get_node("Systems/Inventory").wood == before + 1, "a tree in the woods gives wood with a tap")
+	for row: Array in [["village/Village", "ExitHarbor", "Harbor"], ["village/Village", "ExitOrchard", "Orchard"], ["village/Village", "ExitWoods", "Forest"], ["village/Village", "ExitRoad", "Road"]]:
+		loader.go_to(load("res://src/scenes/world/%s.tscn" % row[0]) as PackedScene, "PlayerSpawn")
+		for i: int in 3:
+			await process_frame
+		check(_place(main).get_node_or_null("PaintedGround") != null, "%s has painted ground" % _place_name(main))
+		var way: Node2D = _place(main).get_node(str(row[1])) as Node2D
+		player.busy = false
+		player.global_position = way.global_position + (Vector2.ZERO - way.global_position).normalized() * 60.0
+		player.set_walk_target(way.global_position)
+		for i: int in 240:
+			await physics_frame
+			if _place_name(main) == row[2]:
+				break
+		check(_place_name(main) == row[2], "the village leads to %s" % row[2])
+		for i: int in 3:
+			await process_frame
 	var hud: Node = main.get_node("UI/HUD")
 	hud._toggle_menu()
 	hud._show_tab("map")

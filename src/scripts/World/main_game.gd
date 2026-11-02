@@ -3,7 +3,7 @@
 
 extends Node
 
-const HOME_AREA: Rect2 = Rect2(-510, -330, 1020, 660)
+const HOME_AREA: Rect2 = Rect2(-630, -510, 1260, 1020)
 
 @onready var player: Player = $World/Player
 

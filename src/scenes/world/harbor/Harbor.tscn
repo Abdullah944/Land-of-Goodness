@@ -1,239 +1,342 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/props/ground_water.png" id="1_ground_water"]
-[ext_resource type="Texture2D" path="res://assets/props/ground_sand.png" id="2_ground_sand"]
-[ext_resource type="Texture2D" path="res://assets/props/ground_planks.png" id="3_ground_plank"]
-[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="4_place_bounds"]
-[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="5_door"]
-[ext_resource type="Script" path="res://src/scripts/World/fish_spot.gd" id="6_fish_spot"]
-[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="7_spot_mark"]
-[ext_resource type="Texture2D" path="res://assets/building/harbor/Dhow.png" id="8_dhow"]
-[ext_resource type="Texture2D" path="res://assets/props/crate_fish.png" id="9_crate_fish"]
-[ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="10_barrel"]
-[ext_resource type="Texture2D" path="res://assets/props/crate.png" id="11_crate"]
-[ext_resource type="Texture2D" path="res://assets/props/sack.png" id="12_sack"]
-[ext_resource type="Texture2D" path="res://assets/props/basket.png" id="13_basket"]
-[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="14_lantern"]
-[ext_resource type="Texture2D" path="res://assets/building/house/Desert Adobe Rooftop House Sprite.png" id="15_desert_adobe"]
+[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="1_place_bounds"]
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="2_door"]
+[ext_resource type="Script" path="res://src/scripts/World/fish_spot.gd" id="3_fish_spot"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="4_spot_mark"]
+[ext_resource type="Texture2D" path="res://assets/building/harbor/Dhow.png" id="5_dhow"]
+[ext_resource type="Texture2D" path="res://assets/props/crate_fish.png" id="6_crate_fish"]
+[ext_resource type="Texture2D" path="res://assets/building/house/Desert Adobe Rooftop House Sprite.png" id="7_desert_adobe"]
+[ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="8_barrel"]
+[ext_resource type="Texture2D" path="res://assets/props/crate.png" id="9_crate"]
+[ext_resource type="Texture2D" path="res://assets/props/sack.png" id="10_sack"]
+[ext_resource type="Texture2D" path="res://assets/props/basket.png" id="11_basket"]
+[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="12_lantern"]
+[ext_resource type="Texture2D" path="res://assets/props/pot_big.png" id="13_pot_big"]
+[ext_resource type="Texture2D" path="res://assets/props/plant.png" id="14_plant"]
+[ext_resource type="Texture2D" path="res://assets/props/stall_produce.png" id="15_stall_produc"]
 [ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="16_date_palm"]
 [ext_resource type="Texture2D" path="res://assets/characters/village/Fisherman.png" id="17_fisherman"]
 [ext_resource type="Script" path="res://src/scripts/World/npc_route.gd" id="18_npc_route"]
 
-[sub_resource type="RectangleShape2D" id="Rect_32x80"]
-size = Vector2(32, 80)
+[sub_resource type="RectangleShape2D" id="Rect_90x24"]
+size = Vector2(90, 24)
 
-[sub_resource type="RectangleShape2D" id="Rect_80x40"]
-size = Vector2(80, 40)
+[sub_resource type="RectangleShape2D" id="Rect_80x30"]
+size = Vector2(80, 30)
 
 [node name="Harbor" type="Node2D"]
 y_sort_enabled = true
 
-[node name="Gulf" type="Polygon2D" parent="."]
-texture_filter = 1
-texture_repeat = 2
-texture = ExtResource("1_ground_water")
-polygon = PackedVector2Array(-864, -704, 864, -704, 864, -80, -864, -80)
-
-[node name="Sand" type="Polygon2D" parent="."]
-texture_filter = 1
-texture_repeat = 2
-texture = ExtResource("2_ground_sand")
-polygon = PackedVector2Array(-864, -80, 864, -80, 864, 592, -864, 592)
-
-[node name="Dock" type="Polygon2D" parent="."]
-texture_filter = 1
-texture_repeat = 2
-texture = ExtResource("3_ground_plank")
-polygon = PackedVector2Array(32, -288, 160, -288, 160, -64, 32, -64)
-
 [node name="Bounds" type="Node2D" parent="."]
-script = ExtResource("4_place_bounds")
-area = Rect2(-480, -300, 960, 600)
-blocks = Array[Rect2]([Rect2(-480, -300, 512, 204), Rect2(160, -300, 320, 204)])
+script = ExtResource("1_place_bounds")
+area = Rect2(-730, -380, 1460, 760)
+blocks = Array[Rect2]([Rect2(-730, 96, 740, 284), Rect2(110, 96, 620, 284), Rect2(10, 340, 100, 40)])
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
-position = Vector2(-380, 120)
+position = Vector2(176, -320)
 
 [node name="ExitVillage" type="Area2D" parent="."]
-position = Vector2(-456, 140)
-script = ExtResource("5_door")
+position = Vector2(180, -370)
+script = ExtResource("2_door")
 next_scene_path = "res://src/scenes/world/village/Village.tscn"
 spawn_name = "HarborReturn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitVillage"]
-shape = SubResource("Rect_32x80")
+shape = SubResource("Rect_90x24")
 
 [node name="FishingSpot" type="Area2D" parent="."]
-position = Vector2(96, -256)
-script = ExtResource("6_fish_spot")
+position = Vector2(60, 310)
+script = ExtResource("3_fish_spot")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FishingSpot"]
-shape = SubResource("Rect_80x40")
+shape = SubResource("Rect_80x30")
 
 [node name="Dhow" type="Node2D" parent="."]
-position = Vector2(300, -140)
-script = ExtResource("7_spot_mark")
-person = ExtResource("8_dhow")
+position = Vector2(320, 240)
+script = ExtResource("4_spot_mark")
+person = ExtResource("5_dhow")
 fit_pixels = 170
 stand_on_feet = true
 
 [node name="DhowSmall" type="Node2D" parent="."]
-position = Vector2(-260, -152)
-script = ExtResource("7_spot_mark")
-person = ExtResource("8_dhow")
+position = Vector2(-240, 220)
+script = ExtResource("4_spot_mark")
+person = ExtResource("5_dhow")
 fit_pixels = 100
 stand_on_feet = true
 
+[node name="ShoreCrate" type="Node2D" parent="."]
+position = Vector2(-160, 62)
+script = ExtResource("4_spot_mark")
+person = ExtResource("6_crate_fish")
+stand_on_feet = true
+group_name = "shore"
+
+[node name="Hut0" type="Node2D" parent="."]
+position = Vector2(-440, -120)
+script = ExtResource("4_spot_mark")
+person = ExtResource("7_desert_adobe")
+fit_pixels = 150
+stand_on_feet = true
+block_size = Vector2(126, 43)
+
+[node name="Hut1" type="Node2D" parent="."]
+position = Vector2(-140, -200)
+script = ExtResource("4_spot_mark")
+person = ExtResource("7_desert_adobe")
+fit_pixels = 140
+stand_on_feet = true
+block_size = Vector2(117, 40)
+
+[node name="Hut2" type="Node2D" parent="."]
+position = Vector2(470, -160)
+script = ExtResource("4_spot_mark")
+person = ExtResource("7_desert_adobe")
+fit_pixels = 150
+stand_on_feet = true
+block_size = Vector2(126, 43)
+
+[node name="Hut3" type="Node2D" parent="."]
+position = Vector2(-600, 40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("7_desert_adobe")
+fit_pixels = 130
+stand_on_feet = true
+block_size = Vector2(109, 37)
+
+[node name="Hut4" type="Node2D" parent="."]
+position = Vector2(610, 20)
+script = ExtResource("4_spot_mark")
+person = ExtResource("7_desert_adobe")
+fit_pixels = 130
+stand_on_feet = true
+block_size = Vector2(109, 37)
+
 [node name="Prop0" type="Node2D" parent="."]
-position = Vector2(120, -72)
-script = ExtResource("7_spot_mark")
-person = ExtResource("9_crate_fish")
+position = Vector2(130, 70)
+script = ExtResource("4_spot_mark")
+person = ExtResource("6_crate_fish")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(-40, 40)
-script = ExtResource("7_spot_mark")
-person = ExtResource("9_crate_fish")
+position = Vector2(-20, 70)
+script = ExtResource("4_spot_mark")
+person = ExtResource("8_barrel")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(40, -72)
-script = ExtResource("7_spot_mark")
-person = ExtResource("10_barrel")
+position = Vector2(170, 60)
+script = ExtResource("4_spot_mark")
+person = ExtResource("9_crate")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(-72, 60)
-script = ExtResource("7_spot_mark")
-person = ExtResource("10_barrel")
+position = Vector2(184, 70)
+script = ExtResource("4_spot_mark")
+person = ExtResource("9_crate")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(220, 40)
-script = ExtResource("7_spot_mark")
-person = ExtResource("11_crate")
+position = Vector2(148, 40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("10_sack")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(244, 60)
-script = ExtResource("7_spot_mark")
-person = ExtResource("11_crate")
+position = Vector2(-60, 40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("11_basket")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(192, 60)
-script = ExtResource("7_spot_mark")
-person = ExtResource("12_sack")
+position = Vector2(36, 110)
+script = ExtResource("4_spot_mark")
+person = ExtResource("8_barrel")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(-120, 48)
-script = ExtResource("7_spot_mark")
-person = ExtResource("13_basket")
+position = Vector2(6, 200)
+script = ExtResource("4_spot_mark")
+person = ExtResource("12_lantern")
 stand_on_feet = true
-block_size = Vector2(12, 6)
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(28, -120)
-script = ExtResource("7_spot_mark")
-person = ExtResource("14_lantern")
+position = Vector2(114, 200)
+script = ExtResource("4_spot_mark")
+person = ExtResource("12_lantern")
 stand_on_feet = true
 
 [node name="Prop9" type="Node2D" parent="."]
-position = Vector2(164, -120)
-script = ExtResource("7_spot_mark")
-person = ExtResource("14_lantern")
+position = Vector2(6, 330)
+script = ExtResource("4_spot_mark")
+person = ExtResource("12_lantern")
 stand_on_feet = true
 
-[node name="ShoreCrate" type="Node2D" parent="."]
-position = Vector2(220, -48)
-script = ExtResource("7_spot_mark")
-person = ExtResource("9_crate_fish")
+[node name="Prop10" type="Node2D" parent="."]
+position = Vector2(114, 330)
+script = ExtResource("4_spot_mark")
+person = ExtResource("12_lantern")
 stand_on_feet = true
-group_name = "shore"
 
-[node name="Hut" type="Node2D" parent="."]
-position = Vector2(-300, 40)
-script = ExtResource("7_spot_mark")
-person = ExtResource("15_desert_adobe")
-fit_pixels = 140
+[node name="Prop11" type="Node2D" parent="."]
+position = Vector2(-300, 30)
+script = ExtResource("4_spot_mark")
+person = ExtResource("6_crate_fish")
 stand_on_feet = true
-block_size = Vector2(116, 40)
+block_size = Vector2(12, 6)
 
-[node name="HutEast" type="Node2D" parent="."]
-position = Vector2(340, 180)
-script = ExtResource("7_spot_mark")
-person = ExtResource("15_desert_adobe")
-fit_pixels = 130
+[node name="Prop12" type="Node2D" parent="."]
+position = Vector2(-330, 40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("8_barrel")
 stand_on_feet = true
-block_size = Vector2(108, 38)
+block_size = Vector2(12, 6)
+
+[node name="Prop13" type="Node2D" parent="."]
+position = Vector2(300, 40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("11_basket")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop14" type="Node2D" parent="."]
+position = Vector2(-390, -60)
+script = ExtResource("4_spot_mark")
+person = ExtResource("13_pot_big")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop15" type="Node2D" parent="."]
+position = Vector2(420, -70)
+script = ExtResource("4_spot_mark")
+person = ExtResource("14_plant")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop16" type="Node2D" parent="."]
+position = Vector2(260, -40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("10_sack")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="Prop17" type="Node2D" parent="."]
+position = Vector2(-100, -110)
+script = ExtResource("4_spot_mark")
+person = ExtResource("9_crate")
+stand_on_feet = true
+block_size = Vector2(12, 6)
+
+[node name="StallFish" type="Node2D" parent="."]
+position = Vector2(30, -60)
+script = ExtResource("4_spot_mark")
+person = ExtResource("15_stall_produc")
+fit_pixels = 64
+stand_on_feet = true
+block_size = Vector2(56, 16)
 
 [node name="Palm0" type="Node2D" parent="."]
-position = Vector2(400, 240)
-script = ExtResource("7_spot_mark")
+position = Vector2(-680, -300)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm1" type="Node2D" parent="."]
-position = Vector2(-120, 260)
-script = ExtResource("7_spot_mark")
+position = Vector2(-560, -280)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm2" type="Node2D" parent="."]
-position = Vector2(360, 80)
-script = ExtResource("7_spot_mark")
+position = Vector2(-300, -320)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm3" type="Node2D" parent="."]
-position = Vector2(-420, 240)
-script = ExtResource("7_spot_mark")
+position = Vector2(20, -320)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm4" type="Node2D" parent="."]
-position = Vector2(120, 160)
-script = ExtResource("7_spot_mark")
+position = Vector2(360, -320)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm5" type="Node2D" parent="."]
-position = Vector2(-200, 180)
-script = ExtResource("7_spot_mark")
+position = Vector2(620, -290)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm6" type="Node2D" parent="."]
-position = Vector2(450, 40)
-script = ExtResource("7_spot_mark")
+position = Vector2(680, -140)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm7" type="Node2D" parent="."]
-position = Vector2(-450, -20)
-script = ExtResource("7_spot_mark")
+position = Vector2(-260, -40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("16_date_palm")
+stand_on_feet = true
+block_size = Vector2(10, 6)
+
+[node name="Palm8" type="Node2D" parent="."]
+position = Vector2(300, -20)
+script = ExtResource("4_spot_mark")
+person = ExtResource("16_date_palm")
+stand_on_feet = true
+block_size = Vector2(10, 6)
+
+[node name="Palm9" type="Node2D" parent="."]
+position = Vector2(-520, -90)
+script = ExtResource("4_spot_mark")
+person = ExtResource("16_date_palm")
+stand_on_feet = true
+block_size = Vector2(10, 6)
+
+[node name="Palm10" type="Node2D" parent="."]
+position = Vector2(560, -40)
+script = ExtResource("4_spot_mark")
+person = ExtResource("16_date_palm")
+stand_on_feet = true
+block_size = Vector2(10, 6)
+
+[node name="Palm11" type="Node2D" parent="."]
+position = Vector2(700, 60)
+script = ExtResource("4_spot_mark")
+person = ExtResource("16_date_palm")
+stand_on_feet = true
+block_size = Vector2(10, 6)
+
+[node name="Palm12" type="Node2D" parent="."]
+position = Vector2(-700, 60)
+script = ExtResource("4_spot_mark")
 person = ExtResource("16_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Fisherman" type="Node2D" parent="."]
-position = Vector2(96, -180)
-script = ExtResource("7_spot_mark")
+position = Vector2(60, 280)
+script = ExtResource("4_spot_mark")
 person = ExtResource("17_fisherman")
 fit_pixels = 36
 stand_on_feet = true
@@ -241,5 +344,5 @@ role = "fisherman"
 
 [node name="Route" type="Node" parent="Fisherman"]
 script = ExtResource("18_npc_route")
-spots = PackedVector2Array(96, -180, -20, 100, 96, -180, -300, 80)
+spots = PackedVector2Array(60, 280, 40, 40, 60, 280, -140, -130)
 hours = PackedFloat32Array(6, 11, 15, 19)

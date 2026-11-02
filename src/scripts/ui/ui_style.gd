@@ -38,6 +38,30 @@ static func button(target: Button) -> void:
 
 static var _glow: Texture2D
 
+## Gives a small sprite the same crisp look as everyone else: hard edges, few colors, and a dark outline.
+static func crisp_sprite(source: Image) -> Image:
+	var picture: Image = Image.create(source.get_width() + 2, source.get_height() + 2, false, Image.FORMAT_RGBA8)
+	var solid: Array[bool] = []
+	solid.resize(picture.get_width() * picture.get_height())
+	for y: int in source.get_height():
+		for x: int in source.get_width():
+			var color: Color = source.get_pixel(x, y)
+			if color.a < 0.5:
+				continue
+			var steps: float = 7.0
+			picture.set_pixel(x + 1, y + 1, Color(round(color.r * steps) / steps, round(color.g * steps) / steps, round(color.b * steps) / steps, 1.0))
+			solid[(y + 1) * picture.get_width() + x + 1] = true
+	var outline: Color = Color("2b1b16")
+	for y: int in picture.get_height():
+		for x: int in picture.get_width():
+			if solid[y * picture.get_width() + x]:
+				continue
+			for near: Vector2i in [Vector2i(x - 1, y), Vector2i(x + 1, y), Vector2i(x, y - 1), Vector2i(x, y + 1)]:
+				if near.x >= 0 and near.y >= 0 and near.x < picture.get_width() and near.y < picture.get_height() and solid[near.y * picture.get_width() + near.x]:
+					picture.set_pixel(x, y, outline)
+					break
+	return picture
+
 ## One soft round light, shared by every lamp.
 static func glow_texture() -> Texture2D:
 	if _glow != null:

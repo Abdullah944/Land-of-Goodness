@@ -14,13 +14,13 @@ const ICON_SIZE: float = 34.0
 
 ## key: [spot on the map, picture, name, pixels]
 const PLACES: Dictionary = {
-	"Home": [Vector2(74, 74), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_home"],
-	"Cave": [Vector2(26, 28), "res://assets/building/Cave/Sandstone Cave Entrance.png", "to_cave"],
-	"Road": [Vector2(174, 24), "res://assets/props/stall_produce.png", "to_road"],
-	"Forest": [Vector2(146, 118), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
-	"Village": [Vector2(262, 74), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_village"],
-	"Orchard": [Vector2(178, 74), "res://assets/nature/Date palm.png", "to_orchard"],
-	"Harbor": [Vector2(362, 66), "res://assets/building/harbor/Dhow.png", "to_harbor"],
+	"Home": [Vector2(74, 76), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_home"],
+	"Cave": [Vector2(28, 28), "res://assets/building/Cave/Sandstone Cave Entrance.png", "to_cave"],
+	"Road": [Vector2(176, 56), "res://assets/props/stall_produce.png", "to_road"],
+	"Forest": [Vector2(112, 124), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
+	"Village": [Vector2(276, 66), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_village"],
+	"Orchard": [Vector2(250, 18), "res://assets/nature/Date palm.png", "to_orchard"],
+	"Harbor": [Vector2(292, 118), "res://assets/building/harbor/Dhow.png", "to_harbor"],
 }
 const LINKS: Array = [
 	["Home", "Road"], ["Road", "Village"], ["Home", "Forest"], ["Forest", "Village"], ["Village", "Orchard"], ["Village", "Harbor"], ["Home", "Cave"],
@@ -47,14 +47,16 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), SEA)
 	_wave_lines()
 	var land: PackedVector2Array = PackedVector2Array([
-		Vector2(0, 0), Vector2(330, 0), Vector2(338, 34), Vector2(322, 60), Vector2(330, 92), Vector2(296, 112),
-		Vector2(250, 128), Vector2(190, 142), Vector2(0, 142),
+		Vector2(0, 0), Vector2(429, 0), Vector2(429, 84), Vector2(372, 96), Vector2(330, 106), Vector2(280, 104),
+		Vector2(226, 124), Vector2(190, 142), Vector2(0, 142),
 	])
 	draw_colored_polygon(land, SAND)
 	draw_polyline(_closed(land), UiStyle.BROWN, 1.0)
-	draw_colored_polygon(PackedVector2Array([Vector2(0, 40), Vector2(40, 34), Vector2(120, 42), Vector2(132, 96), Vector2(92, 118), Vector2(0, 112)]), GREEN)
-	draw_colored_polygon(PackedVector2Array([Vector2(96, 104), Vector2(180, 98), Vector2(202, 122), Vector2(190, 142), Vector2(84, 142)]), FOREST)
-	draw_colored_polygon(PackedVector2Array([Vector2(150, 54), Vector2(204, 52), Vector2(208, 92), Vector2(154, 94)]), GREEN)
+	draw_colored_polygon(PackedVector2Array([Vector2(0, 40), Vector2(40, 34), Vector2(124, 44), Vector2(136, 96), Vector2(92, 106), Vector2(0, 104)]), GREEN)
+	draw_colored_polygon(PackedVector2Array([Vector2(60, 104), Vector2(160, 100), Vector2(176, 128), Vector2(164, 142), Vector2(50, 142)]), FOREST)
+	draw_colored_polygon(PackedVector2Array([Vector2(210, 34), Vector2(330, 32), Vector2(346, 88), Vector2(216, 92)]), GREEN)
+	draw_colored_polygon(PackedVector2Array([Vector2(214, 0), Vector2(290, 0), Vector2(294, 32), Vector2(216, 34)]), GREEN)
+	draw_polyline(PackedVector2Array([Vector2(340, 0), Vector2(322, 40), Vector2(332, 72), Vector2(320, 108)]), SEA, 5.0)
 	for peak: Vector2 in [Vector2(70, 18), Vector2(100, 24), Vector2(128, 14)]:
 		draw_colored_polygon(PackedVector2Array([peak + Vector2(-16, 14), peak + Vector2(0, -12), peak + Vector2(16, 14)]), Color("a98a66"))
 		draw_colored_polygon(PackedVector2Array([peak + Vector2(-5, -4), peak + Vector2(0, -12), peak + Vector2(5, -4)]), UiStyle.CREAM)

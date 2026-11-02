@@ -1,20 +1,18 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/props/ground_sand.png" id="1_ground_sand"]
-[ext_resource type="Texture2D" path="res://assets/props/ground_cobble.png" id="2_ground_cobbl"]
-[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="3_place_bounds"]
-[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="4_door"]
-[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="5_spot_mark"]
-[ext_resource type="Texture2D" path="res://assets/props/stall_produce.png" id="6_stall_produc"]
-[ext_resource type="Texture2D" path="res://assets/props/stall_pots.png" id="7_stall_pots"]
-[ext_resource type="Texture2D" path="res://assets/props/table.png" id="8_table"]
-[ext_resource type="Texture2D" path="res://assets/props/crate.png" id="9_crate"]
-[ext_resource type="Texture2D" path="res://assets/props/sack.png" id="10_sack"]
-[ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="11_barrel"]
-[ext_resource type="Texture2D" path="res://assets/props/basket.png" id="12_basket"]
-[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="13_lantern"]
-[ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="14_date_palm"]
-[ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="15_wild_herb"]
+[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="1_place_bounds"]
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="2_door"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="3_spot_mark"]
+[ext_resource type="Texture2D" path="res://assets/props/stall_produce.png" id="4_stall_produc"]
+[ext_resource type="Texture2D" path="res://assets/props/stall_pots.png" id="5_stall_pots"]
+[ext_resource type="Texture2D" path="res://assets/props/table.png" id="6_table"]
+[ext_resource type="Texture2D" path="res://assets/props/crate.png" id="7_crate"]
+[ext_resource type="Texture2D" path="res://assets/props/sack.png" id="8_sack"]
+[ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="9_barrel"]
+[ext_resource type="Texture2D" path="res://assets/props/basket.png" id="10_basket"]
+[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="11_lantern"]
+[ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="12_date_palm"]
+[ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="13_wild_herb"]
 
 [sub_resource type="RectangleShape2D" id="Rect_16x56"]
 size = Vector2(16, 56)
@@ -22,20 +20,8 @@ size = Vector2(16, 56)
 [node name="Road" type="Node2D"]
 y_sort_enabled = true
 
-[node name="Floor" type="Polygon2D" parent="."]
-texture_filter = 1
-texture_repeat = 2
-texture = ExtResource("1_ground_sand")
-polygon = PackedVector2Array(-420, -260, 420, -260, 420, 260, -420, 260)
-
-[node name="Track" type="Polygon2D" parent="."]
-texture_filter = 1
-texture_repeat = 2
-texture = ExtResource("2_ground_cobbl")
-polygon = PackedVector2Array(-420, -16, 420, -16, 420, 28, -420, 28)
-
 [node name="Bounds" type="Node2D" parent="."]
-script = ExtResource("3_place_bounds")
+script = ExtResource("1_place_bounds")
 area = Rect2(-320, -190, 640, 380)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
@@ -46,7 +32,7 @@ position = Vector2(280, 6)
 
 [node name="ExitFarm" type="Area2D" parent="."]
 position = Vector2(-312, 6)
-script = ExtResource("4_door")
+script = ExtResource("2_door")
 next_scene_path = "res://src/scenes/world/home/Home.tscn"
 spawn_name = "VillageReturn"
 
@@ -55,7 +41,7 @@ shape = SubResource("Rect_16x56")
 
 [node name="ExitVillage" type="Area2D" parent="."]
 position = Vector2(312, 6)
-script = ExtResource("4_door")
+script = ExtResource("2_door")
 next_scene_path = "res://src/scenes/world/village/Village.tscn"
 spawn_name = "RoadReturn"
 
@@ -64,159 +50,159 @@ shape = SubResource("Rect_16x56")
 
 [node name="Rest" type="Node2D" parent="."]
 position = Vector2(30, -32)
-script = ExtResource("5_spot_mark")
-person = ExtResource("6_stall_produc")
+script = ExtResource("3_spot_mark")
+person = ExtResource("4_stall_produc")
 stand_on_feet = true
 block_size = Vector2(40, 12)
 
 [node name="RestPots" type="Node2D" parent="."]
 position = Vector2(80, -32)
-script = ExtResource("5_spot_mark")
-person = ExtResource("7_stall_pots")
+script = ExtResource("3_spot_mark")
+person = ExtResource("5_stall_pots")
 stand_on_feet = true
 block_size = Vector2(40, 12)
 
 [node name="Shade" type="Node2D" parent="."]
 position = Vector2(-80, 70)
-script = ExtResource("5_spot_mark")
-person = ExtResource("8_table")
+script = ExtResource("3_spot_mark")
+person = ExtResource("6_table")
 stand_on_feet = true
 block_size = Vector2(24, 8)
 
 [node name="Prop0" type="Node2D" parent="."]
 position = Vector2(120, -34)
-script = ExtResource("5_spot_mark")
-person = ExtResource("9_crate")
+script = ExtResource("3_spot_mark")
+person = ExtResource("7_crate")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop1" type="Node2D" parent="."]
 position = Vector2(140, -30)
-script = ExtResource("5_spot_mark")
-person = ExtResource("10_sack")
+script = ExtResource("3_spot_mark")
+person = ExtResource("8_sack")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop2" type="Node2D" parent="."]
 position = Vector2(-20, -34)
-script = ExtResource("5_spot_mark")
-person = ExtResource("11_barrel")
+script = ExtResource("3_spot_mark")
+person = ExtResource("9_barrel")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop3" type="Node2D" parent="."]
 position = Vector2(10, 58)
-script = ExtResource("5_spot_mark")
-person = ExtResource("12_basket")
+script = ExtResource("3_spot_mark")
+person = ExtResource("10_basket")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop4" type="Node2D" parent="."]
 position = Vector2(-110, 62)
-script = ExtResource("5_spot_mark")
-person = ExtResource("9_crate")
+script = ExtResource("3_spot_mark")
+person = ExtResource("7_crate")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop5" type="Node2D" parent="."]
 position = Vector2(-58, 62)
-script = ExtResource("5_spot_mark")
-person = ExtResource("10_sack")
+script = ExtResource("3_spot_mark")
+person = ExtResource("8_sack")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop6" type="Node2D" parent="."]
 position = Vector2(-6, -30)
-script = ExtResource("5_spot_mark")
-person = ExtResource("13_lantern")
+script = ExtResource("3_spot_mark")
+person = ExtResource("11_lantern")
 stand_on_feet = true
 
 [node name="Prop7" type="Node2D" parent="."]
 position = Vector2(106, -30)
-script = ExtResource("5_spot_mark")
-person = ExtResource("13_lantern")
+script = ExtResource("3_spot_mark")
+person = ExtResource("11_lantern")
 stand_on_feet = true
 
 [node name="Palm0" type="Node2D" parent="."]
 position = Vector2(-260, -120)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm1" type="Node2D" parent="."]
 position = Vector2(-170, -150)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm2" type="Node2D" parent="."]
 position = Vector2(-90, -130)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm3" type="Node2D" parent="."]
 position = Vector2(170, -140)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm4" type="Node2D" parent="."]
 position = Vector2(250, -110)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm5" type="Node2D" parent="."]
 position = Vector2(-250, 130)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm6" type="Node2D" parent="."]
 position = Vector2(-150, 150)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm7" type="Node2D" parent="."]
 position = Vector2(60, 140)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm8" type="Node2D" parent="."]
 position = Vector2(170, 120)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm9" type="Node2D" parent="."]
 position = Vector2(270, 150)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="RoadsideDate" type="Node2D" parent="."]
 position = Vector2(200, -56)
-script = ExtResource("5_spot_mark")
-person = ExtResource("14_date_palm")
+script = ExtResource("3_spot_mark")
+person = ExtResource("12_date_palm")
 stand_on_feet = true
 group_name = "date"
 
 [node name="RoadsideHerb" type="Node2D" parent="."]
 position = Vector2(-210, 60)
-script = ExtResource("5_spot_mark")
-person = ExtResource("15_wild_herb")
+script = ExtResource("3_spot_mark")
+person = ExtResource("13_wild_herb")
 stand_on_feet = true
 group_name = "forage"

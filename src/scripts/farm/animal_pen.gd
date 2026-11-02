@@ -15,6 +15,27 @@ const SHEETS: Dictionary = {
 
 var _walkers: Array[Dictionary] = []
 
+static var _sheets: Dictionary = {}
+
+## Each animal sheet is made smaller and crisp once, then shared.
+func _sheet(kind: String) -> Texture2D:
+	if _sheets.has(kind):
+		return _sheets[kind]
+	var image: Image = (load(SHEETS[kind]) as Texture2D).get_image()
+	var cell: int = int(image.get_width() * 0.5)
+	var small: int = maxi(1, int(cell * 0.8))
+	var sheet: Image = null
+	for frame: int in 2:
+		var part: Image = image.get_region(Rect2i(frame * cell, 0, cell, image.get_height()))
+		part.resize(small, small, Image.INTERPOLATE_LANCZOS)
+		var crisp: Image = UiStyle.crisp_sprite(part)
+		if sheet == null:
+			sheet = Image.create(crisp.get_width() * 2, crisp.get_height(), false, Image.FORMAT_RGBA8)
+		sheet.blit_rect(crisp, Rect2i(Vector2i.ZERO, crisp.get_size()), Vector2i(frame * crisp.get_width(), 0))
+	var texture: Texture2D = ImageTexture.create_from_image(sheet)
+	_sheets[kind] = texture
+	return texture
+
 func sync(animals: Array) -> void:
 	for walker: Dictionary in _walkers:
 		(walker["sprite"] as Node).queue_free()
@@ -28,10 +49,9 @@ func sync(animals: Array) -> void:
 			continue
 		var area: Rect2 = coop_area if kind == "chicken" else barn_area
 		var sprite: Sprite2D = Sprite2D.new()
-		sprite.texture = load(SHEETS[kind]) as Texture2D
+		sprite.texture = _sheet(kind)
 		sprite.hframes = 2
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sprite.scale = Vector2(0.8, 0.8)
 		sprite.position = area.position + Vector2(fmod(17.0 * i, area.size.x), fmod(7.0 * i, area.size.y))
 		sprite.modulate = Color.WHITE if bool(row.get("fed", false)) else Color(0.92, 0.88, 0.85)
 		add_child(sprite)

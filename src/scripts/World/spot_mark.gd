@@ -43,6 +43,8 @@ func _ready() -> void:
 		_picture = _fit(person, fit_pixels)
 	else:
 		_picture = person
+	if role == "fisherman" and _picture != null:
+		_picture = ImageTexture.create_from_image(UiStyle.crisp_sprite(_picture.get_image()))
 	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
 	var is_person: bool = name == "Neighbor" or role != ""
 	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm")
@@ -86,7 +88,7 @@ func _load_idle(path: String) -> void:
 	for part: Image in cells:
 		var cut: Image = part.get_region(crop)
 		cut.resize(maxi(1, int(round(crop.size.x * factor))), maxi(1, int(round(crop.size.y * factor))), Image.INTERPOLATE_LANCZOS)
-		_frames.append(ImageTexture.create_from_image(cut))
+		_frames.append(ImageTexture.create_from_image(UiStyle.crisp_sprite(cut)))
 	_picture = _frames[0]
 
 ## Lanterns and torches glow after dark. The clock turns them on.
