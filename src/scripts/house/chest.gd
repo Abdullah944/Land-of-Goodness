@@ -46,7 +46,7 @@ func _draw() -> void:
 	var player: Player = _player()
 	if player == null:
 		return
-	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -28)))
 
 func _add_body() -> void:
 	var body: StaticBody2D = StaticBody2D.new()

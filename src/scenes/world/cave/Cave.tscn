@@ -15,11 +15,11 @@
 [ext_resource type="Texture2D" path="res://assets/props/crate.png" id="13_crate"]
 [ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="14_lantern"]
 
-[sub_resource type="RectangleShape2D" id="Rect_32x16"]
-size = Vector2(32, 16)
+[sub_resource type="RectangleShape2D" id="Rect_48x24"]
+size = Vector2(48, 24)
 
-[sub_resource type="RectangleShape2D" id="Rect_16x16"]
-size = Vector2(16, 16)
+[sub_resource type="RectangleShape2D" id="Rect_24x24"]
+size = Vector2(24, 24)
 
 [node name="Cave" type="Node2D"]
 y_sort_enabled = true
@@ -28,153 +28,163 @@ y_sort_enabled = true
 texture_filter = 1
 texture_repeat = 2
 texture = ExtResource("1_ground_cave")
-polygon = PackedVector2Array(-352, -272, 352, -272, 352, 272, -352, 272)
+polygon = PackedVector2Array(-528, -408, 528, -408, 528, 408, -528, 408)
 
 [node name="Bounds" type="Node2D" parent="."]
 script = ExtResource("2_place_bounds")
-area = Rect2(-160, -80, 320, 220)
+area = Rect2(-240, -120, 480, 330)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
-position = Vector2(0, 80)
+position = Vector2(0, 120)
 
 [node name="Exit" type="Area2D" parent="."]
-position = Vector2(0, 128)
+position = Vector2(0, 192)
 script = ExtResource("3_door")
 next_scene_path = "uid://nsyej5gfqkfs"
 spawn_name = "CaveDoor"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
-shape = SubResource("Rect_32x16")
+shape = SubResource("Rect_48x24")
 
 [node name="Rock" type="Area2D" parent="."]
-position = Vector2(48, 40)
+position = Vector2(72, 60)
 script = ExtResource("4_rock")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rock"]
-shape = SubResource("Rect_16x16")
+shape = SubResource("Rect_24x24")
 
 [node name="Copper" type="Area2D" parent="."]
-position = Vector2(-48, 24)
+position = Vector2(-72, 36)
 script = ExtResource("5_copper_vein")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Copper"]
-shape = SubResource("Rect_16x16")
+shape = SubResource("Rect_24x24")
 
 [node name="Wall0" type="Node2D" parent="."]
-position = Vector2(-144, -64)
+position = Vector2(-216, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall1" type="Node2D" parent="."]
-position = Vector2(-112, -64)
+position = Vector2(-168, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall2" type="Node2D" parent="."]
-position = Vector2(-80, -64)
+position = Vector2(-120, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall3" type="Node2D" parent="."]
-position = Vector2(-48, -64)
+position = Vector2(-72, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall4" type="Node2D" parent="."]
-position = Vector2(-16, -64)
+position = Vector2(-24, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall5" type="Node2D" parent="."]
-position = Vector2(16, -64)
+position = Vector2(24, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall6" type="Node2D" parent="."]
-position = Vector2(48, -64)
+position = Vector2(72, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall7" type="Node2D" parent="."]
-position = Vector2(80, -64)
+position = Vector2(120, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall8" type="Node2D" parent="."]
-position = Vector2(112, -64)
+position = Vector2(168, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Wall9" type="Node2D" parent="."]
-position = Vector2(144, -64)
+position = Vector2(216, -96)
 script = ExtResource("6_spot_mark")
 person = ExtResource("7_cave_wall")
+fit_pixels = 52
 stand_on_feet = true
 
 [node name="Prop0" type="Node2D" parent="."]
-position = Vector2(-100, -40)
+position = Vector2(-150, -60)
 script = ExtResource("6_spot_mark")
 person = ExtResource("8_torch")
 stand_on_feet = true
 
 [node name="Prop1" type="Node2D" parent="."]
-position = Vector2(100, -40)
+position = Vector2(150, -60)
 script = ExtResource("6_spot_mark")
 person = ExtResource("8_torch")
 stand_on_feet = true
 
 [node name="Prop2" type="Node2D" parent="."]
-position = Vector2(110, 60)
+position = Vector2(165, 90)
 script = ExtResource("6_spot_mark")
 person = ExtResource("9_mine_cart")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop3" type="Node2D" parent="."]
-position = Vector2(-120, 40)
+position = Vector2(-180, 60)
 script = ExtResource("6_spot_mark")
 person = ExtResource("10_pot_big")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop4" type="Node2D" parent="."]
-position = Vector2(130, -10)
+position = Vector2(195, -15)
 script = ExtResource("6_spot_mark")
 person = ExtResource("11_sack")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop5" type="Node2D" parent="."]
-position = Vector2(-130, 100)
+position = Vector2(-195, 150)
 script = ExtResource("6_spot_mark")
 person = ExtResource("12_barrel")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop6" type="Node2D" parent="."]
-position = Vector2(130, 110)
+position = Vector2(195, 165)
 script = ExtResource("6_spot_mark")
 person = ExtResource("13_crate")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Prop7" type="Node2D" parent="."]
-position = Vector2(-20, 112)
+position = Vector2(-30, 168)
 script = ExtResource("6_spot_mark")
 person = ExtResource("14_lantern")
 stand_on_feet = true
 
 [node name="Prop8" type="Node2D" parent="."]
-position = Vector2(20, 112)
+position = Vector2(30, 168)
 script = ExtResource("6_spot_mark")
 person = ExtResource("14_lantern")
 stand_on_feet = true

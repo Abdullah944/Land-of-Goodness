@@ -413,7 +413,7 @@ func _check_walks(main: Node, clock: GameClock) -> void:
 	for i: int in 3:
 		await process_frame
 	player.busy = false
-	player.set_walk_target(Vector2(168, 40))
+	player.set_walk_target(Vector2(500, 40))
 	for i: int in 900:
 		await physics_frame
 		if _place_name(main) == "Village":
@@ -458,12 +458,15 @@ func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activit
 	await _check_debris(main, loader, activities)
 	var pond: Node = _place(main).get_node("FishingSpot")
 	check(pond.get_node_or_null("Block") != null, "the pond cannot be walked through")
+	check((main.find_child("Player", true, false).get_node("Camera2D") as Camera2D).zoom.x <= 1.0, "the camera shows a wide view of the world")
+	var boy: AnimatedSprite2D = main.find_child("Player", true, false).get_node("CharacterSprite") as AnimatedSprite2D
+	check(boy.scale.x < 1.0 and boy.sprite_frames.has_animation("axe_Down") and boy.sprite_frames.has_animation("pick_Down"), "the boy is small and has his tool swings")
 	var player: Player = main.find_child("Player", true, false) as Player
 	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
 	player.busy = false
 	var fished: bool = bool(activities.fish_spots.has("Home/FishingSpot"))
-	player.global_position = Vector2(70, 60)
-	player.set_walk_target(Vector2(128, 80))
+	player.global_position = Vector2(200, -160)
+	player.set_walk_target(Vector2(330, -170))
 	for i: int in 400:
 		await physics_frame
 		if activities.fish_spots.has("Home/FishingSpot"):

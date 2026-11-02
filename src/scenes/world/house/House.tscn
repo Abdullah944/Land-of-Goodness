@@ -5,16 +5,16 @@
 [ext_resource type="PackedScene" uid="uid://doxblrlmf5jlc" path="res://src/scenes/world/house/House_inside.tscn" id="3_f2osk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ubrcs"]
-size = Vector2(70, 50)
+size = Vector2(130, 80)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ddwlq"]
-size = Vector2(72, 14)
+size = Vector2(130, 14)
 
 [node name="house" type="Node2D" unique_id=1548424025]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1958799620]
-position = Vector2(96, -92)
-scale = Vector2(0.075, 0.075)
+position = Vector2(96, -133)
+scale = Vector2(0.14, 0.14)
 texture = ExtResource("1_j04ud")
 
 [node name="Marker2D" type="Marker2D" parent="." unique_id=991573942]
@@ -22,7 +22,7 @@ texture = ExtResource("1_j04ud")
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1670419591]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1864067708]
-position = Vector2(96, -96)
+position = Vector2(96, -112)
 shape = SubResource("RectangleShape2D_ubrcs")
 
 [node name="Entrance" type="Area2D" parent="." unique_id=1018236657]
@@ -30,5 +30,5 @@ script = ExtResource("2_0snax")
 next_scene = ExtResource("3_f2osk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Entrance" unique_id=1150618844]
-position = Vector2(96, -64)
+position = Vector2(96, -66)
 shape = SubResource("RectangleShape2D_ddwlq")

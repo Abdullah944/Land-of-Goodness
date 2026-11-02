@@ -20,6 +20,10 @@ var tool_locked: bool = false
 var holding_touch: bool = false
 var tapped_point: Vector2 = Vector2.ZERO
 var walking_indoors: bool = false
+## How far a big target such as the pond can be used from. Zero means the normal reach.
+var reach_pixels: float = 0.0
+## The zoom the player chose. A small place may show closer, but this comes back outside it.
+var wanted_zoom: float = 1.0
 
 func get_move_direction() -> Vector2:
 	return Vector2(
@@ -82,6 +86,7 @@ func set_tapped_cell(cell: Vector2i) -> void:
 	wants_water = false
 	if dirt == null:
 		return
+	reach_pixels = activities.reach_for(dirt, cell)
 	var needed: String = activities.tool_for_cell(dirt, cell)
 	if needed != "":
 		tool = needed
@@ -167,23 +172,21 @@ func reached_walk_spot(dirt: TileMapLayer) -> bool:
 
 func change_zoom(multiplier: float) -> void:
 	var cam: Camera2D = get_node("Camera2D") as Camera2D
-	var next: float = clampf(cam.zoom.x * multiplier, _lowest_zoom(), 3.0)
-	cam.zoom = Vector2(next, next)
+	wanted_zoom = clampf(cam.zoom.x * multiplier, 1.0, 3.0)
 	fit_camera()
 
 ## Keeps the view on the map, so the empty space past its edge never shows.
 func fit_camera() -> void:
 	var cam: Camera2D = get_node("Camera2D") as Camera2D
 	var area: Rect2 = _camera_area()
+	var shown: float = maxf(wanted_zoom, _lowest_zoom())
+	cam.zoom = Vector2(shown, shown)
 	if area.size == Vector2.ZERO:
 		cam.limit_left = -10000000
 		cam.limit_top = -10000000
 		cam.limit_right = 10000000
 		cam.limit_bottom = 10000000
 		return
-	var low: float = _lowest_zoom()
-	if cam.zoom.x < low:
-		cam.zoom = Vector2(low, low)
 	cam.limit_left = int(area.position.x)
 	cam.limit_top = int(area.position.y)
 	cam.limit_right = int(area.end.x)
@@ -200,12 +203,6 @@ func _camera_area() -> Rect2:
 	var place: Node = _current_place()
 	if place == null or place.name == "HouseInside":
 		return Rect2()
-	var ground: Node = place.find_child("Ground", true, false)
-	if ground is TileMapLayer:
-		var layer: TileMapLayer = ground
-		var used: Rect2i = layer.get_used_rect()
-		var top_left: Vector2 = layer.to_global(layer.map_to_local(used.position)) - Vector2(layer.tile_set.tile_size) * 0.5
-		return Rect2(top_left, Vector2(used.size * layer.tile_set.tile_size))
 	var bounds: Node = place.get_node_or_null("Bounds")
 	if bounds != null:
 		return (bounds.get("area") as Rect2).grow(16.0)
@@ -213,10 +210,13 @@ func _camera_area() -> Rect2:
 
 func _ready() -> void:
 	var cam: Camera2D = get_node("Camera2D") as Camera2D
-	cam.zoom = Vector2(1.35, 1.35)
+	cam.zoom = Vector2(wanted_zoom, wanted_zoom)
 	get_viewport().size_changed.connect(fit_camera)
-	add_child(UiStyle.shadow_node(Vector2(0, 21), 24.0))
+	add_child(UiStyle.shadow_node(Vector2(0, 21), 20.0))
 	var sprite: AnimatedSprite2D = get_node("CharacterSprite") as AnimatedSprite2D
+	# Three quarters of the drawn size, moved down so the feet stay on the same spot.
+	sprite.scale = Vector2(0.75, 0.75)
+	sprite.position.y += 5.0
 	sprite.sprite_frames = sprite.sprite_frames.duplicate(true)
 	_add_swing(sprite, "res://assets/characters/boy/animation/axe/Kuwaiti farm boy axe-swing sprite sheet.png", "axe_")
 	_add_swing(sprite, "res://assets/characters/boy/animation/pickaxe/Kuwaiti farmer pickaxe strike sprite sheet.png", "pick_")
@@ -336,6 +336,8 @@ func get_stand_cell(dirt: TileMapLayer) -> Vector2i:
 	return dirt.local_to_map(dirt.to_local(feet))
 
 func is_within_reach(dirt: TileMapLayer) -> bool:
+	if reach_pixels > 0.0 and distance_to_cell(dirt, tapped_cell) <= reach_pixels:
+		return true
 	var gap: Vector2i = (tapped_cell - get_stand_cell(dirt)).abs()
 	if maxi(gap.x, gap.y) <= REACH:
 		return true

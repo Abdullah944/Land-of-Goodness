@@ -23,58 +23,77 @@ const ROCKS: int = 11
 const LAYOUTS: Dictionary = {
 	"Home": {
 		"seed": 41,
-		"count": 52,
-		"area": Rect2(-240, -128, 496, 272),
-		"picks": [TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, WEEDS, STONES, TWIGS, ROCKS, SHRUB],
+		"count": 330,
+		"area": Rect2(-510, -330, 1020, 660),
+		"picks": [TUFT, TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, WEEDS, STONES, TWIGS, ROCKS, SHRUB],
 		"avoid": [
-			Rect2(-182, -72, 100, 92), Rect2(-184, -140, 96, 80), Rect2(-84, 60, 72, 60), Rect2(90, 42, 76, 76),
-			Rect2(148, 56, 96, 96), Rect2(36, 80, 72, 70), Rect2(148, 16, 44, 44), Rect2(50, -10, 46, 56),
-			Rect2(-34, 24, 40, 30), Rect2(20, -60, 40, 40), Rect2(100, -90, 40, 40), Rect2(-136, 30, 34, 40),
+			Rect2(-186, -74, 104, 96), Rect2(-220, -220, 170, 150), Rect2(-430, -300, 100, 90), Rect2(260, -230, 140, 110),
+			Rect2(240, 110, 160, 160), Rect2(68, 130, 104, 110), Rect2(470, 20, 50, 50), Rect2(50, -10, 46, 56),
+			Rect2(-40, 20, 50, 40), Rect2(50, -190, 80, 90), Rect2(170, -140, 80, 90),
 		],
 		"fixed": [
 			[FENCE, Vector2(-168, 34)], [FENCE, Vector2(-144, 34)], [FENCE, Vector2(-120, 34)], [FENCE, Vector2(-96, 34)],
-			[STUMP, Vector2(-70, -110)], [HAY, Vector2(118, 138)], [POT, Vector2(-84, -70)], [SHRUB, Vector2(226, -100)],
+			[FENCE, Vector2(32, 250)], [FENCE, Vector2(56, 250)], [STUMP, Vector2(-30, -180)], [HAY, Vector2(236, 262)],
+			[HAY, Vector2(30, 228)], [POT, Vector2(-54, -90)], [STUMP, Vector2(-300, 120)], [STUMP, Vector2(420, -60)],
 		],
 	},
 	"Orchard": {
 		"seed": 17,
-		"count": 44,
-		"area": Rect2(-236, -146, 472, 292),
-		"picks": [TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, STONES, SHRUB],
-		"avoid": [Rect2(-204, -124, 110, 60), Rect2(-240, -14, 480, 44), Rect2(114, 20, 44, 130)],
-		"fixed": [[STUMP, Vector2(150, -40)], [HAY, Vector2(70, -14)]],
+		"count": 220,
+		"area": Rect2(-470, -292, 940, 584),
+		"picks": [TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, STONES, SHRUB],
+		"avoid": [Rect2(-410, -250, 220, 120), Rect2(-480, -28, 960, 88), Rect2(228, 40, 88, 260)],
+		"fixed": [[STUMP, Vector2(300, -80)], [HAY, Vector2(140, -40)]],
 	},
 	"Village": {
 		"seed": 23,
-		"count": 16,
-		"area": Rect2(-236, -146, 472, 292),
-		"picks": [STONES, ROCKS, TWIGS, TUFT, WEEDS],
+		"count": 240,
+		"area": Rect2(-470, -292, 940, 584),
+		"picks": [TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, SHRUB, STONES, ROCKS],
 		"avoid": [
-			Rect2(-240, -14, 480, 50), Rect2(-26, 30, 52, 120), Rect2(-130, -130, 370, 124), Rect2(60, 44, 180, 60),
-			Rect2(-240, 84, 170, 66), Rect2(-70, 50, 50, 50), Rect2(-160, 30, 110, 54),
+			Rect2(-480, -24, 960, 92), Rect2(-48, 60, 96, 240), Rect2(-190, -300, 680, 290), Rect2(120, 88, 360, 120),
 		],
+		"fixed": [],
+	},
+	"Cave": {
+		"seed": 7,
+		"count": 34,
+		"area": Rect2(-236, -110, 472, 320),
+		"picks": [STONES, STONES, ROCKS, ROCKS, TWIGS],
+		"avoid": [Rect2(-60, 150, 120, 60), Rect2(50, 30, 60, 60), Rect2(-100, 10, 60, 60)],
 		"fixed": [],
 	},
 	"Harbor": {
 		"seed": 31,
-		"count": 12,
-		"area": Rect2(-236, -30, 472, 176),
+		"count": 60,
+		"area": Rect2(-470, -60, 940, 352),
 		"picks": [STONES, ROCKS, TWIGS, TUFT],
-		"avoid": [Rect2(-200, -30, 90, 70), Rect2(-70, -30, 200, 80)],
+		"avoid": [Rect2(-400, -60, 180, 140), Rect2(-140, -60, 400, 160), Rect2(260, 60, 160, 130)],
 		"fixed": [],
 	},
 }
 
 ## Things to clear from the farm once. [picture, group, spot]
 const DEBRIS: Array = [
-	[TWIGS, "debris_wood", Vector2(-30, -30)], [TWIGS, "debris_wood", Vector2(10, -96)], [TWIGS, "debris_wood", Vector2(72, -104)],
-	[TWIGS, "debris_wood", Vector2(-212, -6)], [TWIGS, "debris_wood", Vector2(-222, 72)], [TWIGS, "debris_wood", Vector2(172, -60)],
-	[TWIGS, "debris_wood", Vector2(214, -18)],
-	[STONES, "debris_stone", Vector2(-62, -102)], [STONES, "debris_stone", Vector2(-204, -112)], [STONES, "debris_stone", Vector2(34, -18)],
-	[STONES, "debris_stone", Vector2(-104, 92)], [STONES, "debris_stone", Vector2(-190, 112)], [STONES, "debris_stone", Vector2(232, 22)],
-	[WEEDS, "debris_weed", Vector2(-40, -72)], [WEEDS, "debris_weed", Vector2(-212, 32)], [WEEDS, "debris_weed", Vector2(142, -102)],
-	[WEEDS, "debris_weed", Vector2(0, 104)], [WEEDS, "debris_weed", Vector2(-150, 122)],
+	[TWIGS, "debris_wood", Vector2(-51, -51)], [TWIGS, "debris_wood", Vector2(17, -163)], [TWIGS, "debris_wood", Vector2(122, -176)],
+	[TWIGS, "debris_wood", Vector2(-360, -10)], [TWIGS, "debris_wood", Vector2(-377, 122)], [TWIGS, "debris_wood", Vector2(292, -102)],
+	[TWIGS, "debris_wood", Vector2(363, -30)],
+	[STONES, "debris_stone", Vector2(-105, -173)], [STONES, "debris_stone", Vector2(-346, -190)], [STONES, "debris_stone", Vector2(57, -30)],
+	[STONES, "debris_stone", Vector2(-176, 156)], [STONES, "debris_stone", Vector2(-323, 190)], [STONES, "debris_stone", Vector2(394, 37)],
+	[WEEDS, "debris_weed", Vector2(-68, -122)], [WEEDS, "debris_weed", Vector2(-360, 54)], [WEEDS, "debris_weed", Vector2(241, -173)],
+	[WEEDS, "debris_weed", Vector2(0, 176)], [WEEDS, "debris_weed", Vector2(-255, 207)],
 ]
+const TREE_PICTURE: String = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
+const PALM_PICTURE: String = "res://assets/nature/Date palm.png"
+## Trees that frame the farm. They are scenery and cannot be chopped.
+const FARM_TREES: Array[Vector2] = [
+	Vector2(-480, -300), Vector2(-420, -120), Vector2(-490, -30), Vector2(-440, 110), Vector2(-490, 220), Vector2(-400, 300),
+	Vector2(-280, 310), Vector2(-160, 290), Vector2(-40, 310), Vector2(70, 310), Vector2(200, 320), Vector2(470, 300),
+	Vector2(490, 170), Vector2(440, 110), Vector2(490, -120), Vector2(440, -230), Vector2(480, -310), Vector2(360, -310),
+	Vector2(220, -300), Vector2(100, -310), Vector2(-40, -300), Vector2(-250, -310), Vector2(-300, -60), Vector2(-340, 200),
+	Vector2(-220, 200), Vector2(-120, 130), Vector2(20, -230), Vector2(300, 60), Vector2(380, -40),
+]
+const FARM_PALMS: Array[Vector2] = [Vector2(-310, 40), Vector2(-360, -30), Vector2(-260, 130), Vector2(170, 120), Vector2(400, 180)]
 const ROOM: String = "res://assets/building/house/room/%s.png"
 const ROOM_AREA: Rect2 = Rect2(-120, 6, 288, 154)
 const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_window", "wall", "wall_shelf", "wall_window"]
@@ -114,7 +133,11 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 	place.add_child(decor)
 	if place.name == "Home":
 		_add_debris(place, cleared)
-		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-88, -62)})
+		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-50, -66)})
+		for i: int in FARM_TREES.size():
+			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": TREE_PICTURE, "at": FARM_TREES[i], "fit": 90 + i % 3 * 10, "block": Vector2(14, 8)})
+		for i: int in FARM_PALMS.size():
+			PropPiece.add_to(place, {"name": "Palm_farm%d" % i, "path": PALM_PICTURE, "at": FARM_PALMS[i], "block": Vector2(10, 6)})
 
 static func _add_debris(place: Node, cleared: Dictionary) -> void:
 	for i: int in DEBRIS.size():

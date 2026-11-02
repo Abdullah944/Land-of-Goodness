@@ -24,7 +24,7 @@ func _on_physics_process(_delta: float) -> void:
 
 ## A tap behind a wall or stall would push the boy into it forever.
 func _give_up_when_blocked(delta: float, direction: Vector2) -> void:
-	if direction == Vector2.ZERO or not player.walking_indoors or player.get_real_velocity().length() > 4.0:
+	if direction == Vector2.ZERO or player.get_real_velocity().length() > 4.0:
 		_blocked = 0.0
 		return
 	_blocked += delta

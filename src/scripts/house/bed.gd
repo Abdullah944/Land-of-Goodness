@@ -55,7 +55,7 @@ func _draw_mark() -> void:
 	var player: Player = _player()
 	if player == null:
 		return
-	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -28)))
 
 func _add_body() -> void:
 	var bed_size: Vector2 = _bed.get_size()

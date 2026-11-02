@@ -16,29 +16,29 @@ const PROJECTS: Array[Dictionary] = [
 ## Pictures each finished project adds to a place. "flat" pieces lie on the ground.
 const PIECES: Dictionary = {
 	"well": [
-		{"place": "Village", "name": "WorkWell", "path": "res://assets/props/well.png", "at": Vector2(-46, 96), "fit": 44, "block": Vector2(30, 12)},
+		{"place": "Village", "name": "WorkWell", "path": "res://assets/props/well.png", "at": Vector2(-92, 192), "fit": 58, "block": Vector2(38, 14)},
 	],
 	"grove": [
-		{"place": "Orchard", "name": "GrovePalm1", "path": "res://assets/nature/Date palm.png", "at": Vector2(-130, 30), "group": "date"},
-		{"place": "Orchard", "name": "GrovePalm2", "path": "res://assets/nature/Date palm.png", "at": Vector2(-30, 110), "group": "date"},
-		{"place": "Orchard", "name": "GrovePalm3", "path": "res://assets/nature/Date palm.png", "at": Vector2(100, 100), "group": "date"},
+		{"place": "Orchard", "name": "GrovePalm1", "path": "res://assets/nature/Date palm.png", "at": Vector2(-260, 60), "group": "date"},
+		{"place": "Orchard", "name": "GrovePalm2", "path": "res://assets/nature/Date palm.png", "at": Vector2(-60, 220), "group": "date"},
+		{"place": "Orchard", "name": "GrovePalm3", "path": "res://assets/nature/Date palm.png", "at": Vector2(200, 200), "group": "date"},
 	],
 	"market": [
-		{"place": "Village", "name": "WorkStallA", "path": "res://assets/props/stall_produce.png", "at": Vector2(150, 56), "block": Vector2(40, 12)},
-		{"place": "Village", "name": "WorkStallB", "path": "res://assets/props/stall_pots.png", "at": Vector2(198, 56), "block": Vector2(40, 12)},
-		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(126, 56)},
-		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(222, 56)},
+		{"place": "Village", "name": "WorkStallA", "path": "res://assets/props/stall_produce.png", "at": Vector2(300, 112), "block": Vector2(40, 12)},
+		{"place": "Village", "name": "WorkStallB", "path": "res://assets/props/stall_pots.png", "at": Vector2(396, 112), "block": Vector2(40, 12)},
+		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(252, 112)},
+		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(444, 112)},
 	],
 	"dock": [
-		{"place": "Harbor", "name": "WorkDhow", "path": "res://assets/building/harbor/Dhow.png", "at": Vector2(-36, -62), "fit": 72},
-		{"place": "Harbor", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(14, -100)},
-		{"place": "Harbor", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(82, -100)},
+		{"place": "Harbor", "name": "WorkDhow", "path": "res://assets/building/harbor/Dhow.png", "at": Vector2(-72, -124), "fit": 130},
+		{"place": "Harbor", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(28, -200)},
+		{"place": "Harbor", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(164, -200)},
 	],
 	"diwaniya": [
-		{"place": "Village", "name": "WorkDiwaniya", "path": "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "at": Vector2(-185, 146), "fit": 84, "block": Vector2(70, 26)},
-		{"place": "Village", "name": "WorkRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(-118, 126), "flat": true},
-		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-148, 116)},
-		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(-88, 116)},
+		{"place": "Village", "name": "WorkDiwaniya", "path": "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "at": Vector2(-370, 292), "fit": 160, "block": Vector2(136, 46)},
+		{"place": "Village", "name": "WorkRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(-236, 252), "flat": true},
+		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-296, 232)},
+		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(-176, 232)},
 	],
 }
 

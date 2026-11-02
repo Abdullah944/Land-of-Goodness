@@ -10,8 +10,8 @@ const SHEETS: Dictionary = {
 	"cow": "res://assets/characters/animals/Cow.png",
 }
 
-@export var coop_area: Rect2 = Rect2(8, 120, 28, 22)
-@export var barn_area: Rect2 = Rect2(106, 104, 36, 36)
+@export var coop_area: Rect2 = Rect2(30, 170, 60, 50)
+@export var barn_area: Rect2 = Rect2(180, 190, 70, 70)
 
 var _walkers: Array[Dictionary] = []
 
@@ -31,6 +31,7 @@ func sync(animals: Array) -> void:
 		sprite.texture = load(SHEETS[kind]) as Texture2D
 		sprite.hframes = 2
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.scale = Vector2(0.8, 0.8)
 		sprite.position = area.position + Vector2(fmod(17.0 * i, area.size.x), fmod(7.0 * i, area.size.y))
 		sprite.modulate = Color.WHITE if bool(row.get("fed", false)) else Color(0.92, 0.88, 0.85)
 		add_child(sprite)

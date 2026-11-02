@@ -7,7 +7,7 @@ extends Node
 @export var spots: PackedVector2Array = PackedVector2Array()
 ## The hour each spot begins. Same length as spots.
 @export var hours: PackedFloat32Array = PackedFloat32Array()
-@export var speed: float = 28.0
+@export var speed: float = 44.0
 
 var _walked: float = 0.0
 var _placed: bool = false

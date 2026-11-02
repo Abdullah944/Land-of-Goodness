@@ -214,7 +214,8 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 - The farm starts with twigs, stones, and weeds that clear for good and pay one item each. The cleared list is saved with the farm.
 - The world darkens with a tint at night, and lanterns and torches glow. Picking something up shows a small "+1", and tools throw a puff of dust, water, or chips.
 - The house is a real room with walls, a floor, and furniture cut from `house_interior.png` by `tools/cut_interior.gd`. The title screen shows the app art. Villagers lean as they walk.
-- Not done: a bigger map, and true walking frames for villagers, which need more SpriteCook credits.
+- Scale pass measured from the video: people are about 13% of the screen height and houses about four times a person's height. The boy and villagers drew at three quarters of their old size, the camera shows the full view by default, and buildings grew. The farm is 1040 by 680 (it was 512 by 288), and the village, harbor, and orchard are twice as wide and tall. Paths, trees, and details fill the new space.
+- Not done: true walking frames for villagers, which need more SpriteCook credits.
 - The iPhone install waits until the owner raises it. The certificate expired on 2026-11-01, and Xcode rejects the login.
 - SpriteCook credits left: 7.
 

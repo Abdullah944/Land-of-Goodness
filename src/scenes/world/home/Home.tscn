@@ -571,10 +571,10 @@ tile_set = SubResource("TileSet_t01os")
 texture_filter = 1
 texture_repeat = 2
 texture = ExtResource("19_lawn")
-polygon = PackedVector2Array(-248, -136, 264, -136, 264, 152, -248, 152)
+polygon = PackedVector2Array(-600, -420, 600, -420, 600, 420, -600, 420)
 
 [node name="PathRoad" type="Line2D" parent="TileMaps"]
-points = PackedVector2Array(-120, -58, -76, -56, -58, 4, 30, 64, 96, 28, 176, 38)
+points = PackedVector2Array(-136, -62, -70, -62, -40, 10, 60, 76, 260, 56, 510, 40)
 width = 18.0
 default_color = Color(0.78, 0.64, 0.42, 1)
 joint_mode = 2
@@ -582,7 +582,15 @@ begin_cap_mode = 2
 end_cap_mode = 2
 
 [node name="PathCave" type="Line2D" parent="TileMaps"]
-points = PackedVector2Array(-58, 4, -48, 76)
+points = PackedVector2Array(-70, -62, -200, -210, -380, -210)
+width = 14.0
+default_color = Color(0.78, 0.64, 0.42, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="PathBarn" type="Line2D" parent="TileMaps"]
+points = PackedVector2Array(60, 76, 130, 180, 250, 200)
 width = 14.0
 default_color = Color(0.78, 0.64, 0.42, 1)
 joint_mode = 2
@@ -603,13 +611,13 @@ position = Vector2(-136, -36)
 
 [node name="Bounds" type="Node2D" parent="."]
 script = ExtResource("18_bounds")
-area = Rect2(-244, -132, 500, 276)
+area = Rect2(-520, -340, 1040, 680)
 
 [node name="Neighbor" type="Node2D" parent="."]
 position = Vector2(72, 40)
 script = ExtResource("4_mark")
 person = ExtResource("7_jassim")
-person_scale = 0.039
+person_scale = 0.029
 stand_on_feet = true
 z_index = 1
 
@@ -620,18 +628,18 @@ position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_jassim")
 
 [node name="FishingSpot" type="Node2D" parent="."]
-position = Vector2(128, 80)
+position = Vector2(330, -170)
 script = ExtResource("4_mark")
 person = ExtResource("20_pond")
-fit_pixels = 64
-block_size = Vector2(44, 26)
+fit_pixels = 130
+block_size = Vector2(92, 56)
 z_index = 1
 
 [node name="CaveDoor" type="Marker2D" parent="."]
-position = Vector2(-48, 170)
+position = Vector2(-380, -170)
 
 [node name="CaveEntrance" type="Area2D" parent="."]
-position = Vector2(-48, 96)
+position = Vector2(-380, -240)
 script = ExtResource("5_door")
 next_scene = ExtResource("6_cave")
 spawn_name = "PlayerSpawn"
@@ -640,40 +648,40 @@ spawn_name = "PlayerSpawn"
 shape = SubResource("RectangleShape2D_cave")
 
 [node name="CaveMark" type="Node2D" parent="."]
-position = Vector2(-48, 96)
+position = Vector2(-380, -240)
 script = ExtResource("4_mark")
 person = ExtResource("10_cave")
-fit_pixels = 48
+fit_pixels = 96
 z_index = 1
 
 [node name="Tree" type="Node2D" parent="."]
-position = Vector2(40, -24)
+position = Vector2(90, -110)
 script = ExtResource("4_mark")
 person = ExtResource("11_tree")
-fit_pixels = 64
+fit_pixels = 84
 stand_on_feet = true
 group_name = "tree"
 z_index = 1
 
 [node name="Tree2" type="Node2D" parent="."]
-position = Vector2(120, -56)
+position = Vector2(210, -60)
 script = ExtResource("4_mark")
 person = ExtResource("11_tree")
-fit_pixels = 64
+fit_pixels = 84
 stand_on_feet = true
 group_name = "tree"
 z_index = 1
 
 [node name="Rock" type="Node2D" parent="."]
-position = Vector2(96, 8)
+position = Vector2(150, -24)
 script = ExtResource("4_mark")
 person = ExtResource("8_rock")
-fit_pixels = 16
+fit_pixels = 24
 group_name = "rock"
 z_index = 1
 
 [node name="DatePalm" type="Node2D" parent="."]
-position = Vector2(-120, 64)
+position = Vector2(-250, 40)
 script = ExtResource("4_mark")
 person = ExtResource("12_palm")
 stand_on_feet = true
@@ -681,7 +689,7 @@ group_name = "date"
 z_index = 1
 
 [node name="Herb" type="Node2D" parent="."]
-position = Vector2(24, 112)
+position = Vector2(-40, 170)
 script = ExtResource("4_mark")
 person = ExtResource("13_herb")
 stand_on_feet = true
@@ -689,10 +697,10 @@ group_name = "forage"
 z_index = 1
 
 [node name="VillageReturn" type="Marker2D" parent="."]
-position = Vector2(148, 48)
+position = Vector2(470, 48)
 
 [node name="ExitVillage" type="Area2D" parent="."]
-position = Vector2(168, 40)
+position = Vector2(500, 40)
 script = ExtResource("5_door")
 next_scene_path = "res://src/scenes/world/village/Village.tscn"
 spawn_name = "PlayerSpawn"
@@ -704,28 +712,28 @@ shape = SubResource("RectangleShape2D_cave")
 position = Vector2(-16, 48)
 script = ExtResource("4_mark")
 person = ExtResource("14_bench")
-fit_pixels = 32
+fit_pixels = 44
 role = "workbench"
 z_index = 1
 
 [node name="Coop" type="Node2D" parent="."]
 visible = false
-position = Vector2(72, 146)
+position = Vector2(120, 230)
 script = ExtResource("4_mark")
 person = ExtResource("15_coop")
 stand_on_feet = true
-fit_pixels = 60
-block_size = Vector2(50, 18)
+fit_pixels = 100
+block_size = Vector2(84, 30)
 z_index = 1
 
 [node name="Barn" type="Node2D" parent="."]
 visible = false
-position = Vector2(194, 146)
+position = Vector2(320, 260)
 script = ExtResource("4_mark")
 person = ExtResource("16_barn")
 stand_on_feet = true
-fit_pixels = 84
-block_size = Vector2(72, 26)
+fit_pixels = 150
+block_size = Vector2(128, 44)
 z_index = 1
 
 [node name="Pen" type="Node2D" parent="."]

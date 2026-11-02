@@ -19,6 +19,10 @@ var _shown_note: String = ""
 var _shown_at: int = 0
 
 const PEARL_CHANCE: float = 0.25
+## Big things can be tapped this many squares from their middle.
+const BIG_SNAP: Dictionary = {"FishingSpot": 5, "CaveEntrance": 3}
+## Distance in world pixels from which a big thing can be used.
+const BIG_REACH: Dictionary = {"FishingSpot": 72.0, "CaveEntrance": 40.0}
 const NOTE_MS: int = 7000
 
 func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
@@ -63,7 +67,7 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 		var mark_cell: Vector2i = dirt.local_to_map(dirt.to_local(spot.global_position))
 		var gap: Vector2i = cell - mark_cell
 		var distance: int = maxi(absi(gap.x), absi(gap.y))
-		var close: bool = distance <= (2 if spot.name == "FishingSpot" else 1)
+		var close: bool = distance <= (BIG_SNAP.get(str(spot.name), 1) as int)
 		if spot.is_in_group("tree") or spot.is_in_group("date"):
 			close = absi(gap.x) <= 2 and gap.y <= 0 and gap.y >= -5
 			distance = absi(gap.x) + absi(gap.y)
@@ -89,6 +93,15 @@ func tool_for_cell(dirt: TileMapLayer, cell: Vector2i) -> String:
 		return "use"
 	var farm: FarmField = get_parent().get_node("FarmField") as FarmField
 	return farm.tool_for_plot(cell)
+
+func reach_for(dirt: TileMapLayer, cell: Vector2i) -> float:
+	var place: Node = _place()
+	if place == null:
+		return 0.0
+	for mark_name: String in BIG_REACH:
+		if _matches(place, mark_name, dirt, cell):
+			return float(BIG_REACH[mark_name])
+	return 0.0
 
 func chop_at(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	return _clear_debris("debris_wood", dirt, cell, "wood") or _take_mark("tree", dirt, cell, "wood")

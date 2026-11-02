@@ -186,7 +186,7 @@ func _draw_talk_mark() -> void:
 	var player: Player = _hero()
 	if player == null:
 		return
-	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -28)))
 
 func _sprite_rect() -> Rect2:
 	var size: Vector2 = _picture.get_size()
