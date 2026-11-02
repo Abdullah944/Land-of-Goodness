@@ -12,13 +12,21 @@ var rock_mined: bool = false
 var gathered: Dictionary = {}
 var note: String = ""
 var _shop: String = ""
+var _gift_to: String = ""
 var _flash: String = ""
 var _flash_token: int = 0
+var _shown_note: String = ""
+var _shown_at: int = 0
+
+const PEARL_CHANCE: float = 0.25
+const NOTE_MS: int = 7000
 
 func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	var place: Node = _place()
 	if place == null:
 		return false
+	if _clear_debris("debris_weed", dirt, cell, "forage"):
+		return true
 	if _take_mark("date", dirt, cell, "dates"):
 		return true
 	if _take_mark("ore", dirt, cell, "copper"):
@@ -49,17 +57,17 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 	for mark: Node in place.get_children():
 		if not mark is Node2D:
 			continue
-		if not mark.is_in_group("tree") and not mark.is_in_group("rock") and not mark.is_in_group("ore") and not mark.is_in_group("date") and not mark.is_in_group("forage") and str(mark.get("role")) == "" and mark.name != "Neighbor" and mark.name != "FishingSpot" and mark.name != "CaveEntrance":
+		if not _is_debris(mark) and not mark.is_in_group("tree") and not mark.is_in_group("rock") and not mark.is_in_group("ore") and not mark.is_in_group("date") and not mark.is_in_group("forage") and Activities.role_of(mark) == "" and mark.name != "Neighbor" and mark.name != "FishingSpot" and mark.name != "CaveEntrance":
 			continue
 		var spot: Node2D = mark as Node2D
 		var mark_cell: Vector2i = dirt.local_to_map(dirt.to_local(spot.global_position))
 		var gap: Vector2i = cell - mark_cell
 		var distance: int = maxi(absi(gap.x), absi(gap.y))
-		var close: bool = distance <= 1
+		var close: bool = distance <= (2 if spot.name == "FishingSpot" else 1)
 		if spot.is_in_group("tree") or spot.is_in_group("date"):
 			close = absi(gap.x) <= 2 and gap.y <= 0 and gap.y >= -5
 			distance = absi(gap.x) + absi(gap.y)
-		elif str(spot.get("role")) != "" or spot.get("person") != null:
+		elif Activities.role_of(spot) != "" or spot.get("person") != null:
 			close = absi(gap.x) <= 1 and gap.y <= 0 and gap.y >= -3
 			distance = absi(gap.x) + absi(gap.y)
 		if close and distance < best_distance:
@@ -71,11 +79,11 @@ func tool_for_cell(dirt: TileMapLayer, cell: Vector2i) -> String:
 	var place: Node = _place()
 	if place == null:
 		return ""
-	if _group_has("date", dirt, cell) or _group_has("forage", dirt, cell) or _role_at(place, dirt, cell) != "":
+	if _group_has("debris_weed", dirt, cell) or _group_has("date", dirt, cell) or _group_has("forage", dirt, cell) or _role_at(place, dirt, cell) != "":
 		return "use"
-	if _group_has("tree", dirt, cell):
+	if _group_has("debris_wood", dirt, cell) or _group_has("tree", dirt, cell):
 		return "axe"
-	if _group_has("rock", dirt, cell) or _group_has("ore", dirt, cell):
+	if _group_has("debris_stone", dirt, cell) or _group_has("rock", dirt, cell) or _group_has("ore", dirt, cell):
 		return "pick"
 	if _matches(place, "Neighbor", dirt, cell) or _matches(place, "FishingSpot", dirt, cell) or _matches(place, "CaveEntrance", dirt, cell):
 		return "use"
@@ -83,10 +91,84 @@ func tool_for_cell(dirt: TileMapLayer, cell: Vector2i) -> String:
 	return farm.tool_for_plot(cell)
 
 func chop_at(dirt: TileMapLayer, cell: Vector2i) -> bool:
-	return _take_mark("tree", dirt, cell, "wood")
+	return _clear_debris("debris_wood", dirt, cell, "wood") or _take_mark("tree", dirt, cell, "wood")
 
 func mine_at(dirt: TileMapLayer, cell: Vector2i) -> bool:
-	return _take_mark("rock", dirt, cell, "stone")
+	return _clear_debris("debris_stone", dirt, cell, "stone") or _take_mark("rock", dirt, cell, "stone")
+
+## Twigs, stones, and weeds leave the farm for good and give one item.
+func _clear_debris(group_name: String, dirt: TileMapLayer, cell: Vector2i, item: String) -> bool:
+	var place: Node = _place()
+	if place == null:
+		return false
+	for mark: Node in place.get_children():
+		if not mark.is_in_group(group_name) or not mark is Node2D:
+			continue
+		if dirt.local_to_map(dirt.to_local((mark as Node2D).global_position)) != cell:
+			continue
+		_inventory().add_item(item, 1)
+		_stead().flags["cleared_" + str(mark.name)] = true
+		mark.remove_from_group(group_name)
+		mark.queue_free()
+		note = _gather_note(item)
+		_chime("gather")
+		pop_item(item)
+		_save()
+		_refresh()
+		return true
+	return false
+
+func _is_debris(mark: Node) -> bool:
+	return str(mark.get("group_name")).begins_with("debris")
+
+## A small "+1" rises over the boy's head and fades.
+func pop_item(item: String, amount: int = 1) -> void:
+	var scene: Node = get_tree().current_scene
+	var player: Node2D = scene.find_child("Player", true, false) as Node2D if scene != null else null
+	var place: Node = _place()
+	if player == null or place == null:
+		return
+	var label: Label = Label.new()
+	label.text = "+%d %s" % [amount, Locale.item(item)]
+	label.z_index = 3000
+	label.position = player.global_position + Vector2(-30, -48)
+	label.size = Vector2(60, 14)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 9)
+	label.add_theme_color_override("font_color", UiStyle.CREAM)
+	label.add_theme_color_override("font_outline_color", UiStyle.DARK)
+	label.add_theme_constant_override("outline_size", 3)
+	Locale.apply_control(label)
+	place.add_child(label)
+	var rise: Tween = label.create_tween()
+	rise.set_parallel(true)
+	rise.tween_property(label, "position:y", label.position.y - 16.0, 0.9)
+	rise.tween_property(label, "modulate:a", 0.0, 0.9).set_delay(0.35)
+	rise.chain().tween_callback(label.queue_free)
+
+## A quick puff of dust, water, or chips where a tool lands.
+func burst(at: Vector2, color: Color) -> void:
+	var place: Node = _place()
+	if place == null:
+		return
+	var puff: CPUParticles2D = CPUParticles2D.new()
+	puff.position = at
+	puff.z_index = 3000
+	puff.amount = 8
+	puff.one_shot = true
+	puff.explosiveness = 1.0
+	puff.lifetime = 0.4
+	puff.spread = 180.0
+	puff.direction = Vector2.UP
+	puff.gravity = Vector2(0, 70)
+	puff.initial_velocity_min = 14.0
+	puff.initial_velocity_max = 34.0
+	puff.scale_amount_min = 1.0
+	puff.scale_amount_max = 2.0
+	puff.color = color
+	puff.finished.connect(puff.queue_free)
+	place.add_child(puff)
+	puff.emitting = true
 
 func on_new_day() -> void:
 	fished_today = false
@@ -107,6 +189,11 @@ func fish_at(place_name: String) -> bool:
 		fish_day = _day()
 	_inventory().add_item("fish", 1)
 	note = Locale.t("caught")
+	pop_item("fish")
+	var works: VillageWorks = _works()
+	if place_name == "Harbor" and works != null and works.is_done("dock") and randf() < PEARL_CHANCE:
+		_inventory().add_item("pearl", 1)
+		note = Locale.t("found_pearl")
 	_chime("gather")
 	_save()
 	_refresh()
@@ -118,6 +205,7 @@ func take_daily(mark_key: String, item: String) -> bool:
 	gathered[mark_key] = _day()
 	_inventory().add_item(item, 1)
 	note = _gather_note(item)
+	pop_item(item)
 	_chime("gather")
 	_save()
 	_refresh()
@@ -151,7 +239,7 @@ func give_stone() -> void:
 	rock_mined = true
 	var inventory: Inventory = _inventory()
 	inventory.stone += 1
-	note = "You broke a stone."
+	note = Locale.t("broke_rock")
 	_save()
 
 func to_data() -> Dictionary:
@@ -213,33 +301,57 @@ func _talk() -> void:
 	if not dialogue.picked.is_connected(_on_shop_choice):
 		dialogue.picked.connect(_on_shop_choice)
 	_shop = "menu"
-	var greeting: String = Locale.t("greeting")
+	_gift_to = "jassim"
+	dialogue.set_speaker("jassim")
+	var greeting: String = _line("greeting")
 	if not quest_done:
 		greeting = Locale.t("greeting_quest")
-	dialogue.offer(greeting, _menu_choices())
+	dialogue.offer(_with_request(greeting, "jassim"), _with_help("jassim", _menu_choices()))
 
 func talk_role(role: String) -> void:
 	var dialogue: DialogueBox = _dialogue()
 	if dialogue.visible:
 		return
 	_listen(dialogue)
+	_gift_to = role
+	dialogue.set_speaker(role)
 	match role:
-		"workbench", "carpenter":
+		"workbench":
 			_shop = "work"
 			dialogue.offer(Locale.t("workbench"), _labeled(["craft", "build", "animals", "quests", "cancel"]))
+		"carpenter":
+			_shop = "work"
+			var rows: PackedStringArray = _labeled(["craft", "build", "animals", "supplies", "give_food", "cancel"])
+			dialogue.offer(_with_request(_line("carpenter"), role), _with_help(role, rows))
 		"elder":
-			_shop = ""
-			dialogue.open_lines(PackedStringArray([Locale.t("elder")]))
+			_shop = "menu"
+			dialogue.offer(_with_request(_elder_line(), role), _with_help(role, _elder_choices()))
 		"fisherman":
-			_shop = ""
-			dialogue.open_lines(PackedStringArray([Locale.t("fisherman")]))
+			_shop = "menu"
+			dialogue.offer(_with_request(_line("fisherman"), role), _with_help(role, _labeled(["give_food", "cancel"])))
 		"merchant":
 			_shop = "menu"
-			dialogue.offer(Locale.t("merchant"), _labeled(["sell_goods", "buy_seeds", "buy_feed", "cancel"]))
+			var rows: PackedStringArray = _labeled(["sell_goods", "buy_seeds", "buy_feed", "give_food", "cancel"])
+			dialogue.offer(_with_request(_line("merchant"), role), _with_help(role, rows))
 		_:
 			_talk()
 
 func _on_shop_choice(choice: String) -> void:
+	if choice == "give_food":
+		_offer_gift()
+		return
+	if choice == "give_fund":
+		_give_fund()
+		return
+	if choice == "help":
+		_give_help()
+		return
+	if choice == "works":
+		_fund_work()
+		return
+	if _shop == "gift":
+		_give_gift(choice)
+		return
 	if _shop == "menu":
 		if choice == "sell_turnips" or choice == "Sell Turnips":
 			_sell_to_jassim()
@@ -270,7 +382,7 @@ func _on_shop_choice(choice: String) -> void:
 	if _shop == "work":
 		_work_choice(choice)
 		return
-	if _shop == "craft" or _shop == "build" or _shop == "animals":
+	if _shop == "craft" or _shop == "build" or _shop == "animals" or _shop == "supplies":
 		_work_action(choice)
 		return
 	if _shop != "seeds" or choice == "cancel" or choice == "Cancel":
@@ -282,6 +394,145 @@ func _on_shop_choice(choice: String) -> void:
 			continue
 		_buy_seed(crop_id, crop)
 		return
+
+func _offer_gift() -> void:
+	var kindness: Kindness = _kindness()
+	if kindness == null:
+		return
+	if kindness.gifted_today(_gift_to):
+		_say(Locale.t("gift_today"))
+		return
+	var inventory: Inventory = _inventory()
+	var choices: PackedStringArray = []
+	for item_id: String in Kindness.FOODS:
+		var count: int = inventory.count_of(item_id)
+		if count > 0:
+			choices.append("%s|%s x%d" % [item_id, Locale.item(item_id), count])
+	if choices.is_empty():
+		_say(Locale.t("no_food"))
+		return
+	choices.append("cancel|%s" % Locale.t("cancel"))
+	_shop = "gift"
+	_dialogue().offer(Locale.t("gift_which"), choices)
+
+func _give_gift(choice: String) -> void:
+	_shop = ""
+	if choice == "cancel":
+		return
+	if _kindness().give_food(_gift_to, choice):
+		note = Locale.t("gift_thanks") % Kindness.GIFT_POINTS
+		_chime("gather")
+		_save()
+	else:
+		note = Locale.t("cannot")
+	_dialogue().open_lines(PackedStringArray([note]))
+	_refresh()
+
+func _give_fund() -> void:
+	_shop = ""
+	var kindness: Kindness = _kindness()
+	if kindness == null:
+		return
+	if kindness.fund_done:
+		_say(Locale.t("fund_today"))
+		return
+	if not kindness.give_fund():
+		_say(Locale.t("need_dinars") % Kindness.FUND_PRICE)
+		return
+	note = Locale.t("gift_thanks") % Kindness.FUND_POINTS
+	_chime("coin")
+	_save()
+	_dialogue().open_lines(PackedStringArray([note]))
+	_refresh()
+
+func _say(line: String) -> void:
+	_shop = ""
+	note = line
+	_dialogue().open_lines(PackedStringArray([note]))
+	_refresh()
+
+func _give_help() -> void:
+	var works: VillageWorks = _works()
+	if works == null:
+		return
+	var wish: Dictionary = works.request_today()
+	var pay: int = int(wish.get("pay", 0))
+	if not works.fulfil_request():
+		_say(Locale.t("request_short") % [int(wish.get("amount", 0)), Locale.item(str(wish.get("item", "")))])
+		return
+	note = Locale.t("request_done") % [pay, VillageWorks.REQUEST_POINTS]
+	_chime("coin")
+	_save()
+	_dialogue().open_lines(PackedStringArray([note]))
+	_refresh()
+
+func _fund_work() -> void:
+	var works: VillageWorks = _works()
+	var stead: Stead = _stead()
+	if works == null or stead == null:
+		return
+	var project: Dictionary = works.next_project()
+	if project.is_empty():
+		return
+	if not works.fund_next():
+		_say(Locale.t("need_items") % stead.missing_text(project["costs"]))
+		return
+	var lines: PackedStringArray = PackedStringArray([Locale.t("done_" + str(project["id"]))])
+	note = lines[0]
+	_chime("level")
+	_save()
+	if works.all_done():
+		lines.append(Locale.t("works_all_done"))
+	_dialogue().open_lines(lines)
+	_refresh()
+
+func _elder_choices() -> PackedStringArray:
+	var rows: PackedStringArray = PackedStringArray()
+	var works: VillageWorks = _works()
+	var stead: Stead = _stead()
+	if works != null and stead != null and stead.is_established():
+		var project: Dictionary = works.next_project()
+		if not project.is_empty():
+			rows.append("works|%s: %s" % [Locale.t(str(project["id"])), Stead.cost_text(project["costs"])])
+	rows.append_array(_labeled(["give_food", "give_fund", "cancel"]))
+	return rows
+
+func _elder_line() -> String:
+	var works: VillageWorks = _works()
+	var stead: Stead = _stead()
+	if works != null and stead != null and stead.is_established():
+		var project: Dictionary = works.next_project()
+		if not project.is_empty():
+			return Locale.t("ask_" + str(project["id"]))
+	return _line("elder")
+
+## One of a person's four lines, a different one each day.
+func _line(role: String) -> String:
+	var turn: int = _day() % 4
+	return Locale.t(role if turn == 0 else "%s_%d" % [role, turn])
+
+func _with_request(line: String, person: String) -> String:
+	var works: VillageWorks = _works()
+	if works == null or not works.can_help(person):
+		return line
+	var wish: Dictionary = works.request_today()
+	return "%s\n%s" % [line, Locale.t("request_line") % [int(wish["amount"]), Locale.item(str(wish["item"]))]]
+
+func _with_help(person: String, rows: PackedStringArray) -> PackedStringArray:
+	var works: VillageWorks = _works()
+	if works == null or not works.can_help(person):
+		return rows
+	var wish: Dictionary = works.request_today()
+	var help_row: String = "help|%s" % (Locale.t("request_row") % [int(wish["amount"]), Locale.item(str(wish["item"])), int(wish["pay"])])
+	var result: PackedStringArray = PackedStringArray([help_row])
+	result.append_array(rows)
+	return result
+
+func _works() -> VillageWorks:
+	return get_parent().get_node_or_null("VillageWorks") as VillageWorks
+
+func _kindness() -> Kindness:
+	return get_parent().get_node_or_null("Kindness") as Kindness
 
 func _sell_to_jassim() -> void:
 	var inventory: Inventory = _inventory()
@@ -301,13 +552,12 @@ func _sell_to_jassim() -> void:
 	_save()
 	_refresh()
 	if hud != null and hud.has_method("show_sale"):
-		var crop_name: String = str(CropCatalog.get_crop(CropCatalog.TURNIP).get("name", "Turnip"))
-		hud.call("show_sale", crop_name, sold, earned, inventory.turnips, inventory.dinars)
+		hud.call("show_sale", Locale.item("turnips"), sold, earned, inventory.turnips, inventory.dinars)
 
 func _buy_seed(crop_id: String, crop: Dictionary) -> void:
 	var inventory: Inventory = _inventory()
 	var price: int = int(crop.get("seed_price", 0))
-	var seed_name: String = str(crop.get("seed_name", "Seed"))
+	var seed_name: String = Locale.item(str(crop.get("seed_item", "seeds")))
 	if not inventory.try_buy_seed(crop_id):
 		note = Locale.t("need_dinars") % price
 		_dialogue().open_lines(PackedStringArray([note]))
@@ -329,7 +579,7 @@ func _seed_label(crop: Dictionary) -> String:
 	return "%s  %d" % [Locale.item(str(crop.get("seed_item", "seeds"))), int(crop.get("seed_price", 0))]
 
 func _menu_choices() -> PackedStringArray:
-	return _labeled(["sell_turnips", "sell_goods", "buy_seeds", "cancel"])
+	return _labeled(["sell_turnips", "sell_goods", "buy_seeds", "give_food", "cancel"])
 
 func _labeled(keys: Array) -> PackedStringArray:
 	var choices: PackedStringArray = []
@@ -391,20 +641,72 @@ func _work_choice(choice: String) -> void:
 		return
 	if choice == "craft":
 		_shop = "craft"
-		_dialogue().offer(Locale.t("craft"), _labeled(["craft_feed", "craft_feed_herbs", "cancel"]))
+		_dialogue().offer(Locale.t("craft"), PackedStringArray([
+			"craft_feed|%s  (%s)" % [Locale.t("craft_feed"), Stead.cost_text(RecipeCatalog.recipe("feed")["costs"])],
+			"craft_feed_herbs|%s" % Locale.t("craft_feed_herbs"),
+			"cancel|%s" % Locale.t("cancel"),
+		]))
 		return
 	if choice == "build":
 		_shop = "build"
-		_dialogue().offer(Locale.t("build"), _labeled(["coop", "barn", "expand", "tools", "cancel"]))
+		var rows: PackedStringArray = _build_choices(stead)
+		if rows.size() < 2:
+			_say(Locale.t("all_built"))
+			return
+		_dialogue().offer(Locale.t("build"), rows)
+		return
+	if choice == "supplies":
+		_shop = "supplies"
+		var price: String = Locale.t("dinars") % RecipeCatalog.BUNDLE_PRICE
+		_dialogue().offer(Locale.t("supplies"), PackedStringArray([
+			"buy_wood|%d %s  %s" % [RecipeCatalog.BUNDLE_SIZE, Locale.item("wood"), price],
+			"buy_stone|%d %s  %s" % [RecipeCatalog.BUNDLE_SIZE, Locale.item("stone"), price],
+			"cancel|%s" % Locale.t("cancel"),
+		]))
 		return
 	if choice == "animals":
 		_shop = "animals"
-		_dialogue().offer(Locale.t("animals"), _labeled([
-			"buy_chicken", "feed_chicken", "buy_goat", "feed_goat",
-			"buy_sheep", "feed_sheep", "buy_cow", "feed_cow", "cancel",
-		]))
+		_dialogue().offer(Locale.t("animals"), _animal_choices(stead))
 		return
 	_shop = ""
+
+func _build_choices(stead: Stead) -> PackedStringArray:
+	var rows: PackedStringArray = PackedStringArray()
+	for building_id: String in RecipeCatalog.BUILD_ORDER:
+		if stead.can_offer(building_id):
+			rows.append("%s|%s: %s" % [building_id, Locale.t(building_id), Stead.cost_text(RecipeCatalog.building(building_id)["costs"])])
+	rows.append("cancel|%s" % Locale.t("cancel"))
+	return rows
+
+func _animal_choices(stead: Stead) -> PackedStringArray:
+	var rows: PackedStringArray = PackedStringArray()
+	for kind: String in RecipeCatalog.ANIMALS:
+		var spec: Dictionary = RecipeCatalog.animal(kind)
+		if stead.count_kind(kind) > 0:
+			rows.append("feed_%s|%s  x%d" % [kind, Locale.t("feed_" + kind), stead.count_kind(kind)])
+		if stead.count_kind(kind) < stead.animal_cap(kind):
+			rows.append("buy_%s|%s  %s" % [kind, Locale.t("buy_" + kind), Locale.t("dinars") % int(spec["price"])])
+	rows.append("cancel|%s" % Locale.t("cancel"))
+	return rows
+
+## Says what is missing, so a refused tap never leaves the player guessing.
+func _refusal(stead: Stead, shop: String, choice: String) -> String:
+	if shop == "build":
+		return Locale.t("need_items") % stead.missing_text(RecipeCatalog.building(choice).get("costs", {}))
+	if shop == "supplies":
+		return Locale.t("need_dinars") % RecipeCatalog.BUNDLE_PRICE
+	if shop == "craft":
+		var spec: Dictionary = RecipeCatalog.recipe("feed" if choice == "craft_feed" else "feed_herbs")
+		return Locale.t("need_items") % stead.missing_text(spec.get("costs", {}))
+	if shop == "animals" and choice.begins_with("buy_"):
+		var spec: Dictionary = RecipeCatalog.animal(choice.trim_prefix("buy_"))
+		var home: String = str(spec.get("home", ""))
+		if not stead.is_built(home):
+			return Locale.t("need_home") % Locale.t(home)
+		return Locale.t("need_dinars") % int(spec.get("price", 0))
+	if shop == "animals" and choice.begins_with("feed_"):
+		return Locale.t("need_feed")
+	return Locale.t("cannot")
 
 func _work_action(choice: String) -> void:
 	var stead: Stead = _stead()
@@ -420,6 +722,10 @@ func _work_action(choice: String) -> void:
 	elif shop == "build":
 		ok = stead.build(choice)
 		line = Locale.t("built") % Locale.t(choice)
+	elif shop == "supplies":
+		var item: String = "wood" if choice == "buy_wood" else "stone"
+		ok = stead.buy_bundle(item)
+		line = Locale.t("bought") % Locale.item(item)
 	elif shop == "animals" and choice.begins_with("buy_"):
 		var kind: String = choice.trim_prefix("buy_")
 		ok = stead.buy_animal(kind)
@@ -430,7 +736,7 @@ func _work_action(choice: String) -> void:
 		ok = fed > 0
 		line = Locale.t("fed") % fed
 	if not ok:
-		note = Locale.t("cannot")
+		note = _refusal(stead, shop, choice)
 	else:
 		note = line
 		_chime("ui")
@@ -449,9 +755,16 @@ func _chime(kind: String) -> void:
 func _dialogue() -> DialogueBox:
 	return get_tree().current_scene.get_node("UI/Dialogue") as DialogueBox
 
+## A note fades after a few seconds, so the next goal comes back under the day.
 func display_note() -> String:
 	if _flash != "":
 		return _flash
+	if note != _shown_note:
+		_shown_note = note
+		_shown_at = Time.get_ticks_msec()
+	elif note != "" and Time.get_ticks_msec() - _shown_at > NOTE_MS:
+		note = ""
+		_shown_note = ""
 	return note
 
 func flash(text: String) -> void:
@@ -507,6 +820,7 @@ func _take_mark(group_name: String, dirt: TileMapLayer, cell: Vector2i, item: St
 		var inventory: Inventory = _inventory()
 		inventory.add_item(item, 1)
 		note = _gather_note(item)
+		pop_item(item)
 		gathered[key] = _day()
 		_set_mark(spot, false)
 		_save()
@@ -529,13 +843,18 @@ func _gather_note(item: String) -> String:
 		_:
 			return Locale.t("made") % Locale.item(item)
 
+## Markers and walls have no role at all, which is not the same as a person's role.
+static func role_of(mark: Node) -> String:
+	var role: Variant = mark.get("role")
+	return "" if role == null else str(role)
+
 func _role_at(place: Node, dirt: TileMapLayer, cell: Vector2i) -> String:
 	for mark: Node in place.get_children():
-		if str(mark.get("role")) == "" or not mark is Node2D:
+		if Activities.role_of(mark) == "" or not mark is Node2D:
 			continue
 		var spot: Node2D = mark as Node2D
 		if dirt.local_to_map(dirt.to_local(spot.global_position)) == cell:
-			return str(mark.get("role"))
+			return Activities.role_of(mark)
 	return ""
 
 func _mark_key(place: Node, spot: Node) -> String:
@@ -582,5 +901,9 @@ func _save() -> void:
 	if stead != null and stead.check_milestone():
 		note = Locale.t("milestone")
 		_chime("coin")
+	var kindness: Kindness = _kindness()
+	if kindness != null and kindness.take_level_up():
+		note = Locale.t("khair_rise")
+		_chime("level")
 	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame
 	save.write_now()

@@ -186,11 +186,11 @@ def village():
         s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6))
     for i, (x, y) in enumerate([(-220, -120), (-210, 120), (210, 120), (-140, 100), (150, 104), (226, -124)]):
         s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
-    s.mark("Elder", PEOPLE % "Elder", -110, -40, fit=32, role="elder")
+    s.mark("Elder", PEOPLE % "Elder", -110, -40, fit=48, role="elder")
     s.route("Elder", [(-110, -40), (-180, 40), (-40, 50), (-96, -50)], [6, 11, 15, 19])
-    s.mark("Merchant", PEOPLE % "Merchant", 0, -34, fit=32, role="merchant")
+    s.mark("Merchant", PEOPLE % "Merchant", 0, -34, fit=48, role="merchant")
     s.route("Merchant", [(0, -34), (140, -20), (0, -34), (152, -72)], [6, 12, 14, 20])
-    s.mark("Carpenter", PEOPLE % "Carpenter", 100, 92, fit=32, role="carpenter")
+    s.mark("Carpenter", PEOPLE % "Carpenter", 100, 92, fit=48, role="carpenter")
     s.route("Carpenter", [(100, 92), (36, 60), (100, 92), (120, -72)], [6, 12, 13, 18])
     s.save("src/scenes/world/village/Village.tscn")
 
@@ -213,7 +213,7 @@ def harbor():
     s.mark("Hut", HOUSE, -150, 20, fit=72, block=(60, 22))
     for i, (x, y) in enumerate([(200, 120), (-60, 130), (180, 40)]):
         s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
-    s.mark("Fisherman", PEOPLE % "Fisherman", 48, -90, fit=32, role="fisherman")
+    s.mark("Fisherman", PEOPLE % "Fisherman", 48, -90, fit=48, role="fisherman")
     s.route("Fisherman", [(48, -90), (-10, 50), (48, -90), (-150, 40)], [6, 11, 15, 19])
     s.save("src/scenes/world/harbor/Harbor.tscn")
 
@@ -235,7 +235,7 @@ def orchard():
     s.mark("Herb3", HERB, -180, 40, group="forage")
     for i, (x, y) in enumerate([(-220, -120), (110, -120), (180, -90), (-200, 120), (60, 130), (210, 130),
                                 (-120, -120), (0, -120)]):
-        s.mark("Palm%d" % i, PALM, x, y, fit=34, block=(10, 6))
+        s.mark("Palm%d" % i, PALM, x, y, fit=64, block=(10, 6))
     for i, (name, x, y) in enumerate([("basket", 90, -10), ("sack", 104, -12), ("pot_big", -60, 40), ("plant", 150, 80)]):
         s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6))
     s.save("src/scenes/world/orchard/Orchard.tscn")
@@ -259,7 +259,6 @@ def cave():
 
 
 if __name__ == "__main__":
-    draw_grass()
     village()
     harbor()
     orchard()

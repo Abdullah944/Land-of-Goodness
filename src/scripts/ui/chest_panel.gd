@@ -4,7 +4,6 @@
 class_name ChestPanel
 extends CanvasLayer
 
-const VIEW: Vector2 = Vector2(512, 288)
 const WINDOW_SIZE: Vector2 = Vector2(468, 260)
 const ROW_H: float = 34.0
 const ICON_X: float = 4.0
@@ -44,13 +43,11 @@ func _ready() -> void:
 	window.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	window.stretch_mode = TextureRect.STRETCH_SCALE
 	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	window.position = Vector2((VIEW.x - WINDOW_SIZE.x) * 0.5, 8)
 	window.size = WINDOW_SIZE
 	_page.add_child(window)
 	var content: Control = Control.new()
 	content.name = "Content"
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.position = window.position + Vector2(28, 32)
 	content.size = WINDOW_SIZE - Vector2(56, 78)
 	_page.add_child(content)
 	var title: Label = _label("Chest", Vector2(0, 0), Vector2(160, 22))
@@ -86,6 +83,26 @@ func _ready() -> void:
 	var stored_ids: PackedStringArray = Inventory.all_stored_ids()
 	for i: int in stored_ids.size():
 		_add_row(body, stored_ids[i], i)
+	_fit_screen()
+	get_viewport().size_changed.connect(_fit_screen)
+
+func _fit_screen() -> void:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var at: Vector2 = Vector2((view.x - WINDOW_SIZE.x) * 0.5, (view.y - WINDOW_SIZE.y) * 0.5)
+	(_page.get_node("Window") as Control).position = at
+	(_page.get_node("Content") as Control).position = at + Vector2(28, 32)
+
+## The language may have changed since the panel was built.
+func _name_labels() -> void:
+	var content: Node = _page.get_node("Content")
+	var title_keys: Dictionary = {"Title": "chest", "BagHeader": "bag", "ChestHeader": "chest"}
+	for label_name: String in title_keys:
+		var label: Label = content.get_node(label_name) as Label
+		label.text = Locale.t(title_keys[label_name])
+		Locale.apply_control(label)
+	for row: Dictionary in _rows:
+		if row.has("name"):
+			(row["name"] as Label).text = Locale.item(str(row["item"]))
 
 func is_open() -> bool:
 	return _open
@@ -104,6 +121,7 @@ func open_panel() -> void:
 		player.cancel_tap()
 	_open = true
 	_page.visible = true
+	_name_labels()
 	_refresh()
 
 func close_panel() -> void:
@@ -281,27 +299,7 @@ func _label(text: String, at: Vector2, size: Vector2) -> Label:
 	return label
 
 func _item_name(item_id: String) -> String:
-	for crop_id: String in CropCatalog.ids():
-		var crop: Dictionary = CropCatalog.get_crop(crop_id)
-		if str(crop.get("seed_item", "")) == item_id:
-			return str(crop.get("seed_name", item_id))
-		if str(crop.get("harvest_item", "")) == item_id:
-			return str(crop.get("name", item_id))
-	match item_id:
-		"wood":
-			return "Wood"
-		"stone":
-			return "Stone"
-		"fish":
-			return "Fish"
-		"dates":
-			return "Date"
-		"forage":
-			return "Herb"
-		_:
-			if GoodsCatalog.icon_path(item_id) != "":
-				return Locale.item(item_id)
-			return item_id
+	return Locale.item(item_id)
 
 func _icon(item_id: String) -> Texture2D:
 	var extra_icon: String = GoodsCatalog.icon_path(item_id)

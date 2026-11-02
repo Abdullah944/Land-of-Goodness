@@ -55,14 +55,7 @@ func _draw_mark() -> void:
 	var player: Player = _player()
 	if player == null:
 		return
-	var at: Vector2 = to_local(player.global_position + Vector2(0, -20))
-	draw_set_transform(at)
-	var font: Font = ThemeDB.fallback_font
-	draw_circle(Vector2.ZERO, 8, Color("fff3dc"))
-	draw_arc(Vector2.ZERO, 8, 0, TAU, 16, Color("d9a441"), 1.0)
-	var size: Vector2 = font.get_string_size("E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-	draw_string(font, Vector2(-size.x * 0.5, size.y * 0.35), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("3f2d27"))
-	draw_set_transform(Vector2.ZERO)
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
 
 func _add_body() -> void:
 	var bed_size: Vector2 = _bed.get_size()
@@ -90,7 +83,7 @@ func _ask() -> void:
 	if dialogue.visible:
 		return
 	_asking = true
-	dialogue.ask("Should I sleep now?")
+	dialogue.ask(Locale.t("sleep_ask"))
 
 func _on_answer(yes: bool) -> void:
 	if not _asking:
@@ -109,7 +102,7 @@ func _on_answer(yes: bool) -> void:
 	clock.sleep_now()
 	hud.call("uncover_sleep")
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-	activities.note = "You slept until morning."
+	activities.note = Locale.t("slept")
 	if player != null:
 		player.busy = false
 

@@ -338,7 +338,7 @@ block_size = Vector2(10, 6)
 position = Vector2(-110, -40)
 script = ExtResource("6_spot_mark")
 person = ExtResource("26_elder")
-fit_pixels = 32
+fit_pixels = 48
 stand_on_feet = true
 role = "elder"
 
@@ -351,7 +351,7 @@ hours = PackedFloat32Array(6, 11, 15, 19)
 position = Vector2(0, -34)
 script = ExtResource("6_spot_mark")
 person = ExtResource("28_merchant")
-fit_pixels = 32
+fit_pixels = 48
 stand_on_feet = true
 role = "merchant"
 
@@ -364,7 +364,7 @@ hours = PackedFloat32Array(6, 12, 14, 20)
 position = Vector2(100, 92)
 script = ExtResource("6_spot_mark")
 person = ExtResource("29_carpenter")
-fit_pixels = 32
+fit_pixels = 48
 stand_on_feet = true
 role = "carpenter"
 

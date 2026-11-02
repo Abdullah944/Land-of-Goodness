@@ -133,6 +133,8 @@ func _run() -> void:
 	check(stead.buy_feed() and inventory.count_of("feed") == 3 and inventory.dinars == 0, "the merchant sells one feed")
 	check(not stead.buy_feed() and inventory.count_of("feed") == 3, "feed cannot be bought without dinars")
 	await _check_places(main, loader, clock)
+	_check_kindness(main, systems, inventory, clock, save, activities)
+	await _check_finish(main, systems, inventory, stead, clock, save, activities, farm, loader)
 	_check_save_safety(save, inventory)
 	if OS.get_environment("KHAIR_SHOT") == "1":
 		loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "VillageReturn")
@@ -190,6 +192,345 @@ func _check_places(main: Node, loader: LevelLoader, clock: GameClock) -> void:
 		for person_name: String in starts:
 			check((place.get_node(person_name) as Node2D).position != starts[person_name], "%s walks when the hour changes" % person_name)
 		clock.minute = 6.5 * 60.0
+
+func _check_kindness(main: Node, systems: Node, inventory: Inventory, clock: GameClock, save: SaveGame, activities: Activities) -> void:
+	var kindness: Kindness = systems.get_node("Kindness") as Kindness
+	kindness.from_data({})
+	check(kindness.points == 0 and kindness.levels_paid == 0, "a save without a meter starts at zero")
+	inventory.dates = 2
+	check(kindness.give_food("elder", "dates") and inventory.dates == 1 and kindness.points == 2, "a gift spends one food and earns Khair")
+	check(not kindness.give_food("elder", "dates") and inventory.dates == 1 and kindness.points == 2, "one gift per person each day")
+	check(kindness.give_food("fisherman", "dates") and kindness.points == 4, "another neighbor can receive a gift")
+	inventory.wood = 3
+	check(not kindness.give_food("merchant", "wood") and inventory.wood == 3, "only food can be shared")
+	check(not kindness.give_food("merchant", "dates") and kindness.points == 4, "a gift needs food in the bag")
+	inventory.dinars = Kindness.FUND_PRICE - 1
+	check(not kindness.give_fund() and inventory.dinars == Kindness.FUND_PRICE - 1, "giving needs enough dinars")
+	inventory.dinars = Kindness.FUND_PRICE
+	check(kindness.give_fund() and inventory.dinars == 0 and kindness.points == 7, "giving spends dinars and earns Khair")
+	inventory.dinars = Kindness.FUND_PRICE
+	check(not kindness.give_fund() and inventory.dinars == Kindness.FUND_PRICE, "one village gift each day")
+	kindness.note_feeding()
+	kindness.note_feeding()
+	check(kindness.points == 8, "feeding counts once each day")
+	save.write_now()
+	kindness.points = 0
+	check(save.load_game() and kindness.points == 8 and kindness.gifted_today("elder") and kindness.fund_done, "the meter survives a reload")
+	var before_sleep: int = kindness.points
+	clock.sleep_now()
+	clock.set_process(false)
+	check(kindness.points == before_sleep, "the meter never falls overnight")
+	check(not kindness.gifted_today("elder") and not kindness.fund_done and not kindness.fed_done, "gifts open again in the morning")
+	var seeds_before: int = inventory.seeds
+	kindness.points = 9
+	kindness.note_feeding()
+	check(kindness.levels_paid == 1 and inventory.seeds == seeds_before + 3, "a new level brings a gift of seeds")
+	check(kindness.take_level_up() and not kindness.take_level_up(), "the level note shows once")
+	kindness.on_new_day()
+	kindness.note_feeding()
+	check(inventory.seeds == seeds_before + 3, "a level pays only once")
+	kindness.points = 99
+	kindness.levels_paid = 3
+	inventory.dinars = Kindness.FUND_PRICE
+	check(kindness.give_fund() and kindness.points == Kindness.MAX_POINTS and kindness.levels_paid == 4, "the meter stops at its full mark")
+	kindness.from_data({"points": -9, "levels_paid": 99, "gifted": "x"})
+	check(kindness.points == 0 and kindness.levels_paid == Kindness.LEVELS.size() and kindness.gifted.is_empty(), "broken meter values load safely")
+	kindness.from_data({})
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	var ids: PackedStringArray = PackedStringArray()
+	for i: int in 17:
+		ids.append("%d|Row %d" % [i, i])
+	ids.append("cancel|Cancel")
+	dialogue.offer("Long list", ids)
+	var seen: Dictionary = {}
+	var fits: bool = true
+	var cancel_always: bool = true
+	for page: int in 6:
+		fits = fits and dialogue._panel.position.y >= 0.0 and dialogue._offer_buttons.size() <= DialogueBox.MAX_ROWS
+		var has_cancel: bool = false
+		for button: Button in dialogue._offer_buttons:
+			seen[button.text] = true
+			has_cancel = has_cancel or button.text == "Cancel"
+		cancel_always = cancel_always and has_cancel
+		dialogue._next_offer_page()
+	check(fits, "a long menu page fits on the screen")
+	check(cancel_always, "Cancel stays on every page")
+	var every_row: bool = true
+	for i: int in 17:
+		every_row = every_row and seen.has("Row %d" % i)
+	check(every_row, "every row of a long menu can be reached")
+	dialogue._pick("cancel")
+	inventory.dates = 1
+	activities.talk_role("elder")
+	activities._on_shop_choice("give_food")
+	activities._on_shop_choice("dates")
+	check(kindness.points == Kindness.GIFT_POINTS and inventory.dates == 0, "the elder's menu passes a gift to the meter")
+	dialogue._advance()
+
+func _check_finish(main: Node, systems: Node, inventory: Inventory, stead: Stead, clock: GameClock, save: SaveGame, activities: Activities, farm: FarmField, loader: LevelLoader) -> void:
+	var works: VillageWorks = systems.get_node("VillageWorks") as VillageWorks
+	var kindness: Kindness = systems.get_node("Kindness") as Kindness
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	check(_locale_is_whole(), "every line exists in both languages with the same blanks")
+	dialogue.open_lines(PackedStringArray(["x"]))
+	check(clock.held_by_ui(), "the clock waits while a talk box is open")
+	dialogue._advance()
+	check(not clock.held_by_ui(), "the clock runs again after the talk box")
+	inventory.hearts = 0.25
+	check(inventory.tire() and inventory.tire() and inventory.tire() and not inventory.tire(), "tools stop when the boy is out of hearts")
+	inventory.take_item("dates", inventory.dates)
+	inventory.dates = 1
+	inventory.hearts = 0.0
+	check(inventory.eat_something() != "" and inventory.hearts == 1.0, "eating brings one heart back")
+	inventory.hearts = inventory.max_hearts
+	var before_food: int = inventory.count_of("fish")
+	inventory.add_item("fish", 1)
+	check(inventory.eat_something() == "" and inventory.count_of("fish") == before_food + 1, "full hearts do not waste food")
+	inventory.dinars = int(RecipeCatalog.building("house")["costs"]["dinars"])
+	inventory.wood = 30
+	inventory.stone = 20
+	check(stead.can_offer("house") and stead.build("house") and inventory.max_hearts == 7.0, "the bigger house adds two hearts")
+	check(not stead.build("house") and not stead.can_offer("house"), "the house upgrade happens once")
+	clock.sleep_now()
+	clock.set_process(false)
+	check(inventory.hearts == 7.0, "sleep fills all seven hearts")
+	check(not stead.can_offer("tools2") or stead.tool_level >= 1, "the best can follows the first can")
+	var chicken_cap: int = stead.animal_cap("chicken")
+	inventory.dinars = int(RecipeCatalog.building("coop2")["costs"]["dinars"])
+	inventory.wood = 15
+	inventory.stone = 8
+	check(stead.build("coop2") and stead.animal_cap("chicken") == chicken_cap * 2, "the second coop doubles the chickens")
+	inventory.dinars = RecipeCatalog.BUNDLE_PRICE
+	inventory.wood = 0
+	check(stead.buy_bundle("wood") and inventory.wood == RecipeCatalog.BUNDLE_SIZE and inventory.dinars == 0, "the carpenter sells a bundle")
+	check(not stead.buy_bundle("wood") and inventory.wood == RecipeCatalog.BUNDLE_SIZE, "a bundle needs dinars")
+	inventory.dinars = int(RecipeCatalog.building("decor_plant")["costs"]["dinars"])
+	inventory.forage = 2
+	stead.build("decor_plant")
+	check(stead.is_built("decor_plant"), "a decoration can be bought after the house")
+	loader.go_to(load("res://src/scenes/world/house/House_inside.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	check(_place(main).get_node_or_null("DecorPlant") != null, "the decoration appears in the house")
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 12:
+		await physics_frame
+	check(_place_name(main) == "Home", "leaving the house does not walk straight back in")
+	await _check_walks(main, clock)
+	await _check_look(main, loader, dialogue, activities)
+	works.from_data({})
+	kindness.from_data({})
+	check(works.next_project().get("id") == "well" and not works.all_done(), "a save without projects starts at the well")
+	inventory.stone = 0
+	inventory.wood = 0
+	inventory.dinars = 0
+	check(not works.fund_next() and not works.is_done("well"), "a project needs its goods")
+	check(stead.missing_text(works.next_project()["costs"]).length() > 0, "the refusal says what is missing")
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	for project: Dictionary in VillageWorks.PROJECTS:
+		var costs: Dictionary = project["costs"]
+		for key: String in costs:
+			if key == "dinars":
+				inventory.dinars = int(costs[key])
+			else:
+				inventory.add_item(key, int(costs[key]) - inventory.count_of(key))
+		check(works.fund_next() and works.is_done(str(project["id"])), "%s can be finished" % project["id"])
+	check(works.all_done() and kindness.points == 40, "every project raises the Khair meter")
+	check(_place(main).get_node_or_null("WorkWell") != null and _place(main).get_node_or_null("WorkDiwaniya") != null, "finished projects stand in the village")
+	check(_place(main).get_node("WorkWell").get_node_or_null("Block") != null, "the well is solid")
+	loader.go_to(load("res://src/scenes/world/orchard/Orchard.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	var new_palm: Node2D = _place(main).get_node_or_null("GrovePalm1") as Node2D
+	var had_dates: int = inventory.count_of("dates")
+	check(new_palm != null and activities.gather_node(new_palm) and inventory.count_of("dates") == had_dates + 1, "the new grove gives dates")
+	check(not activities.gather_node(new_palm), "the new palm also waits until morning")
+	inventory.take_item("fish", inventory.count_of("fish"))
+	inventory.add_item("fish", 1)
+	inventory.dinars = 0
+	check(inventory.sell_stack("fish") == 33, "the repaired market pays a tenth more")
+	inventory.add_item("pearl", 1)
+	check(inventory.count_of("pearl") == 1 and GoodsCatalog.sell_price("pearl") > 0, "a pearl can be kept and sold")
+	var wish: Dictionary = works.request_today()
+	check(wish.has("person") and works.can_help(str(wish["person"])), "a neighbor asks for help today")
+	check(works.request_today()["item"] == wish["item"], "the request stays the same all day")
+	inventory.take_item(str(wish["item"]), inventory.count_of(str(wish["item"])))
+	check(not works.fulfil_request(), "a request needs the goods")
+	inventory.add_item(str(wish["item"]), int(wish["amount"]))
+	var paid_before: int = inventory.dinars
+	var khair_before: int = kindness.points
+	check(works.fulfil_request() and inventory.dinars == paid_before + int(wish["pay"]) and kindness.points == khair_before + VillageWorks.REQUEST_POINTS, "a request pays dinars and Khair")
+	check(not works.fulfil_request() and not works.can_help(str(wish["person"])), "a request pays once")
+	save.write_now()
+	works.done.clear()
+	check(save.load_game() and works.all_done() and bool(works.request_today().get("done", false)), "projects and requests survive a reload")
+	clock.sleep_now()
+	clock.set_process(false)
+	check(int(works.request_today()["day"]) == clock.day and not bool(works.request_today()["done"]), "a new request comes each morning")
+	check(not works.festival_ready(), "the festival waits for a full meter")
+	kindness.points = Kindness.MAX_POINTS
+	check(works.festival_ready() and stead.goal_text() == Locale.t("quest_festival"), "a full meter and all projects open the festival")
+	works.from_data({"done": {"moon": true}, "request": {"day": clock.day, "person": "nobody", "item": "wood", "amount": 1}})
+	check(works.done.is_empty() and works.request.is_empty(), "broken project values load safely")
+	kindness.from_data({})
+	stead.flags.erase("built_house")
+	stead.apply_buildings()
+	inventory.hearts = 5.0
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "VillageReturn")
+	for i: int in 3:
+		await process_frame
+
+## Walks with the same calls a screen tap makes, because direct calls cannot catch an unreachable door.
+func _check_walks(main: Node, clock: GameClock) -> void:
+	var player: Player = main.find_child("Player", true, false) as Player
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	player.global_position = Vector2(0, 20)
+	player.busy = false
+	player.set_walk_target(Vector2(-136, -85))
+	for i: int in 900:
+		await physics_frame
+		if _place_name(main) == "HouseInside":
+			break
+	check(_place_name(main) == "HouseInside", "a tap on the house walks the boy inside")
+	player.busy = false
+	var bed: Node2D = _place(main).get_node("Bed") as Node2D
+	player.set_walk_target(bed.global_position + Vector2(0, -10))
+	for i: int in 900:
+		await physics_frame
+		if dialogue.visible:
+			break
+	check(dialogue.visible and dialogue._choosing, "a tap on the bed asks about sleep")
+	dialogue._choose(false)
+	var door: Node2D = _place(main).get_node("Exit") as Node2D
+	player.set_walk_target(door.get_node("CollisionShape2D").global_position)
+	for i: int in 900:
+		await physics_frame
+		if _place_name(main) == "Home":
+			break
+	check(_place_name(main) == "Home", "a tap on the door walks back to the farm")
+	for i: int in 3:
+		await process_frame
+	player.busy = false
+	player.set_walk_target(Vector2(168, 40))
+	for i: int in 900:
+		await physics_frame
+		if _place_name(main) == "Village":
+			break
+	check(_place_name(main) == "Village", "a tap on the road sign walks to the village")
+	for i: int in 3:
+		await process_frame
+	player.busy = false
+	var elder: Node2D = _place(main).get_node("Elder") as Node2D
+	player.set_walk_target(elder.global_position)
+	for i: int in 900:
+		await physics_frame
+		if dialogue.visible:
+			break
+	check(dialogue.visible, "a tap on the elder opens talk")
+	dialogue._pick("cancel")
+	(main.get_node("Systems/LevelLoader") as LevelLoader).go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+
+func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activities: Activities) -> void:
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	var elder: Node = _place(main).get_node("Elder")
+	check(elder.get("_frames").size() == 8, "the elder has eight idle frames")
+	var first: Vector2 = elder.get("_frames")[0].get_size()
+	var same: bool = true
+	for frame: Texture2D in elder.get("_frames"):
+		same = same and frame.get_size() == first
+	check(same, "idle frames all share one size, so the feet stay still")
+	check(_place(main).get_node_or_null("Decor") != null and _place(main).get_node("Decor").get_child_count() > 0, "the village has ground details")
+	activities.talk_role("elder")
+	check(dialogue._portrait_box.visible and dialogue._portrait.texture != null, "a villager talks with a portrait")
+	dialogue._pick("cancel")
+	dialogue.ask("x")
+	check(not dialogue._portrait_box.visible, "a question with no speaker shows no portrait")
+	dialogue._choose(false)
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+	await _check_debris(main, loader, activities)
+	var pond: Node = _place(main).get_node("FishingSpot")
+	check(pond.get_node_or_null("Block") != null, "the pond cannot be walked through")
+	var player: Player = main.find_child("Player", true, false) as Player
+	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
+	player.busy = false
+	var fished: bool = bool(activities.fish_spots.has("Home/FishingSpot"))
+	player.global_position = Vector2(70, 60)
+	player.set_walk_target(Vector2(128, 80))
+	for i: int in 400:
+		await physics_frame
+		if activities.fish_spots.has("Home/FishingSpot"):
+			break
+	check(fished or activities.fish_spots.has("Home/FishingSpot"), "a tap on the pond reaches it and fishes")
+	player.cancel_tap()
+
+func _check_debris(main: Node, loader: LevelLoader, activities: Activities) -> void:
+	var systems: Node = main.get_node("Systems")
+	var inventory: Inventory = systems.get_node("Inventory") as Inventory
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var save: SaveGame = systems.get_node("SaveGame") as SaveGame
+	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
+	var place: Node = _place(main)
+	var twigs: Node2D = place.get_node_or_null("Debris0") as Node2D
+	check(twigs != null, "the farm starts with twigs to clear")
+	var cell: Vector2i = dirt.local_to_map(dirt.to_local(twigs.global_position))
+	check(activities.tool_for_cell(dirt, cell) == "axe", "twigs ask for the axe")
+	var wood: int = inventory.wood
+	check(activities.chop_at(dirt, cell) and inventory.wood == wood + 1, "clearing twigs gives wood")
+	check(not activities.chop_at(dirt, cell) and inventory.wood == wood + 1, "cleared twigs pay once")
+	var stones: Node2D = place.get_node("Debris7") as Node2D
+	var stone_cell: Vector2i = dirt.local_to_map(dirt.to_local(stones.global_position))
+	check(activities.tool_for_cell(dirt, stone_cell) == "pick", "stones ask for the pickaxe")
+	var weeds: Node2D = place.get_node("Debris13") as Node2D
+	var weed_cell: Vector2i = dirt.local_to_map(dirt.to_local(weeds.global_position))
+	var herbs: int = inventory.forage
+	check(activities.try_use(dirt, weed_cell) and inventory.forage == herbs + 1, "pulling weeds gives an herb")
+	save.write_now()
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+	check(_place(main).get_node_or_null("Debris0") == null and _place(main).get_node_or_null("Debris7") != null, "cleared debris stays gone, and the rest waits")
+	check(bool(stead.flags.get("cleared_Debris0", false)), "the cleared list is saved")
+	loader.go_to(load("res://src/scenes/world/house/House_inside.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	check(_place(main).get_node_or_null("Room_table") != null and _place(main).get_node_or_null("Bounds/Walls") != null, "the house has furniture and walls")
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var lamp: PointLight2D = _place(main).get_node("Room_lantern").get_child(-1) as PointLight2D
+	clock.minute = 22.0 * 60.0
+	clock._paint_sky()
+	check(lamp != null and lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color != Color.WHITE, "lamps glow at night")
+	clock.minute = 10.0 * 60.0
+	clock._paint_sky()
+	check(not lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color == Color.WHITE, "lamps rest in daylight")
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+
+func _locale_is_whole() -> bool:
+	var whole: bool = true
+	for key: String in Locale._EN:
+		if key == "language":
+			continue
+		if not Locale._AR.has(key):
+			print("MISSING ARABIC %s" % key)
+			whole = false
+			continue
+		for blank: String in ["%d", "%s"]:
+			if str(Locale._EN[key]).count(blank) != str(Locale._AR[key]).count(blank):
+				print("BLANKS DIFFER %s" % key)
+				whole = false
+	return whole
 
 func _check_save_safety(save: SaveGame, inventory: Inventory) -> void:
 	inventory.dinars = 77

@@ -15,10 +15,11 @@ const _EXTRAS: Dictionary = {
 	"wool": {"sell": 36, "icon": "res://assets/items/Wool.png"},
 	"feed": {"sell": 0, "icon": "res://assets/items/Feed.png"},
 	"copper": {"sell": 40, "icon": "res://assets/items/Copper.png"},
+	"pearl": {"sell": 120, "icon": "res://assets/items/Pearl.png"},
 }
 
 static func extra_ids() -> PackedStringArray:
-	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper"])
+	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper", "pearl"])
 
 static func is_extra(item_id: String) -> bool:
 	return item_id in extra_ids()

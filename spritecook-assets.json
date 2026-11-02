@@ -1,0 +1,119 @@
+{
+  "assets": [
+    {
+      "asset_id": "ca8bf607-70bb-47b0-96e8-a439cd24b85d",
+      "sha12": "9e7de478944f",
+      "label": "assets/characters/village/Fisherman.png"
+    },
+    {
+      "asset_id": "0da9fe98-6196-4a1d-9b37-ceb7b03fc4fe",
+      "sha12": "5a30ae426ff9",
+      "label": "assets/characters/village/Elder.png"
+    },
+    {
+      "asset_id": "37b16e2b-6aaf-4e73-ba1b-288bfb0978f0",
+      "sha12": "f746f47a67f1",
+      "label": "assets/characters/village/Merchant.png"
+    },
+    {
+      "asset_id": "517903f5-e495-4a41-a84a-3db594750102",
+      "sha12": "4eaeba702360",
+      "label": "assets/characters/village/Carpenter.png"
+    },
+    {
+      "asset_id": "f9edbd48-d0d1-471e-a6a4-8c0fdd1be5fa",
+      "sha12": "2393339b637f",
+      "label": "assets/building/Farm/Chicken coop.png"
+    },
+    {
+      "asset_id": "7e387aef-0f00-412d-8345-ce786c722d9a",
+      "sha12": "809ba5b02fae",
+      "label": "assets/building/Farm/Barn.png"
+    },
+    {
+      "asset_id": "e45deca0-5f8b-4d82-9f48-8a154314ca7b",
+      "sha12": "8f118f807d83",
+      "label": "assets/props/well.png"
+    },
+    {
+      "asset_ids": [
+        "6b83b2e4-5a5a-4f7d-8201-e2aa8d9da623",
+        "b154fc38-5471-4463-bcca-847903a6cadd"
+      ],
+      "sha12": "5773b7d4011a",
+      "label": "assets/characters/animals/Chicken.png (two frames, resized)"
+    },
+    {
+      "asset_ids": [
+        "523274e6-952c-4bdb-b96b-b5a1bd52f466",
+        "40794b0e-318e-4731-9523-2ca7ba49674c"
+      ],
+      "sha12": "57651c673805",
+      "label": "assets/characters/animals/Goat.png (two frames, resized)"
+    },
+    {
+      "asset_ids": [
+        "cdefd3dd-398b-470c-9c9b-ac58154742e6",
+        "1b756be2-4b62-4bd4-ae4f-c2ed7834423c"
+      ],
+      "sha12": "5e522a5730a5",
+      "label": "assets/characters/animals/Sheep.png (two frames, resized)"
+    },
+    {
+      "asset_ids": [
+        "1f995d32-d233-45ae-b919-6244a062bd16",
+        "6c97030c-c99b-42f0-92cf-1c10d7dcc7cb"
+      ],
+      "sha12": "945a17ed4251",
+      "label": "assets/characters/animals/Cow.png (two frames, resized)"
+    },
+    {
+      "asset_id": "67ab4a96-6db0-4d0e-b441-bf2cf3b5c30c",
+      "label": "style guide: Jassim"
+    },
+    {
+      "asset_id": "3d7aa015-9455-49f1-a31f-1c0d0c038db1",
+      "label": "style guide: adobe house"
+    },
+    {
+      "asset_id": "4c41bcbb-b190-4489-9e88-bbe476ec321e",
+      "sha12": "32b0b92b7a70",
+      "label": "assets/characters/village/idle/Elder.png"
+    },
+    {
+      "asset_id": "0efbdc54-2df2-4f03-8e80-6093a14cb610",
+      "sha12": "71ec0d1b22fe",
+      "label": "assets/characters/village/idle/Merchant.png"
+    },
+    {
+      "asset_id": "98ca6fb4-9c88-4cea-846d-460a9572a493",
+      "sha12": "77e5171d348d",
+      "label": "assets/characters/village/idle/Carpenter.png"
+    },
+    {
+      "asset_id": "c0b5b2b0-bb9f-484e-8a1d-ee489139f8b0",
+      "sha12": "5c9a33a9319d",
+      "label": "assets/characters/village/idle/Jassim.png"
+    },
+    {
+      "asset_id": "eb36c742-10ac-404a-8de4-3685d50c722f",
+      "sha12": "e2ab17da4136",
+      "label": "assets/props/ground_grass.png"
+    },
+    {
+      "asset_id": "d53ed566-1083-4391-a42e-2a7e352b8799",
+      "sha12": "d2da444d7eda",
+      "label": "assets/nature/Oasis pond.png"
+    },
+    {
+      "asset_id": "b3810cca-2be4-4787-8601-3336d54f8105",
+      "sha12": "8f86328d12d9",
+      "label": "assets/props/ground_details.png"
+    },
+    {
+      "asset_id": "453b79f7-0dcc-4daa-8555-065e97092294",
+      "sha12": "dfeb87d232f5",
+      "label": "assets/nature/Date palm.png (resized)"
+    }
+  ]
+}

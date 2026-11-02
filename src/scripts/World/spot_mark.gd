@@ -14,8 +14,23 @@ extends Node2D
 ## Solid footprint at the feet. Zero means the boy walks through.
 @export var block_size: Vector2 = Vector2.ZERO
 
+const IDLE_SHEETS: Dictionary = {
+	"Neighbor": "res://assets/characters/village/idle/Jassim.png",
+	"Elder": "res://assets/characters/village/idle/Elder.png",
+	"Merchant": "res://assets/characters/village/idle/Merchant.png",
+	"Carpenter": "res://assets/characters/village/idle/Carpenter.png",
+}
+const IDLE_FPS: float = 6.0
+const WATER_SHADER: String = "res://src/shaders/water_shimmer.gdshader"
+
 var bob: float = 0.0
+var walking: bool = false
 var _picture: Texture2D
+var _frames: Array[Texture2D] = []
+var _frame: int = 0
+var _phase: float = 0.0
+var _sways: bool = false
+var _breathes: bool = false
 var _player: Player
 var _show_talk: bool = false
 
@@ -28,9 +43,60 @@ func _ready() -> void:
 		_picture = _fit(person, fit_pixels)
 	else:
 		_picture = person
+	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
+	var is_person: bool = name == "Neighbor" or role != ""
+	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm")
+	_breathes = is_person and not IDLE_SHEETS.has(str(name))
+	if IDLE_SHEETS.has(str(name)):
+		_load_idle(str(IDLE_SHEETS[str(name)]))
+	if name == "FishingSpot":
+		var shimmer: ShaderMaterial = ShaderMaterial.new()
+		shimmer.shader = load(WATER_SHADER) as Shader
+		material = shimmer
 	_block_tree()
 	_block_footprint()
+	_add_night_light()
 	queue_redraw()
+
+## Cuts a sheet of eight idle frames, with one crop for all so the feet never jump.
+func _load_idle(path: String) -> void:
+	var sheet: Texture2D = load(path) as Texture2D
+	if sheet == null or _picture == null:
+		return
+	var image: Image = sheet.get_image()
+	var cell: int = image.get_height()
+	var count: int = int(float(image.get_width()) / float(cell))
+	var crop: Rect2i = Rect2i()
+	var cells: Array[Image] = []
+	for i: int in count:
+		var part: Image = image.get_region(Rect2i(i * cell, 0, cell, cell))
+		cells.append(part)
+		var used: Rect2i = part.get_used_rect()
+		crop = used if crop.size == Vector2i.ZERO else crop.merge(used)
+	if crop.size == Vector2i.ZERO:
+		return
+	var tall: float = _picture.get_size().y * (1.0 if fit_pixels > 0 else person_scale)
+	var factor: float = tall / float(crop.size.y)
+	for part: Image in cells:
+		var cut: Image = part.get_region(crop)
+		cut.resize(maxi(1, int(round(crop.size.x * factor))), maxi(1, int(round(crop.size.y * factor))), Image.INTERPOLATE_LANCZOS)
+		_frames.append(ImageTexture.create_from_image(cut))
+	_picture = _frames[0]
+
+## Lanterns and torches glow after dark. The clock turns them on.
+func _add_night_light() -> void:
+	var path: String = person.resource_path.to_lower()
+	if name != "HouseLamp" and not (path.contains("lantern") or path.contains("torch")):
+		return
+	var light: PointLight2D = PointLight2D.new()
+	light.texture = UiStyle.glow_texture()
+	light.color = Color("ffc56b")
+	light.energy = 0.95
+	light.texture_scale = 0.8
+	light.position = Vector2(0, -_picture.get_size().y * 0.6) if stand_on_feet else Vector2.ZERO
+	light.enabled = false
+	light.add_to_group("night_light")
+	add_child(light)
 
 func _block_footprint() -> void:
 	if block_size == Vector2.ZERO:
@@ -62,7 +128,14 @@ func _block_tree() -> void:
 func _process(_delta: float) -> void:
 	if _picture == null:
 		return
-	z_index = 2000 + int(global_position.y)
+	z_index = 1 if name == "FishingSpot" else 2000 + int(global_position.y)
+	if not _frames.is_empty():
+		var now: int = int(_clock() * IDLE_FPS) % _frames.size()
+		if now != _frame:
+			_frame = now
+			queue_redraw()
+	if _sways or _breathes or walking:
+		queue_redraw()
 	if name == "Neighbor" or role != "":
 		var show_talk: bool = _near_player()
 		if show_talk != _show_talk or show_talk:
@@ -113,14 +186,7 @@ func _draw_talk_mark() -> void:
 	var player: Player = _hero()
 	if player == null:
 		return
-	var at: Vector2 = to_local(player.global_position + Vector2(0, -20))
-	draw_set_transform(at)
-	var font: Font = ThemeDB.fallback_font
-	draw_circle(Vector2.ZERO, 8, Color("fff3dc"))
-	draw_arc(Vector2.ZERO, 8, 0, TAU, 16, Color("d9a441"), 1.0)
-	var size: Vector2 = font.get_string_size("E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-	draw_string(font, Vector2(-size.x * 0.5, size.y * 0.35), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("3f2d27"))
-	draw_set_transform(Vector2.ZERO)
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
 
 func _sprite_rect() -> Rect2:
 	var size: Vector2 = _picture.get_size()
@@ -132,13 +198,30 @@ func _sprite_rect() -> Rect2:
 func _player_rect() -> Rect2:
 	return Rect2(_player.global_position - Vector2(10, 22), Vector2(20, 40))
 
+func _clock() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0 + _phase
+
 func _draw() -> void:
 	if _picture != null:
-		var size: Vector2 = _picture.get_size()
-		if fit_pixels == 0:
+		var shown: Texture2D = _frames[_frame] if not _frames.is_empty() else _picture
+		var size: Vector2 = shown.get_size()
+		if fit_pixels == 0 and _frames.is_empty():
 			size *= person_scale
 		var origin: Vector2 = Vector2(-size.x * 0.5, -size.y) if stand_on_feet else -size * 0.5
-		draw_texture_rect(_picture, Rect2(origin + Vector2(0, -bob), size), false)
+		var ground_y: float = origin.y + size.y
+		if not _frames.is_empty() or _breathes or _sways:
+			UiStyle.draw_shadow(self, Vector2(0, ground_y - 1.0), size.x * (0.3 if _sways else 0.42))
+		if walking:
+			var turn: float = sin(_clock() * 10.0) * 0.06
+			draw_set_transform(Vector2(-sin(turn) * ground_y, ground_y - cos(turn) * ground_y), turn)
+		elif _sways:
+			var lean: float = sin(_clock() * 1.1) * 0.03
+			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(lean, 1), Vector2(-lean * ground_y, 0)))
+		elif _breathes:
+			var grow: float = 1.0 + sin(_clock() * 1.8) * 0.018
+			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(0, grow), Vector2(0, ground_y * (1.0 - grow))))
+		draw_texture_rect(shown, Rect2(origin + Vector2(0, -bob), size), false)
+		draw_set_transform(Vector2.ZERO)
 		_draw_talk_mark()
 		return
 	draw_rect(Rect2(-8, -8, 16, 16), mark_color)

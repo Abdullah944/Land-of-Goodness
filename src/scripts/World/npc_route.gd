@@ -22,11 +22,16 @@ func _process(delta: float) -> void:
 		_placed = true
 	if _talking(person):
 		_set_bob(person, 0.0)
+		person.set("walking", false)
 		return
 	var gap: Vector2 = goal - person.position
 	if gap.length() <= 0.5:
+		if bool(person.get("walking")):
+			person.set("walking", false)
+			person.queue_redraw()
 		_set_bob(person, 0.0)
 		return
+	person.set("walking", true)
 	var step: float = minf(speed * delta, gap.length())
 	person.position += gap.normalized() * step
 	_walked += step

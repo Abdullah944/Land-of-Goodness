@@ -15,6 +15,7 @@ const ICONS: Array[String] = [
 	"",
 ]
 const HEART_ICON: String = "res://assets/ui/Terracotta pixel heart icon.png"
+const KHAIR_W: float = 78.0
 
 var _time: Label
 var _gold: Label
@@ -51,15 +52,13 @@ var _sale_earned: Label
 var _sale_left: Label
 var _sale_balance: Label
 var _sale_token: int = 0
+var _sale_titles: Array[Label] = []
+var _music_button: Button
+var _help_button: Button
+var _eat: Button
+var _tab_keys: Dictionary = {}
 
 func _ready() -> void:
-	var night: ColorRect = ColorRect.new()
-	night.name = "Night"
-	night.color = Color(0.05, 0.08, 0.2)
-	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	night.visible = false
-	add_child(night)
-	night.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var rain: ColorRect = ColorRect.new()
 	rain.name = "Rain"
 	rain.color = Color("55afc4")
@@ -76,6 +75,9 @@ func _ready() -> void:
 	_note = _make_label(Vector2(90, 248), Color("fff3dc"))
 	_note.size = Vector2(300, 16)
 	_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_note.add_theme_constant_override("outline_size", 4)
+	_note.add_theme_color_override("font_outline_color", Color("3f2d27"))
+	_note.add_theme_font_size_override("font_size", 11)
 	add_child(_note)
 	_sleep_dark = ColorRect.new()
 	_sleep_dark.name = "SleepDark"
@@ -85,7 +87,31 @@ func _ready() -> void:
 	add_child(_sleep_dark)
 	_sleep_dark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_sale()
+	_fit_screen()
+	get_viewport().size_changed.connect(_fit_screen)
 	refresh()
+
+## Pins each panel to its screen edge, so wide phones fill the screen and the notch stays clear.
+func _fit_screen() -> void:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var side: float = _side_margin(view)
+	_heart_bar.position.x = side
+	_toolbar.position.x = side
+	_clock_panel.position.x = view.x - side - _clock_panel.size.x
+	_burger.position = Vector2(view.x - side - _burger.size.x, view.y - MARGIN - _burger.size.y)
+	_menu.position = Vector2((view.x - _menu.size.x) * 0.5, (view.y - _menu.size.y) * 0.5 + 18.0)
+	_note.position = Vector2((view.x - _note.size.x) * 0.5, view.y - 40.0)
+	_sale_panel.position = (view - _sale_panel.size) * 0.5
+
+func _side_margin(view: Vector2) -> float:
+	if not OS.has_feature("mobile"):
+		return MARGIN
+	var window: Vector2 = Vector2(DisplayServer.window_get_size())
+	var safe: Rect2i = DisplayServer.get_display_safe_area()
+	if window.x <= 0.0 or safe.size.x <= 0:
+		return MARGIN
+	var inset: float = maxf(float(safe.position.x), window.x - float(safe.end.x))
+	return maxf(MARGIN, ceil(inset * view.x / window.x))
 
 func cover_for_sleep() -> void:
 	_sleep_dark.visible = true
@@ -98,9 +124,12 @@ func show_sale(item: String, quantity: int, earned: int, remaining: int, balance
 	_sale_token += 1
 	var token: int = _sale_token
 	_sale_item.text = "%s  × %d" % [item, quantity]
-	_sale_earned.text = "%d dinars" % earned
-	_sale_left.text = "%d turnips" % remaining
-	_sale_balance.text = "%d dinars" % balance
+	_sale_earned.text = Locale.t("dinars") % earned
+	_sale_left.text = "%d %s" % [remaining, item]
+	_sale_balance.text = Locale.t("dinars") % balance
+	for row: int in _sale_titles.size():
+		_sale_titles[row].text = Locale.t(["sale_sold", "sale_earned", "sale_left", "sale_balance"][row])
+		Locale.apply_control(_sale_titles[row])
 	_sale_panel.visible = true
 	_sale_panel.move_to_front()
 	await get_tree().create_timer(3.0).timeout
@@ -176,17 +205,16 @@ func refresh() -> void:
 	_list.visible = _tab == "bag"
 	_bar.visible = _tab == "bag"
 	_craft.visible = _tab == "bag"
-	_zoom_in.visible = _tab == "settings"
-	_zoom_out.visible = _tab == "settings"
-	if _language != null:
-		_language.visible = _tab == "settings"
-		_language.text = Locale.t("language")
-	if _sound != null:
-		_sound.visible = _tab == "settings"
-		_sound.text = Locale.t("sound")
+	_eat.visible = _tab == "bag"
+	_eat.text = Locale.t("eat")
+	Locale.apply_control(_eat)
+	_refresh_settings(stead)
+	for tab: Button in _tab_keys:
+		tab.text = Locale.t(_tab_keys[tab])
+		Locale.apply_control(tab)
+	_craft.text = Locale.t("craft_seeds")
+	Locale.apply_control(_craft)
 	if _journal != null:
-		_journal_tab.text = Locale.t("journal")
-		Locale.apply_control(_journal_tab)
 		_journal.visible = _tab == "quests"
 		_journal2.visible = _tab == "quests"
 		if _journal.visible:
@@ -199,7 +227,23 @@ func refresh() -> void:
 	for i: int in _slots.size():
 		_slots[i].modulate = Color("d9a441") if _player().tool == TOOLS[i] else Color.WHITE
 	for i: int in _hearts.size():
-		_hearts[i].modulate.a = 1.0 if float(i) < inventory.hearts else 0.35
+		_hearts[i].visible = float(i) < inventory.max_hearts
+		_hearts[i].modulate.a = clampf(inventory.hearts - float(i), 0.3, 1.0)
+	var kindness: Kindness = systems.get_node_or_null("Kindness") as Kindness
+	if kindness != null:
+		_khair_fill.size.x = (KHAIR_W - 2.0) * float(kindness.points) / float(Kindness.MAX_POINTS)
+		_khair_label.text = "%s  %d" % [Locale.t("khair"), kindness.points]
+		Locale.apply_control(_khair_label)
+
+func _refresh_settings(stead: Stead) -> void:
+	var labels: Dictionary = {_zoom_in: Locale.t("zoom_in"), _zoom_out: Locale.t("zoom_out"), _language: Locale.t("language"), _help_button: Locale.t("help_button")}
+	if stead != null:
+		labels[_music_button] = Locale.t("music") % Locale.t("level_%d" % stead.music_level)
+		labels[_sound] = Locale.t("effects") % Locale.t("level_%d" % stead.sfx_level)
+	for button: Button in labels:
+		button.visible = _tab == "settings"
+		button.text = labels[button]
+		Locale.apply_control(button)
 
 func _build_clock() -> void:
 	var panel: TextureRect = TextureRect.new()
@@ -212,11 +256,13 @@ func _build_clock() -> void:
 	add_child(panel)
 	_clock_panel = panel
 	_time = _make_label(Vector2(10, 4), Color("3f2d27"))
-	_gold = _make_label(Vector2(10, 22), Color("7a4f32"))
+	_gold = _make_label(Vector2(10, 22), Color("3f2d27"))
 	panel.add_child(_time)
 	panel.add_child(_gold)
 
 var _heart_bar: Control
+var _khair_fill: ColorRect
+var _khair_label: Label
 
 func _build_hearts() -> void:
 	var bar: Control = Control.new()
@@ -224,7 +270,7 @@ func _build_hearts() -> void:
 	bar.size = Vector2(78, 14)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var icon: Texture2D = _fit_icon(HEART_ICON, 14)
-	for i: int in 5:
+	for i: int in 7:
 		var heart: TextureRect = TextureRect.new()
 		heart.texture = icon
 		heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -236,6 +282,29 @@ func _build_hearts() -> void:
 		_hearts.append(heart)
 	add_child(bar)
 	_heart_bar = bar
+	_build_khair(bar)
+
+func _build_khair(bar: Control) -> void:
+	bar.size.y = 40.0
+	var track: ColorRect = ColorRect.new()
+	track.color = Color("3f2d27")
+	track.position = Vector2(0, 17)
+	track.size = Vector2(KHAIR_W, 6)
+	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(track)
+	_khair_fill = ColorRect.new()
+	_khair_fill.color = Color("d9a441")
+	_khair_fill.position = Vector2(1, 1)
+	_khair_fill.size = Vector2(0, 4)
+	_khair_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	track.add_child(_khair_fill)
+	_khair_label = _make_label(Vector2(0, 24), Color("fff3dc"))
+	_khair_label.size = Vector2(KHAIR_W, 14)
+	_khair_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_khair_label.add_theme_font_size_override("font_size", 9)
+	_khair_label.add_theme_constant_override("outline_size", 3)
+	_khair_label.add_theme_color_override("font_outline_color", Color("3f2d27"))
+	bar.add_child(_khair_label)
 
 func _build_tools() -> void:
 	var bar: TextureRect = TextureRect.new()
@@ -317,22 +386,19 @@ func _build_menu() -> void:
 	window.size = page.size
 	page.add_child(window)
 	var inner: Rect2 = Rect2(20, 22, 429, 170)
-	var bag_tab: Button = _picture_button("res://assets/ui/tabs/Cozy wooden Bag inventory tab.png", 18)
-	var settings_tab: Button = _picture_button("res://assets/ui/tabs/Cozy pixel-game settings tab.png", 18)
-	var close_tab: Button = _picture_button("res://assets/ui/tabs/Cozy pixel-art beige Close tab.png", 18)
-	bag_tab.position = Vector2(inner.position.x, inner.position.y)
-	settings_tab.position = Vector2(bag_tab.position.x + bag_tab.size.x + 6.0, inner.position.y)
-	close_tab.position = Vector2(inner.end.x - close_tab.size.x, inner.position.y)
+	var bag_tab: Button = _tab_button("", Vector2(inner.position.x, inner.position.y))
+	var settings_tab: Button = _tab_button("", Vector2(inner.position.x + 84.0, inner.position.y))
+	var journal_tab: Button = _tab_button("", Vector2(inner.position.x + 168.0, inner.position.y))
+	var close_tab: Button = _tab_button("", Vector2(inner.end.x - 78.0, inner.position.y))
 	bag_tab.pressed.connect(_show_tab.bind("bag"))
 	settings_tab.pressed.connect(_show_tab.bind("settings"))
-	close_tab.pressed.connect(_toggle_menu)
-	page.add_child(bag_tab)
-	page.add_child(settings_tab)
-	page.add_child(close_tab)
-	var journal_tab: Button = _tab_button(Locale.t("journal"), Vector2(settings_tab.position.x + settings_tab.size.x + 6.0, inner.position.y))
-	journal_tab.size = Vector2(60, 18)
 	journal_tab.pressed.connect(_show_tab.bind("quests"))
-	page.add_child(journal_tab)
+	close_tab.pressed.connect(_toggle_menu)
+	_tab_keys = {bag_tab: "tab_bag", settings_tab: "tab_settings", journal_tab: "journal", close_tab: "tab_close"}
+	for tab: Button in _tab_keys:
+		tab.size = Vector2(78, 24)
+		tab.focus_mode = Control.FOCUS_NONE
+		page.add_child(tab)
 	_journal_tab = journal_tab
 	var column_w: float = (inner.size.x - 30.0) * 0.5
 	_journal = _make_label(Vector2(inner.position.x + 10.0, 52), Color("3f2d27"))
@@ -341,6 +407,7 @@ func _build_menu() -> void:
 		column.size = Vector2(column_w, 104)
 		column.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		column.add_theme_font_size_override("font_size", 11)
+		column.add_theme_constant_override("line_spacing", -4)
 		column.visible = false
 		page.add_child(column)
 	var list: Panel = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", Vector2(inner.position.x, 48), Vector2(inner.size.x, 108), 11, 2)
@@ -350,33 +417,38 @@ func _build_menu() -> void:
 	var bar: Panel = _nine("res://assets/ui/menu/Empty Beige Pixel Game Bar.png", Vector2(inner.position.x, 160), Vector2(inner.size.x, 30), 8, 2)
 	page.add_child(bar)
 	_bar = bar
-	var craft: Button = _picture_button("res://assets/ui/tabs/Wooden craft seeds button.png", 22)
-	craft.position = Vector2(8, (bar.size.y - craft.size.y) * 0.5)
+	var craft: Button = _tab_button("", Vector2(6, 3))
+	craft.size = Vector2(96, 24)
+	craft.focus_mode = Control.FOCUS_NONE
 	craft.pressed.connect(_on_craft)
 	bar.add_child(craft)
 	_craft = craft
-	_bag_money = _make_label(Vector2(160, 0), Color("3f2d27"))
-	_bag_money.size = Vector2(bar.size.x - 172, bar.size.y)
+	_bag_money = _make_label(Vector2(180, 0), Color("3f2d27"))
+	_bag_money.size = Vector2(bar.size.x - 192, bar.size.y)
 	_bag_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_bag_money.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bag_money.add_theme_font_size_override("font_size", 12)
 	bar.add_child(_bag_money)
-	var zoom_in: Button = _tab_button("Zoom in", Vector2(180, 78))
-	var zoom_out: Button = _tab_button("Zoom out", Vector2(180, 110))
-	zoom_in.pressed.connect(_zoom.bind(1.15))
-	zoom_out.pressed.connect(_zoom.bind(0.87))
-	page.add_child(zoom_in)
-	page.add_child(zoom_out)
-	_zoom_in = zoom_in
-	_zoom_out = zoom_out
-	var language: Button = _tab_button(Locale.t("language"), Vector2(180, 142))
-	language.pressed.connect(_toggle_language)
-	page.add_child(language)
-	_language = language
-	var sound: Button = _tab_button(Locale.t("sound"), Vector2(260, 142))
-	sound.pressed.connect(_toggle_sound)
-	page.add_child(sound)
-	_sound = sound
+	_zoom_in = _settings_button(0, 0, _zoom.bind(1.15))
+	_zoom_out = _settings_button(1, 0, _zoom.bind(0.87))
+	_music_button = _settings_button(0, 1, _cycle_music)
+	_sound = _settings_button(1, 1, _toggle_sound)
+	_language = _settings_button(0, 2, _toggle_language)
+	_help_button = _settings_button(1, 2, _show_help)
+	_eat = _tab_button(Locale.t("eat"), Vector2(108, 3))
+	_eat.size = Vector2(60, 24)
+	_eat.focus_mode = Control.FOCUS_NONE
+	_eat.pressed.connect(_on_eat)
+	bar.add_child(_eat)
+
+func _settings_button(column: int, row: int, action: Callable) -> Button:
+	var button: Button = _tab_button("", Vector2(84.0 + column * 156.0, 60.0 + row * 40.0))
+	button.size = Vector2(144, 32)
+	button.add_theme_font_size_override("font_size", 12)
+	button.focus_mode = Control.FOCUS_NONE
+	button.pressed.connect(action)
+	_menu.add_child(button)
+	return button
 
 func _picture_button(path: String, height_px: int) -> Button:
 	var button: Button = Button.new()
@@ -506,11 +578,23 @@ func _journal_text(stead: Stead) -> String:
 	if stead == null:
 		return ""
 	var lines: PackedStringArray = PackedStringArray()
-	for step: Dictionary in stead.steps():
-		var mark: String = "[x]" if bool(step["done"]) else "[  ]"
-		lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
-	if stead.is_established():
-		lines.append(Locale.t("quest_established"))
+	var works: VillageWorks = get_tree().current_scene.get_node_or_null("Systems/VillageWorks") as VillageWorks
+	if stead.is_established() and works != null:
+		lines.append(Locale.t("journal_works"))
+		for project: Dictionary in VillageWorks.PROJECTS:
+			lines.append("%s %s" % ["[x]" if works.is_done(str(project["id"])) else "[  ]", Locale.t(str(project["id"]))])
+	else:
+		for step: Dictionary in stead.steps():
+			var mark: String = "[x]" if bool(step["done"]) else "[  ]"
+			lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
+	if works != null:
+		var wish: Dictionary = works.request_today()
+		if not bool(wish.get("done", false)):
+			var who: String = str(wish.get("person", ""))
+			lines.append(Locale.t("journal_request") % [Locale.t(who if who == "jassim" else who + "_name"), int(wish.get("amount", 0)), Locale.item(str(wish.get("item", "")))])
+	var kindness: Kindness = get_tree().current_scene.get_node_or_null("Systems/Kindness") as Kindness
+	if kindness != null:
+		lines.append(Locale.t("khair_line") % [kindness.points, Kindness.MAX_POINTS])
 	return "\n".join(lines)
 
 func _toggle_language() -> void:
@@ -524,14 +608,42 @@ func _toggle_language() -> void:
 		save.write_now()
 	refresh()
 
+func _show_help() -> void:
+	_toggle_menu()
+	var lines: PackedStringArray = PackedStringArray()
+	for key: String in ["help_clear", "help_farm", "help_rest", "help_world", "help_khair"]:
+		lines.append(Locale.t(key))
+	(get_tree().current_scene.get_node("UI/Dialogue") as DialogueBox).open_lines(lines)
+
+func _on_eat() -> void:
+	var systems: Node = get_tree().current_scene.get_node("Systems")
+	var inventory: Inventory = systems.get_node("Inventory") as Inventory
+	var activities: Activities = systems.get_node("Activities") as Activities
+	var eaten: String = inventory.eat_something()
+	if eaten == "":
+		activities.flash(Locale.t("nothing_to_eat"))
+		return
+	activities.flash(Locale.t("ate") % Locale.item(eaten))
+	(systems.get_node("SoundBank") as SoundBank).play("gather")
+	(systems.get_node("SaveGame") as SaveGame).write_now()
+	refresh()
+
+func _cycle_music() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null:
+		return
+	stead.music_level = (stead.music_level + 2) % 3
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).apply_levels()
+	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
+	refresh()
+
 func _toggle_sound() -> void:
 	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
 	if stead == null:
 		return
-	stead.sfx = not stead.sfx
-	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
-	if bank != null and stead.sfx:
-		bank.call("play", "ui")
+	stead.sfx_level = (stead.sfx_level + 2) % 3
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	refresh()
 	var save: SaveGame = get_tree().current_scene.get_node_or_null("Systems/SaveGame") as SaveGame
 	if save != null:
 		save.write_now()
@@ -590,10 +702,9 @@ func _build_sale() -> void:
 	hit.add_theme_stylebox_override("focus", empty)
 	hit.pressed.connect(dismiss_sale)
 	panel.add_child(hit)
-	var titles: PackedStringArray = PackedStringArray(["Sold", "Earned", "Left", "Balance"])
-	for i: int in titles.size():
+	for i: int in 4:
 		var title: Label = _make_label(Vector2(18, 22 + i * 22), Color("7a4f32"))
-		title.text = titles[i]
+		_sale_titles.append(title)
 		title.size = Vector2(70, 16)
 		title.add_theme_font_size_override("font_size", 12)
 		panel.add_child(title)
@@ -774,9 +885,9 @@ func _on_craft() -> void:
 	var inventory: Inventory = systems.get_node("Inventory") as Inventory
 	var activities: Activities = systems.get_node("Activities") as Activities
 	if inventory.try_craft_seeds():
-		activities.note = "Two stones became three seeds."
+		activities.note = Locale.t("seeds_made")
 		var save: SaveGame = systems.get_node("SaveGame") as SaveGame
 		save.write_now()
 	else:
-		activities.note = "Crafting needs two stones."
+		activities.note = Locale.t("seeds_need")
 	refresh()

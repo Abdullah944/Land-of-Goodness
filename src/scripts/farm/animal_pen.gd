@@ -10,8 +10,8 @@ const SHEETS: Dictionary = {
 	"cow": "res://assets/characters/animals/Cow.png",
 }
 
-@export var coop_area: Rect2 = Rect2(16, 128, 56, 24)
-@export var barn_area: Rect2 = Rect2(72, 136, 72, 28)
+@export var coop_area: Rect2 = Rect2(8, 120, 28, 22)
+@export var barn_area: Rect2 = Rect2(106, 104, 36, 36)
 
 var _walkers: Array[Dictionary] = []
 
@@ -34,6 +34,8 @@ func sync(animals: Array) -> void:
 		sprite.position = area.position + Vector2(fmod(17.0 * i, area.size.x), fmod(7.0 * i, area.size.y))
 		sprite.modulate = Color.WHITE if bool(row.get("fed", false)) else Color(0.92, 0.88, 0.85)
 		add_child(sprite)
+		var cell: Vector2 = sprite.texture.get_size() / Vector2(2.0, 1.0)
+		sprite.add_child(UiStyle.shadow_node(Vector2(0, cell.y * 0.5 - 2.0), cell.x * 0.8))
 		sprite.z_index = 2000 + int(global_position.y + sprite.position.y)
 		_walkers.append({"sprite": sprite, "area": area, "goal": sprite.position, "wait": 0.5 + 0.3 * i, "clock": 0.0})
 

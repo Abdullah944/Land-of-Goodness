@@ -24,7 +24,33 @@ const BUILDINGS: Dictionary = {
 	"barn": {"name_key": "barn", "costs": {"wood": 20, "stone": 12}, "requires": "coop"},
 	"expand": {"name_key": "expand", "costs": {"wood": 8, "stone": 8, "dinars": 100}, "requires": ""},
 	"tools": {"name_key": "tools", "costs": {"copper": 3, "dinars": 120}, "requires": ""},
+	"house": {"name_key": "house", "costs": {"wood": 30, "stone": 20, "dinars": 1200}, "requires": ""},
+	"coop2": {"name_key": "coop2", "costs": {"wood": 15, "stone": 8, "dinars": 600}, "requires": "coop"},
+	"barn2": {"name_key": "barn2", "costs": {"wood": 25, "stone": 15, "dinars": 1200}, "requires": "barn"},
+	"expand2": {"name_key": "expand2", "costs": {"wood": 16, "stone": 16, "dinars": 800}, "requires": "expand"},
+	"tools2": {"name_key": "tools2", "costs": {"copper": 8, "dinars": 800}, "requires": "tools"},
+	"decor_rug": {"name_key": "decor_rug", "costs": {"wool": 2, "dinars": 300}, "requires": "house"},
+	"decor_table": {"name_key": "decor_table", "costs": {"wood": 6, "dinars": 250}, "requires": "house"},
+	"decor_plant": {"name_key": "decor_plant", "costs": {"forage": 2, "dinars": 150}, "requires": "house"},
+	"decor_lantern": {"name_key": "decor_lantern", "costs": {"copper": 1, "dinars": 200}, "requires": "house"},
 }
+
+## The order the build menu lists things.
+const BUILD_ORDER: Array[String] = [
+	"coop", "barn", "expand", "tools", "house", "coop2", "barn2", "expand2", "tools2",
+	"decor_rug", "decor_table", "decor_plant", "decor_lantern",
+]
+
+## Pictures that a bought decoration adds inside the house.
+const DECOR: Dictionary = {
+	"decor_rug": {"place": "HouseInside", "name": "DecorRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(70, 120), "flat": true},
+	"decor_table": {"place": "HouseInside", "name": "DecorTable", "path": "res://assets/props/table.png", "at": Vector2(70, 128), "block": Vector2(24, 8)},
+	"decor_plant": {"place": "HouseInside", "name": "DecorPlant", "path": "res://assets/props/plant.png", "at": Vector2(150, 118)},
+	"decor_lantern": {"place": "HouseInside", "name": "DecorLantern", "path": "res://assets/props/lantern.png", "at": Vector2(150, 96)},
+}
+
+const BUNDLE_PRICE: int = 70
+const BUNDLE_SIZE: int = 10
 
 const ANIMALS: Dictionary = {
 	"chicken": {"name_key": "chicken", "price": 180, "home": "coop", "feed": 1, "product": "eggs", "amount": 1, "cap": 4},

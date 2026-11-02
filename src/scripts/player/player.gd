@@ -146,7 +146,7 @@ func _arrive_role(place: Node, feet: Vector2) -> void:
 			continue
 		if tapped_point.distance_to(spot.global_position) > 30.0:
 			continue
-		var role: String = str(spot.get("role"))
+		var role: String = Activities.role_of(spot)
 		if role != "":
 			activities.talk_role(role)
 			return
@@ -167,12 +167,55 @@ func reached_walk_spot(dirt: TileMapLayer) -> bool:
 
 func change_zoom(multiplier: float) -> void:
 	var cam: Camera2D = get_node("Camera2D") as Camera2D
-	var next: float = clampf(cam.zoom.x * multiplier, 1.0, 3.0)
+	var next: float = clampf(cam.zoom.x * multiplier, _lowest_zoom(), 3.0)
 	cam.zoom = Vector2(next, next)
+	fit_camera()
+
+## Keeps the view on the map, so the empty space past its edge never shows.
+func fit_camera() -> void:
+	var cam: Camera2D = get_node("Camera2D") as Camera2D
+	var area: Rect2 = _camera_area()
+	if area.size == Vector2.ZERO:
+		cam.limit_left = -10000000
+		cam.limit_top = -10000000
+		cam.limit_right = 10000000
+		cam.limit_bottom = 10000000
+		return
+	var low: float = _lowest_zoom()
+	if cam.zoom.x < low:
+		cam.zoom = Vector2(low, low)
+	cam.limit_left = int(area.position.x)
+	cam.limit_top = int(area.position.y)
+	cam.limit_right = int(area.end.x)
+	cam.limit_bottom = int(area.end.y)
+
+func _lowest_zoom() -> float:
+	var area: Rect2 = _camera_area()
+	if area.size == Vector2.ZERO:
+		return 1.0
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	return maxf(1.0, maxf(view.x / area.size.x, view.y / area.size.y))
+
+func _camera_area() -> Rect2:
+	var place: Node = _current_place()
+	if place == null or place.name == "HouseInside":
+		return Rect2()
+	var ground: Node = place.find_child("Ground", true, false)
+	if ground is TileMapLayer:
+		var layer: TileMapLayer = ground
+		var used: Rect2i = layer.get_used_rect()
+		var top_left: Vector2 = layer.to_global(layer.map_to_local(used.position)) - Vector2(layer.tile_set.tile_size) * 0.5
+		return Rect2(top_left, Vector2(used.size * layer.tile_set.tile_size))
+	var bounds: Node = place.get_node_or_null("Bounds")
+	if bounds != null:
+		return (bounds.get("area") as Rect2).grow(16.0)
+	return Rect2()
 
 func _ready() -> void:
 	var cam: Camera2D = get_node("Camera2D") as Camera2D
-	cam.zoom = Vector2(1.6, 1.6)
+	cam.zoom = Vector2(1.35, 1.35)
+	get_viewport().size_changed.connect(fit_camera)
+	add_child(UiStyle.shadow_node(Vector2(0, 21), 24.0))
 	var sprite: AnimatedSprite2D = get_node("CharacterSprite") as AnimatedSprite2D
 	sprite.sprite_frames = sprite.sprite_frames.duplicate(true)
 	_add_swing(sprite, "res://assets/characters/boy/animation/axe/Kuwaiti farm boy axe-swing sprite sheet.png", "axe_")
@@ -223,7 +266,7 @@ func _snap_indoor(world_position: Vector2) -> Vector2:
 			continue
 		var spot: Node2D = child as Node2D
 		var kind: String = str(spot.get("group_name"))
-		var interesting: bool = str(spot.get("role")) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore"
+		var interesting: bool = Activities.role_of(spot) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore"
 		if interesting and world_position.distance_to(spot.global_position) <= 28.0:
 			return spot.global_position + Vector2(0, 18)
 	for child: Node in place.get_children():

@@ -24,7 +24,7 @@ window/size/window_width_override=1280
 window/size/window_height_override=720
 window/handheld/orientation=4
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+window/stretch/aspect="expand"
 window/stretch/scale_mode="integer"
 
 [file_customization]
@@ -111,3 +111,4 @@ textures/vram_compression/import_etc2_astc=true
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+environment/defaults/default_clear_color=Color(0.16, 0.11, 0.09, 1)

@@ -13,7 +13,9 @@ var flags: Dictionary = {}
 var visited: Dictionary = {}
 var place_name: String = "Home"
 var language: String = "ar"
-var sfx: bool = true
+## 0 is off, 1 is soft, 2 is full.
+var music_level: int = 2
+var sfx_level: int = 2
 
 const SCENES: Dictionary = {
 	"Home": "res://src/scenes/world/home/Home.tscn",
@@ -49,20 +51,9 @@ func buy_feed() -> bool:
 	return true
 
 func build(building_id: String) -> bool:
+	if not can_offer(building_id):
+		return false
 	var spec: Dictionary = RecipeCatalog.building(building_id)
-	if spec.is_empty():
-		return false
-	if building_id == "coop" and coop:
-		return false
-	if building_id == "barn" and (barn or not coop):
-		return false
-	if building_id == "expand" and expanded:
-		return false
-	if building_id == "tools" and tool_level >= 1:
-		return false
-	var requires: String = str(spec.get("requires", ""))
-	if requires == "coop" and not coop:
-		return false
 	if not _pay(spec.get("costs", {})):
 		return false
 	if building_id == "coop":
@@ -73,8 +64,70 @@ func build(building_id: String) -> bool:
 		expanded = true
 	elif building_id == "tools":
 		tool_level = 1
+	elif building_id == "tools2":
+		tool_level = 2
+	else:
+		flags["built_" + building_id] = true
 	apply_buildings()
 	return true
+
+func is_built(building_id: String) -> bool:
+	match building_id:
+		"coop":
+			return coop
+		"barn":
+			return barn
+		"expand":
+			return expanded
+		"tools":
+			return tool_level >= 1
+		"tools2":
+			return tool_level >= 2
+	return bool(flags.get("built_" + building_id, false))
+
+## True when the thing is not built yet and what it depends on is standing.
+func can_offer(building_id: String) -> bool:
+	var spec: Dictionary = RecipeCatalog.building(building_id)
+	if spec.is_empty() or is_built(building_id):
+		return false
+	var requires: String = str(spec.get("requires", ""))
+	return requires == "" or is_built(requires)
+
+func pay_costs(costs: Variant) -> bool:
+	return _pay(costs)
+
+## Spends dinars on a bundle of wood or stone from the carpenter.
+func buy_bundle(item_id: String) -> bool:
+	var bag: Inventory = _bag()
+	if bag == null or bag.dinars < RecipeCatalog.BUNDLE_PRICE:
+		return false
+	bag.dinars -= RecipeCatalog.BUNDLE_PRICE
+	bag.add_item(item_id, RecipeCatalog.BUNDLE_SIZE)
+	return true
+
+static func cost_text(costs: Dictionary) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for key: Variant in costs:
+		if str(key) == "dinars":
+			parts.append(Locale.t("dinars") % int(costs[key]))
+		else:
+			parts.append("%d %s" % [int(costs[key]), Locale.item(str(key))])
+	return Locale.t("list_join").join(parts)
+
+## Only what is still missing, for the line that says why something cannot be paid yet.
+func missing_text(costs: Dictionary) -> String:
+	var bag: Inventory = _bag()
+	var short: Dictionary = {}
+	for key: Variant in costs:
+		var have: int = bag.dinars if str(key) == "dinars" else bag.count_of(str(key))
+		if have < int(costs[key]):
+			short[key] = int(costs[key]) - have
+	return Stead.cost_text(short)
+
+func animal_cap(kind: String) -> int:
+	var spec: Dictionary = RecipeCatalog.animal(kind)
+	var bigger: bool = is_built("coop2") if str(spec.get("home", "")) == "coop" else is_built("barn2")
+	return int(spec.get("cap", 0)) * (2 if bigger else 1)
 
 func buy_animal(kind: String) -> bool:
 	var spec: Dictionary = RecipeCatalog.animal(kind)
@@ -84,7 +137,7 @@ func buy_animal(kind: String) -> bool:
 		return false
 	if str(spec.get("home", "")) == "barn" and not barn:
 		return false
-	if count_kind(kind) >= int(spec.get("cap", 0)):
+	if count_kind(kind) >= animal_cap(kind):
 		return false
 	var bag: Inventory = _bag()
 	var price: int = int(spec.get("price", 0))
@@ -115,6 +168,9 @@ func feed_kind(kind: String) -> int:
 		fed_count += 1
 	if fed_count > 0:
 		apply_buildings()
+		var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
+		if kindness != null:
+			kindness.note_feeding()
 	return fed_count
 
 func on_new_day() -> String:
@@ -177,7 +233,18 @@ func goal_text() -> String:
 		return Locale.t("quest_barn_animal")
 	if not bool(flags.get("got_barn_product", false)):
 		return Locale.t("quest_barn_product")
-	return Locale.t("quest_established")
+	var works: VillageWorks = get_parent().get_node_or_null("VillageWorks") as VillageWorks
+	if works == null:
+		return Locale.t("quest_established")
+	if works.finished:
+		return Locale.t("quest_free")
+	if works.festival_ready():
+		return Locale.t("quest_festival")
+	var project: Dictionary = works.next_project()
+	if not project.is_empty():
+		return Locale.t("quest_work") % Locale.t(str(project["id"]))
+	var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
+	return Locale.t("quest_khair") % (kindness.points if kindness != null else 0)
 
 ## Pays the one-time village thanks when the farm goal is first reached.
 func check_milestone() -> bool:
@@ -214,10 +281,21 @@ func is_established() -> bool:
 func apply_buildings() -> void:
 	var farm: FarmField = get_parent().get_node_or_null("FarmField") as FarmField
 	if farm != null and expanded:
-		farm.farm_size = Vector2i(4, 4)
+		farm.farm_size = Vector2i(5, 5) if is_built("expand2") else Vector2i(4, 4)
+	var bag: Inventory = _bag()
+	if bag != null:
+		bag.max_hearts = 7.0 if is_built("house") else 5.0
 	var place: Node = _place()
 	if place == null:
 		return
+	PlaceDecor.dress(place, flags)
+	for decor_id: String in RecipeCatalog.DECOR:
+		var piece: Dictionary = RecipeCatalog.DECOR[decor_id]
+		if is_built(decor_id) and str(piece["place"]) == str(place.name) and place.get_node_or_null(str(piece["name"])) == null:
+			PropPiece.add_to(place, piece)
+	var works: VillageWorks = get_parent().get_node_or_null("VillageWorks") as VillageWorks
+	if works != null:
+		works.apply_place()
 	var coop_node: CanvasItem = place.get_node_or_null("Coop") as CanvasItem
 	if coop_node != null:
 		coop_node.visible = coop
@@ -245,7 +323,8 @@ func to_data() -> Dictionary:
 		"visited": visited.duplicate(true),
 		"place_name": place_name,
 		"language": language,
-		"sfx": sfx,
+		"music_level": music_level,
+		"sfx_level": sfx_level,
 	}
 
 func from_data(data: Dictionary) -> void:
@@ -278,7 +357,8 @@ func from_data(data: Dictionary) -> void:
 	language = str(data.get("language", "ar"))
 	if language != "ar" and language != "en":
 		language = "ar"
-	sfx = bool(data.get("sfx", true))
+	music_level = clampi(int(data.get("music_level", 2)), 0, 2)
+	sfx_level = clampi(int(data.get("sfx_level", 2 if bool(data.get("sfx", true)) else 0)), 0, 2)
 	Locale.language = language
 	apply_buildings()
 

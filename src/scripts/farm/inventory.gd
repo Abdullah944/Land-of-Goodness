@@ -20,8 +20,10 @@ var wood: int = 0
 var dates: int = 0
 var forage: int = 0
 var hearts: float = 5.0
+var max_hearts: float = 5.0
 var extra: Dictionary = {}
 
+const TOOL_TIRE: float = 0.1
 const STORED_GOODS: Array[String] = [
 	"seeds", "tomato_seeds", "wheat_seeds", "watermelon_seeds",
 	"turnips", "tomatoes", "wheat", "watermelons",
@@ -35,7 +37,29 @@ func spend_heart() -> bool:
 	return true
 
 func refill_hearts() -> void:
-	hearts = 5.0
+	hearts = max_hearts
+
+## Each tool swing tires the boy a little. False means he must rest or eat first.
+func tire() -> bool:
+	if hearts < TOOL_TIRE * 0.1:
+		return false
+	hearts = maxf(0.0, hearts - TOOL_TIRE)
+	return true
+
+## Eats the cheapest food in the bag for one heart. Returns its id, or "" when nothing was eaten.
+func eat_something() -> String:
+	if hearts >= max_hearts:
+		return ""
+	var choice: String = ""
+	for item_id: String in Kindness.FOODS:
+		if count_of(item_id) < 1:
+			continue
+		if choice == "" or GoodsCatalog.sell_price(item_id) < GoodsCatalog.sell_price(choice):
+			choice = item_id
+	if choice == "" or not take_item(choice, 1):
+		return ""
+	hearts = minf(max_hearts, hearts + 1.0)
+	return choice
 
 func try_craft_seeds() -> bool:
 	if stone < 2:
@@ -57,13 +81,13 @@ func sell_stack(item_id: String) -> int:
 		return 0
 	if not take_item(item_id, have):
 		return 0
-	var earned: int = price * have
+	var earned: int = _with_market(price * have)
 	dinars += earned
 	return earned
 
 func sell_turnips() -> int:
 	var price: int = int(CropCatalog.get_crop(CropCatalog.TURNIP).get("sell_price", 20))
-	var earned: int = turnips * price
+	var earned: int = _with_market(turnips * price)
 	dinars += earned
 	turnips = 0
 	return earned
@@ -189,7 +213,14 @@ func from_data(data: Dictionary) -> void:
 	for item_id: String in all_stored_ids():
 		_set_item(item_id, maxi(0, count_of(item_id)))
 	dinars = maxi(0, dinars)
-	hearts = clampf(hearts, 0.0, 5.0)
+	hearts = clampf(hearts, 0.0, 7.0)
+
+## The repaired market brings more buyers, so goods sell for a tenth more.
+func _with_market(amount: int) -> int:
+	var works: VillageWorks = get_parent().get_node_or_null("VillageWorks") as VillageWorks
+	if works != null and works.is_done("market"):
+		return int(ceil(amount * 1.1))
+	return amount
 
 func _set_item(item_id: String, amount: int) -> void:
 	match item_id:

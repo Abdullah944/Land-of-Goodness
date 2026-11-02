@@ -6,7 +6,9 @@ extends Node
 
 const DIRT_TILE: Vector2i = Vector2i(2, 4)
 const BED_TILE: Vector2i = Vector2i(1, 1)
-const OUTSIDE_NOTE: String = "This ground cannot be farmed."
+const SOIL_BED: Texture2D = preload("res://assets/farming/soil_bed.png")
+const SOIL_TILLED: Texture2D = preload("res://assets/farming/soil_tilled.png")
+const SOIL_WET: Texture2D = preload("res://assets/farming/soil_wet.png")
 
 @export var farm_origin: Vector2i = Vector2i(-11, -4)
 @export var farm_size: Vector2i = Vector2i(3, 3)
@@ -20,9 +22,9 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 		return
 	if not _can_work(cell):
 		if activities != null:
-			activities.note = OUTSIDE_NOTE
+			activities.note = Locale.t("outside")
 		return
-	if activities != null and activities.note == OUTSIDE_NOTE:
+	if activities != null and activities.note == Locale.t("outside"):
 		activities.note = ""
 	var plot: Dictionary = _plot(cell)
 	var watered_now: bool = false
@@ -83,6 +85,14 @@ func apply() -> void:
 	var crops: Node2D = Node2D.new()
 	crops.name = "Crops"
 	dirt.add_child(crops)
+	for cell: Vector2i in _farm_cells():
+		if not _is_tilled(cell):
+			crops.add_child(_soil(dirt, cell, SOIL_BED))
+	for key: String in plots.keys():
+		var plot: Dictionary = plots[key]
+		var cell: Vector2i = _cell_from_key(key)
+		if bool(plot["tilled"]):
+			crops.add_child(_soil(dirt, cell, SOIL_WET if bool(plot["watered"]) else SOIL_TILLED))
 	for key: String in plots.keys():
 		var plot: Dictionary = plots[key]
 		var cell: Vector2i = _cell_from_key(key)
@@ -163,20 +173,23 @@ func _plant(plot: Dictionary) -> void:
 	var crop: Dictionary = CropCatalog.get_crop(crop_id)
 	if inventory == null or not _take_seed(inventory, crop):
 		if activities != null:
-			activities.note = "You need a seed."
+			activities.note = Locale.t("need_seed")
 		return
 	plot["stage"] = 0
 	plot["watered"] = false
 	plot["crop"] = crop_id
 	var seasons: Array = crop.get("seasons", [])
 	if activities != null and not seasons.has(_season()):
-		activities.note = "%s waits for its season." % str(crop.get("name", "This crop"))
+		activities.note = Locale.t("waits_season") % Locale.item(str(crop.get("harvest_item", "")))
 
 func _spread_water(cell: Vector2i) -> void:
 	var stead: Node = get_parent().get_node_or_null("Stead")
 	if stead == null or int(stead.get("tool_level")) < 1:
 		return
-	for offset: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+	var around: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]
+	if int(stead.get("tool_level")) >= 2:
+		around.append_array([Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)])
+	for offset: Vector2i in around:
 		var next: Vector2i = cell + offset
 		if not plots.has(_key(next)):
 			continue
@@ -194,18 +207,20 @@ func _harvest(plot: Dictionary) -> void:
 	var inventory: Inventory = _inventory()
 	if inventory != null:
 		_give_harvest(inventory, crop)
+	if _activities() != null:
+		_activities().pop_item(str(crop.get("harvest_item", "")), int(crop.get("harvest_amount", 1)))
 	var activities: Activities = _activities()
 	if activities != null:
 		activities.flash(_picked_line(crop))
+	var bank: Node = get_parent().get_node_or_null("SoundBank")
+	if bank != null:
+		bank.call("play", "harvest")
 	plot["stage"] = -1
 	plot["watered"] = false
 	plot["crop"] = ""
 
 func _picked_line(crop: Dictionary) -> String:
-	var crop_name: String = str(crop.get("name", "crop"))
-	if crop_name == "Wheat":
-		return "You picked wheat."
-	return "You picked a %s." % crop_name.to_lower()
+	return Locale.t("picked") % Locale.item(str(crop.get("harvest_item", "")))
 
 func _take_seed(inventory: Inventory, crop: Dictionary) -> bool:
 	return inventory.take_item(str(crop.get("seed_item", "")), 1)
@@ -262,6 +277,14 @@ func _crop_of(plot: Dictionary) -> Dictionary:
 	if not CropCatalog.has_crop(crop_id):
 		crop_id = CropCatalog.TURNIP
 	return CropCatalog.get_crop(crop_id)
+
+## Soil pictures make the field easy to find, and show at a glance what was watered.
+func _soil(dirt: TileMapLayer, cell: Vector2i, picture: Texture2D) -> Sprite2D:
+	var soil: Sprite2D = Sprite2D.new()
+	soil.texture = picture
+	soil.position = dirt.map_to_local(cell)
+	soil.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return soil
 
 func _sprout(dirt: TileMapLayer, cell: Vector2i, plot: Dictionary) -> Sprite2D:
 	var crop: Dictionary = _crop_of(plot)

@@ -182,11 +182,43 @@ Local branch `production-v1` holds the production work. `main` was not changed. 
 
 Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 
-**Exact next action:** On `production-v1`:
-1. Add money sinks and buy them in `tests/playthrough.gd`: a carpenter wood bundle, a house upgrade, and a second animal of each kind.
-2. Pause the clock during the chest and dialogue.
-3. Add harvest sounds and a separate music and effects volume.
-4. Then ask before any push, TestFlight upload, or Android release signing.
+**Milestone 3, tested on side saves and desktop renders only:**
+
+- The game fills wide phones and iPads. The panels pin to the screen edges, and the HUD stays clear of the notch. The notch margin still needs an iPhone check.
+- Long dialogue menus show pages with More and Cancel. Before this, the top of the animals menu ran off the screen, so Buy chicken could not be tapped.
+- The village Khair meter sits under the hearts. Share one food with each neighbor per day (+2), give 10 dinars through the elder once per day (+3), and feed animals (+1 once per day). It never falls, stops at 100, and gives seeds at 10, 30, 60, and 100. Old saves start at 0.
+- `tests/core_loop.gd`: 86 of 86 passed. `tests/playthrough.gd`: 7 of 7 passed, goal on day 19.
+- A signed debug build was installed by cable on the iPhone 16e. On 2026-11-01 the owner confirmed that it opens and fills the screen. The notch margin, old save, gift, and Buy chicken checks were not separately reported.
+- Check on iPhone: the "E" bubble is a keyboard letter that means nothing on a touch screen.
+
+**Milestone 4, content complete, tested on side saves and desktop renders:**
+
+- The single-player story now has an ending. After the farm is established, the elder asks for five village projects in order: well, palm grove, market, harbor dock, and diwaniya. Each one appears in the world and has an effect (new daily date palms, goods sell for a tenth more, pearls while fishing at the harbor).
+- A neighbor asks for goods each day and pays dinars and Khair. When all projects are done and the Khair meter is full, the next morning opens the village festival and credits. The farm stays open afterward.
+- Money sinks: bigger house (7 hearts), second coop and barn (double animals), largest field (5x5), best watering can, four house decorations, and wood and stone bundles from the carpenter.
+- Hearts now matter. Each tool swing costs a tenth of a heart. The Eat button in the bag restores one heart, and sleep restores all.
+- Phone fixes: the "E" bubble became a speech bubble, the clock waits during talk and the chest, the game saves when sent to the background, and the camera stays on the map.
+- The empty field now shows soil, and watered soil looks darker. The house moved from past the top of the map to just above the field. Exits show a gold arrow and the place name. Menu tabs are text in the chosen language.
+- A bug where hidden map markers counted as people was fixed. Tapping near one could stop the boy or open Jassim's talk.
+- Refused actions say what is missing. Every line exists in Arabic and English.
+- Original music and sound effects come from `tools/make_audio.py`, with separate Music and Effects settings. Small pictures come from `tools/draw_items.py`.
+- `tests/core_loop.gd`: 132 of 132 passed, including walks that use the same call as a screen tap. `tests/playthrough.gd`: 15 of 15 passed. An ordinary routine establishes the farm on day 19 and reaches the festival on day 48.
+
+**Not done on purpose:** prayer, Quran, and dhikr (need a named reviewer), the mosque, and family play (decided for after the single-player game proves fun). The villagers, animals, coop, barn, and well were generated with SpriteCook, and their asset ids are in `spritecook-assets.json`. The pearl, rug, and soil are still script drawings.
+
+**Look pass after studying the Stardew Valley mobile Day 1 video (ideas only, no art or text copied):**
+
+- The camera shows more of the world and the boy is smaller. Paths, fences, flowers, stones, and weeds fill the ground. New grass, pond, and date palm came from SpriteCook.
+- Talk boxes are warm wood, show a portrait and a name, and reveal text letter by letter.
+- Jassim, the elder, the merchant, and the carpenter have eight-frame idle animations. The fisherman breathes by code. Palms sway, water moves, and people, trees, and animals have soft shadows. Daylight is brighter.
+- The farm starts with twigs, stones, and weeds that clear for good and pay one item each. The cleared list is saved with the farm.
+- The world darkens with a tint at night, and lanterns and torches glow. Picking something up shows a small "+1", and tools throw a puff of dust, water, or chips.
+- The house is a real room with walls, a floor, and furniture cut from `house_interior.png` by `tools/cut_interior.gd`. The title screen shows the app art. Villagers lean as they walk.
+- Not done: a bigger map, and true walking frames for villagers, which need more SpriteCook credits.
+- The iPhone install waits until the owner raises it. The certificate expired on 2026-11-01, and Xcode rejects the login.
+- SpriteCook credits left: 7.
+
+**Exact next action:** The owner plays a new game and reports problems. Then have a native speaker review the Arabic, and ask before any push, TestFlight upload, or Android release signing.
 
 ## 7. Open decisions
 
@@ -195,14 +227,21 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 | Final art generator | Seedream Lite is promising; test Nano Banana consistency | Before bulk asset production |
 | Sprite pipeline | AI concepts + pixel-editor cleanup and exact-size verification | Before animation sheets |
 | Game language | Arabic-first is preferred; verify audience and localization needs | Before UI content expansion |
-| Family gameplay | Later, preferably asynchronous first | After single-player loop proves fun |
-| Revenue model | No ads; free core with optional one-time purchase | After player validation |
+| Family gameplay | **Decided 2026-11-01:** separate phones sharing a family farm and goals, each playing at their own time; build after the single-player loop proves fun | Decided |
+| Good meter | **Decided 2026-11-01:** counts in-game kindness only. Prayer and Quran stay optional and unscored. The game does not claim real reward or heaven | Decided |
+| 2D or 3D | **Decided 2026-11-01:** stay 2D | Decided |
+| Everyday testing | **Decided 2026-11-01:** real iPhone, because the simulator is heavy on the 8 GB MacBook Air | Decided |
+| Religious content reviewer | A scholar or teacher must review Quran, prayer times, and Arabic lines, including the Khair meter's "جزاك الله خيراً" lines; no reviewer named yet | Before any religious feature ships |
+| Revenue model | **Decided 2026-11-01:** free, no ads, one optional purchase; recheck after player validation | Before release |
 | Build automation | Approval-gated macOS/GitHub workflow | After reliable manual releases |
 
 ## 8. Change log
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Look pass after studying the Stardew Valley mobile video: SpriteCook villagers, animals, and buildings, idle animations, ground details, debris to clear, night lamps, a furnished house, portrait talk boxes, and a new title screen. Core test 150 of 150 and playthrough 15 of 15 passed on side saves. Not yet played on a phone. |
+| 2026-11-02 | Production branch milestone 4: village projects, daily requests, festival ending, money sinks, working hearts, original music and sounds, visible field, house moved onto the map, and exit signs. Core test 132 of 132 and playthrough 15 of 15 passed on side saves. Full play on the iPhone is still required. |
+| 2026-11-01 | Production branch milestone 3: full-screen layout for wide phones and iPads, paged long menus, and the village Khair meter. Core test 86 of 86 and playthrough 7 of 7 passed on side saves. The iPhone test is still required. |
 | 2026-10-30 | Created the master plan from our agreed 2D Kuwaiti farming direction; marked existing prototype work and defined milestones. |
 | 2026-10-30 | Phase 1.1: added a visible 3×3 farm. Each square tills, plants, waters, grows, and harvests on its own. Old saves still load; planted squares now store an optional turnip id. |
 | 2026-10-30 | Confirmed there is one master plan, at `doc/LAND_OF_KHAIR_PLAN.md`. No `docs/` copy exists. |

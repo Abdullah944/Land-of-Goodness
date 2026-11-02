@@ -16,6 +16,9 @@
 [ext_resource type="Script" path="res://src/scripts/farm/stead.gd" id="12_stead"]
 [ext_resource type="Script" path="res://src/scripts/ui/sound_bank.gd" id="13_sound"]
 [ext_resource type="Script" path="res://src/scripts/ui/title_menu.gd" id="14_title"]
+[ext_resource type="Script" path="res://src/scripts/farm/kindness.gd" id="15_kind"]
+[ext_resource type="Script" path="res://src/scripts/farm/village_works.gd" id="16_works"]
+[ext_resource type="Script" path="res://src/scripts/ui/ending.gd" id="17_end"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -53,6 +56,12 @@ script = ExtResource("12_stead")
 [node name="SoundBank" type="Node" parent="Systems"]
 script = ExtResource("13_sound")
 
+[node name="Kindness" type="Node" parent="Systems"]
+script = ExtResource("15_kind")
+
+[node name="VillageWorks" type="Node" parent="Systems"]
+script = ExtResource("16_works")
+
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true
 
@@ -77,6 +86,10 @@ script = ExtResource("9_talk")
 process_mode = 3
 layer = 2
 script = ExtResource("14_title")
+
+[node name="Ending" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("17_end")
 
 [node name="Player" parent="World" unique_id=1950149959 instance=ExtResource("2_4qh4t")]
 z_index = 1

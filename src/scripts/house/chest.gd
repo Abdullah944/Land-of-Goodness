@@ -46,14 +46,7 @@ func _draw() -> void:
 	var player: Player = _player()
 	if player == null:
 		return
-	var at: Vector2 = to_local(player.global_position + Vector2(0, -20))
-	draw_set_transform(at)
-	var font: Font = ThemeDB.fallback_font
-	draw_circle(Vector2.ZERO, 8, Color("fff3dc"))
-	draw_arc(Vector2.ZERO, 8, 0, TAU, 16, Color("d9a441"), 1.0)
-	var letter: Vector2 = font.get_string_size("E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-	draw_string(font, Vector2(-letter.x * 0.5, letter.y * 0.35), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("3f2d27"))
-	draw_set_transform(Vector2.ZERO)
+	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -34)))
 
 func _add_body() -> void:
 	var body: StaticBody2D = StaticBody2D.new()

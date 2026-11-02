@@ -9,7 +9,11 @@ signal picked(choice: String)
 
 const _PANEL_AT: Vector2 = Vector2(40, 200)
 const _PANEL_SIZE: Vector2 = Vector2(430, 70)
+const MAX_ROWS: int = 6
+const MORE: String = "__more"
 
+var _offer_all: PackedStringArray = []
+var _offer_page: int = 0
 var _lines: PackedStringArray = []
 var _index: int = 0
 var _choosing: bool = false
@@ -20,30 +24,119 @@ var _next: Button
 var _yes: Button
 var _no: Button
 var _offer_buttons: Array[Button] = []
+var _portrait_box: Panel
+var _portrait: TextureRect
+var _speaker_name: Label
+var _speaker: String = ""
+var _faces: Dictionary = {}
+var _typing: Tween
+
+const FACE_W: float = 44.0
+const SPEAKERS: Dictionary = {
+	"jassim": "res://assets/characters/NPC/Kind Kuwaiti Elder Sprite JASSEM.png",
+	"elder": "res://assets/characters/village/Elder.png",
+	"merchant": "res://assets/characters/village/Merchant.png",
+	"carpenter": "res://assets/characters/village/Carpenter.png",
+	"fisherman": "res://assets/characters/village/Fisherman.png",
+}
 
 func _ready() -> void:
 	visible = false
 	_panel = Panel.new()
 	_panel.position = Vector2(40, 200)
 	_panel.size = Vector2(430, 70)
+	UiStyle.panel(_panel)
 	add_child(_panel)
 	_label = Label.new()
 	_label.position = Vector2(8, 8)
 	_label.size = Vector2(414, 32)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.add_theme_color_override("font_color", Color("3f2d27"))
+	_label.add_theme_font_size_override("font_size", 13)
+	_label.add_theme_constant_override("line_spacing", -4)
 	_panel.add_child(_label)
 	_next = Button.new()
 	_next.text = Locale.t("next")
 	Locale.apply_control(_label)
 	Locale.apply_control(_next)
 	_next.position = Vector2(360, 40)
+	UiStyle.button(_next)
 	_next.pressed.connect(_advance)
 	_panel.add_child(_next)
 	_yes = _choice_button(Locale.t("yes"), Vector2(250, 40))
 	_no = _choice_button(Locale.t("no"), Vector2(340, 40))
 	_yes.pressed.connect(_choose.bind(true))
 	_no.pressed.connect(_choose.bind(false))
+	_build_portrait()
+	_fit_screen()
+	get_viewport().size_changed.connect(_fit_screen)
+
+func _build_portrait() -> void:
+	_portrait_box = Panel.new()
+	_portrait_box.position = Vector2(8, 6)
+	_portrait_box.size = Vector2(FACE_W - 6.0, 25)
+	_portrait_box.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.CREAM, UiStyle.WOOD_DARK, 1))
+	_portrait_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(_portrait_box)
+	_portrait = TextureRect.new()
+	_portrait.position = Vector2(2, 2)
+	_portrait.size = _portrait_box.size - Vector2(4, 4)
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_portrait_box.add_child(_portrait)
+	_speaker_name = Label.new()
+	_speaker_name.position = Vector2(4, 30)
+	_speaker_name.size = Vector2(FACE_W + 4.0, 14)
+	_speaker_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_speaker_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_speaker_name.add_theme_font_size_override("font_size", 8)
+	_speaker_name.add_theme_color_override("font_color", UiStyle.DARK)
+	_speaker_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(_speaker_name)
+
+## Shows who is talking until set_speaker("") or the talk ends.
+func set_speaker(person: String) -> void:
+	_speaker = person if SPEAKERS.has(person) else ""
+	_place_speaker()
+
+func _place_speaker() -> void:
+	var shown: bool = _speaker != ""
+	_portrait_box.visible = shown
+	_speaker_name.visible = shown
+	_label.position.x = 8.0 + (FACE_W + 4.0 if shown else 0.0)
+	_label.size.x = 414.0 - (FACE_W + 4.0 if shown else 0.0)
+	if shown:
+		_portrait.texture = _face(_speaker)
+		_speaker_name.text = Locale.t("name_" + _speaker)
+		Locale.apply_control(_speaker_name)
+
+## The head and shoulders of the person's picture.
+func _face(person: String) -> Texture2D:
+	if _faces.has(person):
+		return _faces[person]
+	var image: Image = (load(str(SPEAKERS[person])) as Texture2D).get_image()
+	var used: Rect2i = image.get_used_rect()
+	var side: int = mini(used.size.x, int(used.size.y * 0.5))
+	var left: int = used.position.x + int((used.size.x - side) * 0.5)
+	var cut: Image = image.get_region(Rect2i(left, used.position.y, side, side))
+	cut.resize(64, 64, Image.INTERPOLATE_LANCZOS)
+	var face: Texture2D = ImageTexture.create_from_image(cut)
+	_faces[person] = face
+	return face
+
+## Letters appear one after another. A tap on any button never has to wait for it.
+func _type_text() -> void:
+	if _typing != null:
+		_typing.kill()
+	_label.visible_ratio = 0.0
+	_typing = create_tween()
+	_typing.tween_property(_label, "visible_ratio", 1.0, minf(1.0, float(_label.text.length()) * 0.02))
+
+## Keeps the box centered and on the bottom edge of any screen shape.
+func _fit_screen() -> void:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	offset = Vector2((view.x - 512.0) * 0.5, view.y - 288.0)
 
 func open_lines(lines: PackedStringArray) -> void:
 	_close_offer()
@@ -51,9 +144,11 @@ func open_lines(lines: PackedStringArray) -> void:
 	_lines = lines
 	_index = 0
 	visible = true
-	_fit_actions(1)
-	_next.position = Vector2(8, 46)
-	_next.size = Vector2(414, 34)
+	_panel.size = Vector2(430, 112)
+	_panel.position = Vector2(40, 288.0 - 112.0 - 6.0)
+	_label.size = Vector2(414, 62)
+	_next.position = Vector2(8, 72)
+	_next.size = Vector2(414, 32)
 	_show_choices(false)
 	_show_line()
 	_hold_player()
@@ -74,6 +169,8 @@ func ask(text: String) -> void:
 	_no.position = Vector2(8, 82)
 	_no.size = Vector2(414, 34)
 	_show_choices(true)
+	_speaker = ""
+	_place_speaker()
 	_hold_player()
 
 func offer(text: String, choices: PackedStringArray) -> void:
@@ -84,19 +181,62 @@ func offer(text: String, choices: PackedStringArray) -> void:
 	_next.visible = false
 	visible = true
 	_label.text = text
-	_fit_actions(choices.size())
-	for i: int in choices.size():
-		var parts: PackedStringArray = _choice_parts(choices[i])
+	Locale.apply_control(_label)
+	_offer_all = choices
+	_offer_page = 0
+	_show_offer_page()
+	_type_text()
+	_hold_player()
+
+## A short list shows whole. A long one shows a page, a More button, and always Cancel.
+func _show_offer_page() -> void:
+	_clear_offer_buttons()
+	var rows: PackedStringArray = _offer_all
+	if _offer_all.size() > MAX_ROWS:
+		var body: PackedStringArray = _offer_all
+		var last: PackedStringArray = PackedStringArray()
+		if _choice_parts(_offer_all[_offer_all.size() - 1])[0] == "cancel":
+			body = _offer_all.slice(0, _offer_all.size() - 1)
+			last.append(_offer_all[_offer_all.size() - 1])
+		var per_page: int = MAX_ROWS - 1 - last.size()
+		rows = body.slice(_offer_page * per_page, (_offer_page + 1) * per_page)
+		rows.append("%s|%s" % [MORE, Locale.t("more")])
+		rows.append_array(last)
+	_fit_actions(rows.size())
+	_place_speaker()
+	for i: int in rows.size():
+		var parts: PackedStringArray = _choice_parts(rows[i])
 		var button: Button = Button.new()
 		button.text = parts[1]
 		button.position = Vector2(8, 46.0 + 36.0 * i)
 		button.size = Vector2(414, 34)
 		button.focus_mode = Control.FOCUS_NONE
+		button.add_theme_font_size_override("font_size", 12)
+		button.clip_text = true
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		UiStyle.button(button)
 		Locale.apply_control(button)
-		button.pressed.connect(_pick.bind(parts[0]))
+		if parts[0] == MORE:
+			button.pressed.connect(_next_offer_page)
+		else:
+			button.pressed.connect(_pick.bind(parts[0]))
 		_panel.add_child(button)
 		_offer_buttons.append(button)
-	_hold_player()
+
+func _next_offer_page() -> void:
+	var body: int = _offer_all.size()
+	if _choice_parts(_offer_all[body - 1])[0] == "cancel":
+		body -= 1
+	var per_page: int = MAX_ROWS - 1 - (_offer_all.size() - body)
+	_offer_page += 1
+	if _offer_page * per_page >= body:
+		_offer_page = 0
+	_show_offer_page()
+
+func _clear_offer_buttons() -> void:
+	for button: Button in _offer_buttons:
+		button.queue_free()
+	_offer_buttons.clear()
 
 func _fit_actions(rows: int) -> void:
 	_label.size = Vector2(414, 40)
@@ -106,9 +246,7 @@ func _fit_actions(rows: int) -> void:
 
 func _close_offer() -> void:
 	_offering = false
-	for button: Button in _offer_buttons:
-		button.queue_free()
-	_offer_buttons.clear()
+	_clear_offer_buttons()
 	_panel.position = _PANEL_AT
 	_panel.size = _PANEL_SIZE
 	_label.size = Vector2(414, 32)
@@ -126,6 +264,9 @@ func _pick(choice: String) -> void:
 	visible = false
 	var player: Player = get_tree().current_scene.find_child("Player", true, false) as Player
 	player.busy = false
+	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
+	if bank != null:
+		bank.call("play", "ui")
 	picked.emit(choice)
 
 func _choice_button(text: String, at: Vector2) -> Button:
@@ -133,6 +274,7 @@ func _choice_button(text: String, at: Vector2) -> Button:
 	button.text = text
 	button.position = at
 	button.visible = false
+	UiStyle.button(button)
 	_panel.add_child(button)
 	return button
 
@@ -162,6 +304,7 @@ func _advance() -> void:
 	_index += 1
 	if _index >= _lines.size():
 		visible = false
+		_speaker = ""
 		var player: Player = get_tree().current_scene.find_child("Player", true, false) as Player
 		player.busy = false
 		return
@@ -170,4 +313,7 @@ func _advance() -> void:
 func _show_line() -> void:
 	_next.text = Locale.t("next")
 	Locale.apply_control(_label)
+	Locale.apply_control(_next)
 	_label.text = _lines[_index]
+	_place_speaker()
+	_type_text()

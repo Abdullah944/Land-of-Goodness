@@ -26,9 +26,15 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 		place.queue_free()
 	var next_place: Node = next_scene.instantiate()
 	world.add_child(next_place)
+	var gulf: CanvasItem = next_place.get_node_or_null("Gulf") as CanvasItem
+	if gulf != null:
+		var sea: ShaderMaterial = ShaderMaterial.new()
+		sea.shader = load("res://src/shaders/water_scroll.gdshader") as Shader
+		gulf.material = sea
 	var spawn: Node = next_place.get_node_or_null(spawn_name)
 	if spawn is Marker2D:
 		player.global_position = spawn.global_position
+	player.fit_camera()
 	var farm: FarmField = main.get_node_or_null("Systems/FarmField") as FarmField
 	if farm != null:
 		farm.apply()

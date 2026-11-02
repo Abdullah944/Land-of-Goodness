@@ -185,7 +185,7 @@ block_size = Vector2(10, 6)
 position = Vector2(48, -90)
 script = ExtResource("7_spot_mark")
 person = ExtResource("17_fisherman")
-fit_pixels = 32
+fit_pixels = 48
 stand_on_feet = true
 role = "fisherman"
 

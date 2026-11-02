@@ -5,7 +5,7 @@ class_name SaveGame
 extends Node
 
 const PATH: String = "user://land_of_khair.json"
-const VERSION: int = 2
+const VERSION: int = 3
 
 var path: String = PATH
 var saved_position: Vector2 = Vector2.ZERO
@@ -17,6 +17,16 @@ func _ready() -> void:
 	var override_path: String = OS.get_environment("KHAIR_SAVE")
 	if override_path != "":
 		path = override_path
+
+## A phone can close the game at any moment, so save when it goes to the background.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_APPLICATION_PAUSED and what != NOTIFICATION_WM_CLOSE_REQUEST:
+		return
+	var scene: Node = get_tree().current_scene if is_inside_tree() else null
+	var title: Node = scene.get_node_or_null("UI/TitleMenu") if scene != null else null
+	if title == null or bool(title.call("is_open")):
+		return
+	write_now()
 
 func backup_path() -> String:
 	return path.get_basename() + ".backup.json"
@@ -48,6 +58,12 @@ func write_now() -> void:
 	}
 	if stead != null:
 		data["stead"] = stead.to_data()
+	var kindness: Variant = get_parent().get_node_or_null("Kindness")
+	if kindness != null:
+		data["kindness"] = kindness.to_data()
+	var works: Variant = get_parent().get_node_or_null("VillageWorks")
+	if works != null:
+		data["works"] = works.to_data()
 	_write_safely(JSON.stringify(data))
 
 ## Writes a temporary file, keeps the last good save as a backup, then swaps the new file in.
@@ -99,6 +115,12 @@ func _apply(data: Dictionary) -> void:
 	activities.from_data(_section(data, "activities"))
 	if stead != null:
 		stead.from_data(_section(data, "stead"))
+	var kindness: Variant = get_parent().get_node_or_null("Kindness")
+	if kindness != null:
+		kindness.from_data(_section(data, "kindness"))
+	var works: Variant = get_parent().get_node_or_null("VillageWorks")
+	if works != null:
+		works.from_data(_section(data, "works"))
 	has_position = bool(data.get("has_position", false))
 	saved_position = Vector2(float(data.get("x", 0.0)), float(data.get("y", 0.0)))
 
