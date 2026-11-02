@@ -166,6 +166,8 @@ func _check_places(main: Node, loader: LevelLoader, clock: GameClock) -> void:
 		"Harbor": ["Fisherman"],
 		"Orchard": [],
 		"Cave": [],
+		"Road": [],
+		"Forest": [],
 	}
 	for place_name: String in places:
 		var path: String = "res://src/scenes/world/%s/%s.tscn" % [place_name.to_lower(), place_name]
@@ -416,9 +418,19 @@ func _check_walks(main: Node, clock: GameClock) -> void:
 	player.set_walk_target(Vector2(500, 40))
 	for i: int in 900:
 		await physics_frame
+		if _place_name(main) == "Road":
+			break
+	check(_place_name(main) == "Road", "a tap on the east sign walks to the caravan road")
+	for i: int in 3:
+		await process_frame
+	var road_door: Node2D = _place(main).get_node("ExitVillage") as Node2D
+	player.busy = false
+	player.set_walk_target(road_door.global_position)
+	for i: int in 900:
+		await physics_frame
 		if _place_name(main) == "Village":
 			break
-	check(_place_name(main) == "Village", "a tap on the road sign walks to the village")
+	check(_place_name(main) == "Village", "the caravan road leads to the village")
 	for i: int in 3:
 		await process_frame
 	player.busy = false
@@ -456,6 +468,7 @@ func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activit
 	for i: int in 3:
 		await process_frame
 	await _check_debris(main, loader, activities)
+	await _check_world(main, loader, activities)
 	var pond: Node = _place(main).get_node("FishingSpot")
 	check(pond.get_node_or_null("Block") != null, "the pond cannot be walked through")
 	check((main.find_child("Player", true, false).get_node("Camera2D") as Camera2D).zoom.x <= 1.0, "the camera shows a wide view of the world")
@@ -519,6 +532,87 @@ func _check_debris(main: Node, loader: LevelLoader, activities: Activities) -> v
 	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
 	for i: int in 3:
 		await process_frame
+
+func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> void:
+	var home: Node = _place(main)
+	check(home.get_node_or_null("ExitForest") != null and home.get_node_or_null("ExitVillage") != null, "the farm has two ways out")
+	check(home.get_node_or_null("Forest0") != null and home.get_node_or_null("Pond_0") != null, "the farm has a forest edge and more ponds")
+	var player_check: Player = main.find_child("Player", true, false) as Player
+	player_check.global_position = Vector2(-340, 90)
+	player_check.busy = false
+	player_check.set_walk_target(Vector2(-340, 230))
+	for i: int in 200:
+		await physics_frame
+	check(player_check.global_position.y < 90.0, "the boy cannot walk onto a pond")
+	player_check.cancel_tap()
+	var zone_dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
+	var pond_fish: int = main.get_node("Systems/Inventory").count_of("fish")
+	var pond_cell: Vector2i = zone_dirt.local_to_map(zone_dirt.to_local((home.get_node("Pond_0") as Node2D).global_position))
+	check(activities.tool_for_cell(zone_dirt, pond_cell) == "use", "a new pond can be fished")
+	check(activities.try_use(zone_dirt, pond_cell) and main.get_node("Systems/Inventory").count_of("fish") == pond_fish + 1, "a new pond gives a fish")
+	check(activities.try_use(zone_dirt, pond_cell) and main.get_node("Systems/Inventory").count_of("fish") == pond_fish + 1, "the pond rests until morning")
+	var ore_cell: Vector2i = zone_dirt.local_to_map(zone_dirt.to_local((home.get_node("ZoneOre") as Node2D).global_position))
+	var copper: int = main.get_node("Systems/Inventory").count_of("copper")
+	check(activities.tool_for_cell(zone_dirt, ore_cell) == "pick" and activities.mine_at(zone_dirt, ore_cell) and main.get_node("Systems/Inventory").count_of("copper") == copper + 1, "the farm quarry gives copper")
+	var stump_cell: Vector2i = zone_dirt.local_to_map(zone_dirt.to_local((home.get_node("ZoneStump0") as Node2D).global_position))
+	var stump_wood: int = main.get_node("Systems/Inventory").wood
+	check(activities.tool_for_cell(zone_dirt, stump_cell) == "axe" and activities.chop_at(zone_dirt, stump_cell) and main.get_node("Systems/Inventory").wood == stump_wood + 1, "a stump gives wood")
+	check(not activities.chop_at(zone_dirt, stump_cell) and main.get_node("Systems/Inventory").wood == stump_wood + 1, "a stump waits until morning")
+	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	var crate: Node2D = _place(main).get_node("ShoreCrate") as Node2D
+	var total_before: int = _bag_total(main)
+	check(activities.gather_node(crate) and _bag_total(main) == total_before + 1, "the shore crate gives one find")
+	check(not activities.gather_node(crate) and _bag_total(main) == total_before + 1, "the shore crate waits until morning")
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+	home = _place(main)
+	check(PlaceDecor.farm_edge(Vector2(0, 0)) < 1.0 and PlaceDecor.farm_edge(Vector2(590, 410)) > 1.0, "the clearing is inside the forest")
+	var blocked_exit: bool = false
+	for mark: Node in home.get_children():
+		if str(mark.name).begins_with("Forest") and mark is Node2D and not mark is Marker2D:
+			blocked_exit = blocked_exit or PlaceDecor.in_exit((mark as Node2D).global_position)
+	check(not blocked_exit, "no forest tree stands in a way out")
+	var player: Player = main.find_child("Player", true, false) as Player
+	player.global_position = Vector2(0, 260)
+	player.busy = false
+	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
+	player.set_walk_target(Vector2(0, 330))
+	for i: int in 500:
+		await physics_frame
+		if _place_name(main) == "Forest":
+			break
+	check(_place_name(main) == "Forest", "the south road walks to the woods")
+	for i: int in 3:
+		await process_frame
+	var wood: Node2D = _place(main).get_node("Wood0") as Node2D
+	var before: int = main.get_node("Systems/Inventory").wood
+	player.busy = false
+	player.global_position = wood.global_position + Vector2(0, -6)
+	player.set_walk_target(wood.global_position)
+	for i: int in 300:
+		await physics_frame
+		if main.get_node("Systems/Inventory").wood > before:
+			break
+	check(main.get_node("Systems/Inventory").wood == before + 1, "a tree in the woods gives wood with a tap")
+	var hud: Node = main.get_node("UI/HUD")
+	hud._toggle_menu()
+	hud._show_tab("map")
+	check(hud._world_map.visible and hud._world_map.current_spot() != Vector2.ZERO, "the map shows where the boy is")
+	hud._show_tab("bag")
+	hud._toggle_menu()
+	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
+	for i: int in 3:
+		await process_frame
+
+func _bag_total(main: Node) -> int:
+	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory
+	var total: int = 0
+	for item_id: String in Inventory.all_stored_ids():
+		total += bag.count_of(item_id)
+	return total
 
 func _locale_is_whole() -> bool:
 	var whole: bool = true

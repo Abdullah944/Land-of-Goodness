@@ -23,6 +23,8 @@ const SCENES: Dictionary = {
 	"Harbor": "res://src/scenes/world/harbor/Harbor.tscn",
 	"Orchard": "res://src/scenes/world/orchard/Orchard.tscn",
 	"Cave": "res://src/scenes/world/cave/Cave.tscn",
+	"Road": "res://src/scenes/world/road/Road.tscn",
+	"Forest": "res://src/scenes/world/forest/Forest.tscn",
 	"HouseInside": "res://src/scenes/world/house/House_inside.tscn",
 }
 
@@ -289,6 +291,9 @@ func apply_buildings() -> void:
 	if place == null:
 		return
 	PlaceDecor.dress(place, flags)
+	var gatherers: Activities = get_parent().get_node_or_null("Activities") as Activities
+	if gatherers != null:
+		gatherers.apply_gathered()
 	for decor_id: String in RecipeCatalog.DECOR:
 		var piece: Dictionary = RecipeCatalog.DECOR[decor_id]
 		if is_built(decor_id) and str(piece["place"]) == str(place.name) and place.get_node_or_null(str(piece["name"])) == null:

@@ -156,7 +156,7 @@ func _arrive_role(place: Node, feet: Vector2) -> void:
 			activities.talk_role(role)
 			return
 		var kind: String = str(spot.get("group_name"))
-		if kind == "date" or kind == "forage" or kind == "ore":
+		if kind == "date" or kind == "forage" or kind == "ore" or kind == "tree" or kind == "rock" or kind == "shore":
 			activities.gather_node(spot)
 			return
 		if spot.name == "FishingSpot":
@@ -266,7 +266,7 @@ func _snap_indoor(world_position: Vector2) -> Vector2:
 			continue
 		var spot: Node2D = child as Node2D
 		var kind: String = str(spot.get("group_name"))
-		var interesting: bool = Activities.role_of(spot) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore"
+		var interesting: bool = Activities.role_of(spot) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore" or kind == "tree" or kind == "rock" or kind == "shore"
 		if interesting and world_position.distance_to(spot.global_position) <= 28.0:
 			return spot.global_position + Vector2(0, 18)
 	for child: Node in place.get_children():

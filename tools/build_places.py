@@ -13,6 +13,8 @@ HOME = "res://src/scenes/world/home/Home.tscn"
 VILLAGE = "res://src/scenes/world/village/Village.tscn"
 HARBOR = "res://src/scenes/world/harbor/Harbor.tscn"
 ORCHARD = "res://src/scenes/world/orchard/Orchard.tscn"
+ROAD = "res://src/scenes/world/road/Road.tscn"
+FOREST = "res://src/scenes/world/forest/Forest.tscn"
 
 
 def write_png(path, width, height, pixels):
@@ -171,7 +173,10 @@ def village():
     s.spawn("PlayerSpawn", 0, 70)
     s.spawn("HarborReturn", 196, 0)
     s.spawn("OrchardReturn", -196, 0)
-    s.door("ExitFarm", 0, 140, HOME, "VillageReturn", 40, 16)
+    s.spawn("RoadReturn", -196, -110)
+    s.spawn("ForestReturn", 0, 118)
+    s.door("ExitFarm", 0, 140, FOREST, "VillageReturn", 40, 16)
+    s.door("ExitRoad", -228, -110, ROAD, "VillageReturn", 16, 40)
     s.door("ExitHarbor", 228, 10, HARBOR, "PlayerSpawn", 16, 40)
     s.door("ExitOrchard", -228, 10, ORCHARD, "PlayerSpawn", 16, 40)
     s.mark("HouseWest", HOUSE, -170, -64, fit=150, block=(126, 44))
@@ -197,7 +202,7 @@ def village():
                                       ("pot_green", 30, -22), ("sack", 104, -32), ("crate", 190, 34), ("barrel", 206, 36),
                                       ("plant", -120, 60), ("plant", -30, -100), ("basket", 150, 74), ("pot_big", 60, 44)]):
         s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6))
-    for i, (x, y) in enumerate([(-220, -120), (-210, 120), (210, 120), (-140, 100), (150, 104), (226, -124), (-226, 56), (222, 62), (40, 136), (-60, 136), (168, 28)]):
+    for i, (x, y) in enumerate([(-210, 120), (210, 120), (-140, 100), (150, 104), (226, -124), (-226, 56), (222, 62), (40, 136), (-60, 136), (168, 28)]):
         s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
     s.mark("Elder", PEOPLE % "Elder", -110, -40, fit=36, role="elder")
     s.route("Elder", [(-110, -40), (-180, 40), (-40, 50), (-96, -50)], [6, 11, 15, 19])
@@ -206,6 +211,55 @@ def village():
     s.mark("Carpenter", PEOPLE % "Carpenter", 100, 92, fit=36, role="carpenter")
     s.route("Carpenter", [(100, 92), (36, 60), (100, 92), (120, -72)], [6, 12, 13, 18])
     s.save("src/scenes/world/village/Village.tscn")
+
+
+def road():
+    s = Scene("Road", k=1)
+    s.rect_ground("Floor", PROP % "ground_sand", -420, -260, 840, 520)
+    s.rect_ground("Track", PROP % "ground_cobble", -420, -16, 840, 44)
+    s.bounds(-320, -190, 640, 380)
+    s.spawn("PlayerSpawn", -280, 6)
+    s.spawn("VillageReturn", 280, 6)
+    s.door("ExitFarm", -312, 6, HOME, "VillageReturn", 16, 56)
+    s.door("ExitVillage", 312, 6, VILLAGE, "RoadReturn", 16, 56)
+    s.mark("Rest", PROP % "stall_produce", 30, -32, block=(40, 12))
+    s.mark("RestPots", PROP % "stall_pots", 80, -32, block=(40, 12))
+    s.mark("Shade", PROP % "table", -80, 70, block=(24, 8))
+    for i, (name, x, y) in enumerate([("crate", 120, -34), ("sack", 140, -30), ("barrel", -20, -34), ("basket", 10, 58),
+                                      ("crate", -110, 62), ("sack", -58, 62), ("lantern", -6, -30), ("lantern", 106, -30)]):
+        s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6) if name != "lantern" else None)
+    for i, (x, y) in enumerate([(-260, -120), (-170, -150), (-90, -130), (170, -140), (250, -110), (-250, 130), (-150, 150), (60, 140), (170, 120), (270, 150)]):
+        s.mark("Palm%d" % i, PALM, x, y, block=(10, 6))
+    s.mark("RoadsideDate", PALM, 200, -56, group="date")
+    s.mark("RoadsideHerb", HERB, -210, 60, group="forage")
+    s.save("src/scenes/world/road/Road.tscn")
+
+
+def forest():
+    s = Scene("Forest", k=1)
+    tree = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
+    rock = "res://assets/nature/Chunky desert rock sprite.png"
+    s.rect_ground("Floor", PROP % "ground_grass", -560, -400, 1120, 800)
+    s.bounds(-480, -320, 960, 640)
+    s.spawn("PlayerSpawn", 0, -270)
+    s.spawn("VillageReturn", 440, 0)
+    s.door("ExitFarm", 0, -306, HOME, "ForestReturn", 64, 20)
+    s.door("ExitVillage", 468, 0, VILLAGE, "ForestReturn", 16, 64)
+    s.mark("Pond", "res://assets/nature/Oasis pond.png", -220, 40, fit=200, block=(168, 140))
+    s.mark("Pond2", "res://assets/nature/Oasis pond.png", 240, 230, fit=130, block=(108, 92))
+    for i, (x, y) in enumerate([(-120, -180), (140, -170), (260, -60), (70, 90), (-60, 230), (-300, 220)]):
+        s.mark("Wood%d" % i, tree, x, y, fit=96, group="tree", block=(14, 8))
+    for i, (x, y) in enumerate([(40, -80), (-140, 110), (180, 40), (-340, -160), (330, 110), (-40, 150)]):
+        s.mark("Herb%d" % i, HERB, x, y, group="forage")
+    for i, (x, y) in enumerate([(120, 180), (-400, 110), (360, -200)]):
+        s.mark("Stone%d" % i, rock, x, y, fit=26, group="rock")
+    spots = [(-440, -280), (-360, -270), (-280, -290), (-200, -270), (-120, -290), (120, -290), (200, -270), (280, -290), (360, -270), (440, -280),
+             (-450, -200), (-440, -100), (-450, 0), (-450, 100), (-440, 200), (-450, 300), (-360, 300), (-260, 300), (-160, 300), (-60, 300),
+             (40, 300), (140, 300), (340, 300), (440, 300), (450, 200), (450, 110), (450, -100), (450, -200), (-260, -140), (-200, -60),
+             (40, -200), (250, -210), (340, 0), (160, 110), (-20, 40), (-300, 140), (60, 200), (-120, 300)]
+    for i, (x, y) in enumerate(spots):
+        s.mark("Palm%d" % i, tree, x, y, fit=88 + i % 3 * 12, block=(14, 8))
+    s.save("src/scenes/world/forest/Forest.tscn")
 
 
 def harbor():
@@ -223,6 +277,7 @@ def harbor():
                                       ("barrel", -36, 30), ("crate", 110, 20), ("crate", 122, 30), ("sack", 96, 30),
                                       ("basket", -60, 24), ("lantern", 14, -60), ("lantern", 82, -60)]):
         s.mark("Prop%d" % i, PROP % name, x, y, block=(12, 6) if name != "lantern" else None)
+    s.mark("ShoreCrate", PROP % "crate_fish", 110, -24, group="shore")
     s.mark("Hut", HOUSE, -150, 20, fit=140, block=(116, 40))
     s.mark("HutEast", HOUSE, 170, 90, fit=130, block=(108, 38))
     for i, (x, y) in enumerate([(200, 120), (-60, 130), (180, 40), (-210, 120), (60, 80), (-100, 90), (225, 20), (-225, -10)]):
@@ -273,7 +328,11 @@ def cave():
 
 
 if __name__ == "__main__":
+    os.makedirs(os.path.join(ROOT, "src/scenes/world/road"), exist_ok=True)
+    os.makedirs(os.path.join(ROOT, "src/scenes/world/forest"), exist_ok=True)
     village()
+    road()
+    forest()
     harbor()
     orchard()
     cave()

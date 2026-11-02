@@ -215,7 +215,9 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 - The world darkens with a tint at night, and lanterns and torches glow. Picking something up shows a small "+1", and tools throw a puff of dust, water, or chips.
 - The house is a real room with walls, a floor, and furniture cut from `house_interior.png` by `tools/cut_interior.gd`. The title screen shows the app art. Villagers lean as they walk.
 - Scale pass measured from the video: people are about 13% of the screen height and houses about four times a person's height. The boy and villagers drew at three quarters of their old size, the camera shows the full view by default, and buildings grew. The farm is 1040 by 680 (it was 512 by 288), and the village, harbor, and orchard are twice as wide and tall. Paths, trees, and details fill the new space.
-- Not done: true walking frames for villagers, which need more SpriteCook credits.
+- World pass after the owner's Stardew map and farm pictures: the farm ground is painted once by `tools/bake_farm_ground.gd` as a natural clearing of grass and dirt inside dark forest, with more ponds, tree groups, and about 60 pieces of debris. The farm now has two exits: east to a new caravan road and south to new ghaf woods, and both lead to the village. The menu has a Map tab with a mark on the boy's place.
+- Farm zones, from the owner's notes on Stardew farm types: each corner of the farm has a daily job. The northwest quarry gives stone and copper, the southern woodlot gives wood from stumps, the eastern patch gives herbs, and each farm pond gives one fish a day. A crate on the harbor shore holds one find each morning.
+- Not done: true walking frames for villagers, cliffs like the reference maps, fishing at the woods ponds, and choosing a farm type at the start. Art needs more SpriteCook credits.
 - The iPhone install waits until the owner raises it. The certificate expired on 2026-11-01, and Xcode rejects the login.
 - SpriteCook credits left: 7.
 
@@ -240,6 +242,7 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | World pass: natural farm clearing with forest edge and ponds, caravan road and ghaf woods areas, a world Map tab, and Stardew-like scale. Not yet played by hand. |
 | 2026-11-02 | Look pass after studying the Stardew Valley mobile video: SpriteCook villagers, animals, and buildings, idle animations, ground details, debris to clear, night lamps, a furnished house, portrait talk boxes, and a new title screen. Core test 150 of 150 and playthrough 15 of 15 passed on side saves. Not yet played on a phone. |
 | 2026-11-02 | Production branch milestone 4: village projects, daily requests, festival ending, money sinks, working hearts, original music and sounds, visible field, house moved onto the map, and exit signs. Core test 132 of 132 and playthrough 15 of 15 passed on side saves. Full play on the iPhone is still required. |
 | 2026-11-01 | Production branch milestone 3: full-screen layout for wide phones and iPads, paged long menus, and the village Khair meter. Core test 86 of 86 and playthrough 7 of 7 passed on side saves. The iPhone test is still required. |

@@ -208,6 +208,8 @@ func _daily_marks(main: Node) -> Array[String]:
 		return marks
 	for child: Node in place.get_children():
 		var kind: String = str(child.get("group_name"))
+		if str(child.name).begins_with("Zone"):
+			continue
 		if kind == "tree" or kind == "rock":
 			marks.append("Home/%s=%s" % [child.name, "wood" if kind == "tree" else "stone"])
 	return marks

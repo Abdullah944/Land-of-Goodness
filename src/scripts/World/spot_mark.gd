@@ -46,10 +46,11 @@ func _ready() -> void:
 	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
 	var is_person: bool = name == "Neighbor" or role != ""
 	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm")
+	var is_pond: bool = name == "FishingSpot" or str(name).begins_with("Pond_")
 	_breathes = is_person and not IDLE_SHEETS.has(str(name))
 	if IDLE_SHEETS.has(str(name)):
 		_load_idle(str(IDLE_SHEETS[str(name)]))
-	if name == "FishingSpot":
+	if is_pond:
 		var shimmer: ShaderMaterial = ShaderMaterial.new()
 		shimmer.shader = load(WATER_SHADER) as Shader
 		material = shimmer
@@ -57,6 +58,11 @@ func _ready() -> void:
 	_block_footprint()
 	_add_night_light()
 	queue_redraw()
+	if str(name).begins_with("Forest"):
+		# Dozens of these stand far from the path, so they stay still and cost nothing each frame.
+		z_index = 2000 + int(global_position.y)
+		modulate = Color(0.78, 0.86, 0.8)
+		set_process(false)
 
 ## Cuts a sheet of eight idle frames, with one crop for all so the feet never jump.
 func _load_idle(path: String) -> void:
@@ -128,7 +134,7 @@ func _block_tree() -> void:
 func _process(_delta: float) -> void:
 	if _picture == null:
 		return
-	z_index = 1 if name == "FishingSpot" else 2000 + int(global_position.y)
+	z_index = 1 if name == "FishingSpot" or str(name).begins_with("Pond_") else 2000 + int(global_position.y)
 	if not _frames.is_empty():
 		var now: int = int(_clock() * IDLE_FPS) % _frames.size()
 		if now != _frame:

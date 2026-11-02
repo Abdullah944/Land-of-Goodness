@@ -94,14 +94,29 @@ position = Vector2(392, 0)
 [node name="OrchardReturn" type="Marker2D" parent="."]
 position = Vector2(-392, 0)
 
+[node name="RoadReturn" type="Marker2D" parent="."]
+position = Vector2(-392, -220)
+
+[node name="ForestReturn" type="Marker2D" parent="."]
+position = Vector2(0, 236)
+
 [node name="ExitFarm" type="Area2D" parent="."]
 position = Vector2(0, 280)
 script = ExtResource("5_door")
-next_scene_path = "res://src/scenes/world/home/Home.tscn"
+next_scene_path = "res://src/scenes/world/forest/Forest.tscn"
 spawn_name = "VillageReturn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitFarm"]
 shape = SubResource("Rect_80x32")
+
+[node name="ExitRoad" type="Area2D" parent="."]
+position = Vector2(-456, -220)
+script = ExtResource("5_door")
+next_scene_path = "res://src/scenes/world/road/Road.tscn"
+spawn_name = "VillageReturn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitRoad"]
+shape = SubResource("Rect_32x80")
 
 [node name="ExitHarbor" type="Area2D" parent="."]
 position = Vector2(456, 20)
@@ -424,76 +439,69 @@ stand_on_feet = true
 block_size = Vector2(12, 6)
 
 [node name="Palm0" type="Node2D" parent="."]
-position = Vector2(-440, -240)
-script = ExtResource("6_spot_mark")
-person = ExtResource("25_date_palm")
-stand_on_feet = true
-block_size = Vector2(10, 6)
-
-[node name="Palm1" type="Node2D" parent="."]
 position = Vector2(-420, 240)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm2" type="Node2D" parent="."]
+[node name="Palm1" type="Node2D" parent="."]
 position = Vector2(420, 240)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm3" type="Node2D" parent="."]
+[node name="Palm2" type="Node2D" parent="."]
 position = Vector2(-280, 200)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm4" type="Node2D" parent="."]
+[node name="Palm3" type="Node2D" parent="."]
 position = Vector2(300, 208)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm5" type="Node2D" parent="."]
+[node name="Palm4" type="Node2D" parent="."]
 position = Vector2(452, -248)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm6" type="Node2D" parent="."]
+[node name="Palm5" type="Node2D" parent="."]
 position = Vector2(-452, 112)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm7" type="Node2D" parent="."]
+[node name="Palm6" type="Node2D" parent="."]
 position = Vector2(444, 124)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm8" type="Node2D" parent="."]
+[node name="Palm7" type="Node2D" parent="."]
 position = Vector2(80, 272)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm9" type="Node2D" parent="."]
+[node name="Palm8" type="Node2D" parent="."]
 position = Vector2(-120, 272)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
 block_size = Vector2(10, 6)
 
-[node name="Palm10" type="Node2D" parent="."]
+[node name="Palm9" type="Node2D" parent="."]
 position = Vector2(336, 56)
 script = ExtResource("6_spot_mark")
 person = ExtResource("25_date_palm")

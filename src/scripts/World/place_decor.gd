@@ -30,6 +30,7 @@ const LAYOUTS: Dictionary = {
 			Rect2(-186, -74, 104, 96), Rect2(-220, -220, 170, 150), Rect2(-430, -300, 100, 90), Rect2(260, -230, 140, 110),
 			Rect2(240, 110, 160, 160), Rect2(68, 130, 104, 110), Rect2(470, 20, 50, 50), Rect2(50, -10, 46, 56),
 			Rect2(-40, 20, 50, 40), Rect2(50, -190, 80, 90), Rect2(170, -140, 80, 90),
+			Rect2(-446, 66, 212, 210), Rect2(84, -296, 132, 132), Rect2(364, 192, 112, 108),
 		],
 		"fixed": [
 			[FENCE, Vector2(-168, 34)], [FENCE, Vector2(-144, 34)], [FENCE, Vector2(-120, 34)], [FENCE, Vector2(-96, 34)],
@@ -63,6 +64,22 @@ const LAYOUTS: Dictionary = {
 		"avoid": [Rect2(-60, 150, 120, 60), Rect2(50, 30, 60, 60), Rect2(-100, 10, 60, 60)],
 		"fixed": [],
 	},
+	"Road": {
+		"seed": 53,
+		"count": 90,
+		"area": Rect2(-300, -180, 600, 360),
+		"picks": [TUFT, TUFT, ROCKS, ROCKS, STONES, SHRUB, TWIGS, YELLOW],
+		"avoid": [Rect2(-310, -30, 620, 70)],
+		"fixed": [[STUMP, Vector2(-180, 110)], [HAY, Vector2(120, -70)], [FENCE, Vector2(-60, -48)], [FENCE, Vector2(-36, -48)], [FENCE, Vector2(-12, -48)]],
+	},
+	"Forest": {
+		"seed": 61,
+		"count": 260,
+		"area": Rect2(-470, -310, 940, 620),
+		"picks": [TUFT, TUFT, TUFT, WEEDS, WEEDS, SHRUB, SHRUB, PINK, YELLOW, STUMP, TWIGS, STONES],
+		"avoid": [Rect2(-40, -320, 80, 100), Rect2(400, -30, 80, 60)],
+		"fixed": [],
+	},
 	"Harbor": {
 		"seed": 31,
 		"count": 60,
@@ -85,15 +102,41 @@ const DEBRIS: Array = [
 ]
 const TREE_PICTURE: String = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
 const PALM_PICTURE: String = "res://assets/nature/Date palm.png"
-## Trees that frame the farm. They are scenery and cannot be chopped.
+## Tree groups inside the farm clearing. They are scenery and cannot be chopped.
 const FARM_TREES: Array[Vector2] = [
-	Vector2(-480, -300), Vector2(-420, -120), Vector2(-490, -30), Vector2(-440, 110), Vector2(-490, 220), Vector2(-400, 300),
-	Vector2(-280, 310), Vector2(-160, 290), Vector2(-40, 310), Vector2(70, 310), Vector2(200, 320), Vector2(470, 300),
-	Vector2(490, 170), Vector2(440, 110), Vector2(490, -120), Vector2(440, -230), Vector2(480, -310), Vector2(360, -310),
-	Vector2(220, -300), Vector2(100, -310), Vector2(-40, -300), Vector2(-250, -310), Vector2(-300, -60), Vector2(-340, 200),
-	Vector2(-220, 200), Vector2(-120, 130), Vector2(20, -230), Vector2(300, 60), Vector2(380, -40),
+	Vector2(-420, -120), Vector2(-440, 60), Vector2(-280, -280), Vector2(-120, 270), Vector2(-70, 300), Vector2(70, 300),
+	Vector2(200, 300), Vector2(420, 130), Vector2(430, -120), Vector2(300, 60), Vector2(380, -40), Vector2(-300, -60),
+	Vector2(-120, 130), Vector2(20, -230), Vector2(-20, -280), Vector2(60, -280), Vector2(250, -280), Vector2(-250, -130),
+	Vector2(-210, 110), Vector2(120, 110),
 ]
 const FARM_PALMS: Array[Vector2] = [Vector2(-310, 40), Vector2(-360, -30), Vector2(-260, 130), Vector2(170, 120), Vector2(400, 180)]
+## Extra ponds, as in a real clearing. [spot, width, solid footprint]
+const FARM_PONDS: Array = [
+	[Vector2(-340, 170), 190, Vector2(160, 134)], [Vector2(150, -230), 110, Vector2(92, 78)], [Vector2(420, 246), 90, Vector2(74, 62)],
+]
+const FARM_HALF: Vector2 = Vector2(500, 330)
+const ROCK_PICTURE: String = "res://assets/nature/Chunky desert rock sprite.png"
+const COPPER_PICTURE: String = "res://assets/props/ore_copper.png"
+const HERB_PICTURE: String = "res://assets/nature/Wild herb.png"
+## Each corner of the farm has its own daily job. These come back every morning.
+const QUARRY: Array[Vector2] = [Vector2(-320, -170), Vector2(-280, -240), Vector2(-430, -190)]
+const QUARRY_ORE: Vector2 = Vector2(-340, -290)
+const WOODLOT: Array[Vector2] = [Vector2(-210, 245), Vector2(-120, 215), Vector2(-60, 255)]
+const HERB_PATCH: Array[Vector2] = [Vector2(250, -30), Vector2(340, -60), Vector2(280, 100)]
+const MORE_DEBRIS: int = 48
+
+## Below 1 is inside the clearing. The edge wobbles, so it never looks like a rectangle.
+static func farm_edge(world: Vector2) -> float:
+	var x: float = absf(world.x) / FARM_HALF.x
+	var y: float = absf(world.y) / FARM_HALF.y
+	var round_edge: float = pow(pow(x, 4.0) + pow(y, 4.0), 0.25)
+	var angle: float = atan2(world.y / FARM_HALF.y, world.x / FARM_HALF.x)
+	return round_edge / (1.0 + 0.05 * sin(angle * 3.0 + 1.0) + 0.03 * sin(angle * 7.0 + 2.0) + 0.015 * sin(angle * 13.0))
+
+## The ways out cut through the forest.
+static func in_exit(world: Vector2) -> bool:
+	return (world.x > 300.0 and absf(world.y - 40.0) < 34.0) or (world.y > 200.0 and absf(world.x) < 34.0)
+
 const ROOM: String = "res://assets/building/house/room/%s.png"
 const ROOM_AREA: Rect2 = Rect2(-120, 6, 288, 154)
 const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_window", "wall", "wall_shelf", "wall_window"]
@@ -138,6 +181,36 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": TREE_PICTURE, "at": FARM_TREES[i], "fit": 90 + i % 3 * 10, "block": Vector2(14, 8)})
 		for i: int in FARM_PALMS.size():
 			PropPiece.add_to(place, {"name": "Palm_farm%d" % i, "path": PALM_PICTURE, "at": FARM_PALMS[i], "block": Vector2(10, 6)})
+		for i: int in FARM_PONDS.size():
+			PropPiece.add_to(place, {"name": "Pond_%d" % i, "path": "res://assets/nature/Oasis pond.png", "at": FARM_PONDS[i][0], "fit": FARM_PONDS[i][1], "block": FARM_PONDS[i][2], "centered": true})
+		_add_forest(place)
+		_add_zones(place)
+
+static func _add_zones(place: Node) -> void:
+	for i: int in QUARRY.size():
+		PropPiece.add_to(place, {"name": "ZoneRock%d" % i, "path": ROCK_PICTURE, "at": QUARRY[i], "fit": 28, "group": "rock"})
+	PropPiece.add_to(place, {"name": "ZoneOre", "path": COPPER_PICTURE, "at": QUARRY_ORE, "group": "ore"})
+	for i: int in WOODLOT.size():
+		PropPiece.add_to(place, {"name": "ZoneStump%d" % i, "texture": _cuts[STUMP], "at": WOODLOT[i], "group": "tree"})
+	for i: int in HERB_PATCH.size():
+		PropPiece.add_to(place, {"name": "ZoneHerb%d" % i, "path": HERB_PICTURE, "at": HERB_PATCH[i], "group": "forage"})
+
+## A thick ring of still trees around the clearing, with gaps at the exits.
+static func _add_forest(place: Node) -> void:
+	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
+	roll.seed = 77
+	var made: int = 0
+	var y: float = -400.0
+	while y < 420.0:
+		var x: float = -590.0
+		while x < 600.0:
+			var at: Vector2 = Vector2(x + roll.randf() * 24.0, y + roll.randf() * 20.0)
+			var edge: float = farm_edge(at)
+			if edge > 1.0 and edge < 1.34 and not in_exit(at):
+				PropPiece.add_to(place, {"name": "Forest%d" % made, "path": TREE_PICTURE, "at": at, "fit": 84 + made % 3 * 12, "block": Vector2(18, 10)})
+				made += 1
+			x += 44.0
+		y += 40.0
 
 static func _add_debris(place: Node, cleared: Dictionary) -> void:
 	for i: int in DEBRIS.size():
@@ -146,6 +219,17 @@ static func _add_debris(place: Node, cleared: Dictionary) -> void:
 		if bool(cleared.get("cleared_" + mark_name, false)):
 			continue
 		PropPiece.add_to(place, {"name": mark_name, "texture": _cuts[int(row[0])], "at": row[2], "group": str(row[1])})
+	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
+	roll.seed = 58
+	var kinds: Array = [[TWIGS, "debris_wood"], [STONES, "debris_stone"], [WEEDS, "debris_weed"]]
+	var avoid: Array = LAYOUTS["Home"]["avoid"]
+	for i: int in MORE_DEBRIS:
+		var spot: Vector2 = Vector2(roll.randf_range(-470.0, 470.0), roll.randf_range(-300.0, 300.0))
+		var kind: Array = kinds[i % kinds.size()]
+		var extra_name: String = "Debris%d" % (DEBRIS.size() + i)
+		if farm_edge(spot) > 0.94 or _blocked(spot, avoid) or bool(cleared.get("cleared_" + extra_name, false)):
+			continue
+		PropPiece.add_to(place, {"name": extra_name, "texture": _cuts[int(kind[0])], "at": spot, "group": str(kind[1])})
 
 ## Lays the floor and walls, then the furniture. The old tile floor stays hidden for its grid.
 static func _dress_room(place: Node) -> void:

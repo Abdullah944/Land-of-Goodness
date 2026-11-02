@@ -57,6 +57,7 @@ var _music_button: Button
 var _help_button: Button
 var _eat: Button
 var _tab_keys: Dictionary = {}
+var _world_map: WorldMap
 
 func _ready() -> void:
 	var rain: ColorRect = ColorRect.new()
@@ -205,6 +206,7 @@ func refresh() -> void:
 	_list.visible = _tab == "bag"
 	_bar.visible = _tab == "bag"
 	_craft.visible = _tab == "bag"
+	_world_map.visible = _tab == "map"
 	_eat.visible = _tab == "bag"
 	_eat.text = Locale.t("eat")
 	Locale.apply_control(_eat)
@@ -389,12 +391,19 @@ func _build_menu() -> void:
 	var bag_tab: Button = _tab_button("", Vector2(inner.position.x, inner.position.y))
 	var settings_tab: Button = _tab_button("", Vector2(inner.position.x + 84.0, inner.position.y))
 	var journal_tab: Button = _tab_button("", Vector2(inner.position.x + 168.0, inner.position.y))
+	var map_tab: Button = _tab_button("", Vector2(inner.position.x + 252.0, inner.position.y))
+	map_tab.pressed.connect(_show_tab.bind("map"))
 	var close_tab: Button = _tab_button("", Vector2(inner.end.x - 78.0, inner.position.y))
 	bag_tab.pressed.connect(_show_tab.bind("bag"))
 	settings_tab.pressed.connect(_show_tab.bind("settings"))
 	journal_tab.pressed.connect(_show_tab.bind("quests"))
 	close_tab.pressed.connect(_toggle_menu)
-	_tab_keys = {bag_tab: "tab_bag", settings_tab: "tab_settings", journal_tab: "journal", close_tab: "tab_close"}
+	_tab_keys = {bag_tab: "tab_bag", settings_tab: "tab_settings", journal_tab: "journal", map_tab: "tab_map", close_tab: "tab_close"}
+	_world_map = WorldMap.new()
+	_world_map.position = Vector2(inner.position.x, 48)
+	_world_map.size = Vector2(inner.size.x, 142)
+	_world_map.visible = false
+	page.add_child(_world_map)
 	for tab: Button in _tab_keys:
 		tab.size = Vector2(78, 24)
 		tab.focus_mode = Control.FOCUS_NONE
@@ -611,7 +620,7 @@ func _toggle_language() -> void:
 func _show_help() -> void:
 	_toggle_menu()
 	var lines: PackedStringArray = PackedStringArray()
-	for key: String in ["help_clear", "help_farm", "help_rest", "help_world", "help_khair"]:
+	for key: String in ["help_clear", "help_farm", "help_rest", "help_zones", "help_world", "help_khair"]:
 		lines.append(Locale.t(key))
 	(get_tree().current_scene.get_node("UI/Dialogue") as DialogueBox).open_lines(lines)
 

@@ -27,7 +27,7 @@ static func add_to(place: Node, piece: Dictionary) -> void:
 	mark.name = str(piece["name"])
 	mark.position = piece["at"]
 	mark.set("person", picture)
-	mark.set("stand_on_feet", true)
+	mark.set("stand_on_feet", not bool(piece.get("centered", false)))
 	mark.set("fit_pixels", int(piece.get("fit", 0)))
 	mark.set("group_name", str(piece.get("group", "")))
 	mark.set("block_size", piece.get("block", Vector2.ZERO))

@@ -20,9 +20,11 @@ var _shown_at: int = 0
 
 const PEARL_CHANCE: float = 0.25
 ## Big things can be tapped this many squares from their middle.
-const BIG_SNAP: Dictionary = {"FishingSpot": 5, "CaveEntrance": 3}
+const BIG_SNAP: Dictionary = {"CaveEntrance": 3}
 ## Distance in world pixels from which a big thing can be used.
-const BIG_REACH: Dictionary = {"FishingSpot": 72.0, "CaveEntrance": 40.0}
+const BIG_REACH: Dictionary = {"CaveEntrance": 40.0}
+## What the sea may leave in the shore crate each morning.
+const SHORE_FINDS: Array[String] = ["wood", "wood", "fish", "dates", "stone", "copper", "pearl"]
 const NOTE_MS: int = 7000
 
 func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
@@ -44,8 +46,9 @@ func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	if _matches(place, "Neighbor", dirt, cell):
 		_talk()
 		return true
-	if _matches(place, "FishingSpot", dirt, cell):
-		_fish()
+	var pond: Node2D = _pond_at(place, dirt, cell)
+	if pond != null:
+		fish_at(str(place.name), str(pond.name))
 		return true
 	if _matches(place, "CaveEntrance", dirt, cell):
 		_enter_cave()
@@ -61,13 +64,15 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 	for mark: Node in place.get_children():
 		if not mark is Node2D:
 			continue
-		if not _is_debris(mark) and not mark.is_in_group("tree") and not mark.is_in_group("rock") and not mark.is_in_group("ore") and not mark.is_in_group("date") and not mark.is_in_group("forage") and Activities.role_of(mark) == "" and mark.name != "Neighbor" and mark.name != "FishingSpot" and mark.name != "CaveEntrance":
+		if not _is_debris(mark) and not mark.is_in_group("tree") and not mark.is_in_group("rock") and not mark.is_in_group("ore") and not mark.is_in_group("date") and not mark.is_in_group("forage") and Activities.role_of(mark) == "" and mark.name != "Neighbor" and mark.name != "FishingSpot" and mark.name != "CaveEntrance" and not _is_pond(mark):
 			continue
 		var spot: Node2D = mark as Node2D
 		var mark_cell: Vector2i = dirt.local_to_map(dirt.to_local(spot.global_position))
 		var gap: Vector2i = cell - mark_cell
 		var distance: int = maxi(absi(gap.x), absi(gap.y))
 		var close: bool = distance <= (BIG_SNAP.get(str(spot.name), 1) as int)
+		if _is_pond(spot):
+			close = distance <= int(float(spot.get("fit_pixels")) / 32.0)
 		if spot.is_in_group("tree") or spot.is_in_group("date"):
 			close = absi(gap.x) <= 2 and gap.y <= 0 and gap.y >= -5
 			distance = absi(gap.x) + absi(gap.y)
@@ -89,7 +94,7 @@ func tool_for_cell(dirt: TileMapLayer, cell: Vector2i) -> String:
 		return "axe"
 	if _group_has("debris_stone", dirt, cell) or _group_has("rock", dirt, cell) or _group_has("ore", dirt, cell):
 		return "pick"
-	if _matches(place, "Neighbor", dirt, cell) or _matches(place, "FishingSpot", dirt, cell) or _matches(place, "CaveEntrance", dirt, cell):
+	if _matches(place, "Neighbor", dirt, cell) or _pond_at(place, dirt, cell) != null or _matches(place, "CaveEntrance", dirt, cell):
 		return "use"
 	var farm: FarmField = get_parent().get_node("FarmField") as FarmField
 	return farm.tool_for_plot(cell)
@@ -98,6 +103,9 @@ func reach_for(dirt: TileMapLayer, cell: Vector2i) -> float:
 	var place: Node = _place()
 	if place == null:
 		return 0.0
+	var pond: Node2D = _pond_at(place, dirt, cell)
+	if pond != null:
+		return float(pond.get("fit_pixels")) * 0.5 + 10.0
 	for mark_name: String in BIG_REACH:
 		if _matches(place, mark_name, dirt, cell):
 			return float(BIG_REACH[mark_name])
@@ -107,7 +115,7 @@ func chop_at(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	return _clear_debris("debris_wood", dirt, cell, "wood") or _take_mark("tree", dirt, cell, "wood")
 
 func mine_at(dirt: TileMapLayer, cell: Vector2i) -> bool:
-	return _clear_debris("debris_stone", dirt, cell, "stone") or _take_mark("rock", dirt, cell, "stone")
+	return _clear_debris("debris_stone", dirt, cell, "stone") or _take_mark("rock", dirt, cell, "stone") or _take_mark("ore", dirt, cell, "copper")
 
 ## Twigs, stones, and weeds leave the farm for good and give one item.
 func _clear_debris(group_name: String, dirt: TileMapLayer, cell: Vector2i, item: String) -> bool:
@@ -130,6 +138,15 @@ func _clear_debris(group_name: String, dirt: TileMapLayer, cell: Vector2i, item:
 		_refresh()
 		return true
 	return false
+
+func _is_pond(mark: Node) -> bool:
+	return mark.name == "FishingSpot" or str(mark.name).begins_with("Pond_")
+
+func _pond_at(place: Node, dirt: TileMapLayer, cell: Vector2i) -> Node2D:
+	for mark: Node in place.get_children():
+		if mark is Node2D and _is_pond(mark) and dirt.local_to_map(dirt.to_local((mark as Node2D).global_position)) == cell:
+			return mark as Node2D
+	return null
 
 func _is_debris(mark: Node) -> bool:
 	return str(mark.get("group_name")).begins_with("debris")
@@ -190,15 +207,15 @@ func on_new_day() -> void:
 	gathered.clear()
 	apply_gathered()
 
-func fish_at(place_name: String) -> bool:
-	var key: String = "%s/FishingSpot" % place_name
+func fish_at(place_name: String, spot_name: String = "FishingSpot") -> bool:
+	var key: String = "%s/%s" % [place_name, spot_name]
 	if int(fish_spots.get(key, -1)) == _day():
 		note = Locale.t("quiet")
 		_refresh()
 		return false
 	fish_spots[key] = _day()
-	fished_today = place_name == "Home"
-	if place_name == "Home":
+	if place_name == "Home" and spot_name == "FishingSpot":
+		fished_today = true
 		fish_day = _day()
 	_inventory().add_item("fish", 1)
 	note = Locale.t("caught")
@@ -239,6 +256,10 @@ func gather_node(spot: Node2D) -> bool:
 			item = "stone"
 		"ore":
 			item = "copper"
+		"shore":
+			var finds: RandomNumberGenerator = RandomNumberGenerator.new()
+			finds.seed = _day() * 131 + 7
+			item = SHORE_FINDS[finds.randi_range(0, SHORE_FINDS.size() - 1)]
 		_:
 			return false
 	var place: Node = spot.get_parent()
@@ -299,7 +320,7 @@ func apply_gathered() -> void:
 		if not mark is Node2D:
 			continue
 		var kind: String = str(mark.get("group_name"))
-		if kind != "tree" and kind != "rock" and kind != "ore" and kind != "date" and kind != "forage":
+		if kind != "tree" and kind != "rock" and kind != "ore" and kind != "date" and kind != "forage" and kind != "shore":
 			continue
 		var taken: bool = gathered.has(_mark_key(place, mark)) and int(gathered[_mark_key(place, mark)]) == today
 		_set_mark(mark as Node2D, not taken)

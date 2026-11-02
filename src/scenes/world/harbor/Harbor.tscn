@@ -152,6 +152,13 @@ script = ExtResource("7_spot_mark")
 person = ExtResource("14_lantern")
 stand_on_feet = true
 
+[node name="ShoreCrate" type="Node2D" parent="."]
+position = Vector2(220, -48)
+script = ExtResource("7_spot_mark")
+person = ExtResource("9_crate_fish")
+stand_on_feet = true
+group_name = "shore"
+
 [node name="Hut" type="Node2D" parent="."]
 position = Vector2(-300, 40)
 script = ExtResource("7_spot_mark")
