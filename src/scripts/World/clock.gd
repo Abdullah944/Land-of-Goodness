@@ -35,6 +35,9 @@ func held_by_ui() -> bool:
 	var dialogue: Node = scene.get_node_or_null("UI/Dialogue")
 	if dialogue != null and bool(dialogue.get("visible")):
 		return true
+	var fishing: Node = scene.get_node_or_null("UI/FishGame")
+	if fishing != null and bool(fishing.get("visible")):
+		return true
 	var chest: Node = scene.get_node_or_null("UI/ChestPanel")
 	return chest != null and bool(chest.call("is_open"))
 
@@ -51,6 +54,9 @@ func _begin_morning(stayed_up: bool = false) -> void:
 	var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
 	if kindness != null:
 		kindness.on_new_day()
+	var friends: Friendship = get_parent().get_node_or_null("Friendship") as Friendship
+	if friends != null:
+		friends.on_new_day()
 	var stead: Stead = get_parent().get_node_or_null("Stead") as Stead
 	if stead != null:
 		var morning: String = stead.on_new_day()
@@ -60,8 +66,14 @@ func _begin_morning(stayed_up: bool = false) -> void:
 			activities.note = Locale.t("milestone")
 	if season != old_season:
 		activities.note = Locale.t("season_" + season.to_lower())
+		var bank: SoundBank = get_parent().get_node_or_null("SoundBank") as SoundBank
+		if bank != null:
+			bank.apply_levels()
 	elif stayed_up:
 		activities.note = Locale.t("stayed_up")
+	var fairs: Festivals = get_parent().get_node_or_null("Festivals") as Festivals
+	if fairs != null and fairs.morning_note() != "" and season == old_season:
+		activities.note = fairs.morning_note()
 	var bag: Inventory = get_parent().get_node("Inventory") as Inventory
 	bag.refill_hearts()
 	var save: SaveGame = get_parent().get_node("SaveGame") as SaveGame

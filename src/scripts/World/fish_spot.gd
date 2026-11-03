@@ -1,5 +1,5 @@
 # src/scripts/World/fish_spot.gd
-# Purpose: Gives one fish when the boy reaches this water, once each day.
+# Purpose: Starts the fishing game when the boy reaches this water. It gives one fish a day.
 
 extends Area2D
 
@@ -10,4 +10,4 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body is Player:
 		return
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-	activities.fish_at(get_parent().name)
+	activities.cast(get_parent().name)

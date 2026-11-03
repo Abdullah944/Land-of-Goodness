@@ -160,7 +160,7 @@ func _arrive_role(place: Node, feet: Vector2) -> void:
 			activities.gather_node(spot)
 			return
 		if spot.name == "FishingSpot":
-			activities.fish_at(place.name)
+			activities.cast(place.name)
 			return
 
 func reached_indoor_point() -> bool:

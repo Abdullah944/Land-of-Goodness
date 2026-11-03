@@ -30,6 +30,8 @@ var _speaker_name: Label
 var _speaker: String = ""
 var _faces: Dictionary = {}
 var _typing: Tween
+var _heart_row: HBoxContainer
+var _heart_marks: Array[TextureRect] = []
 
 const FACE_W: float = 44.0
 const SPEAKERS: Dictionary = {
@@ -86,24 +88,51 @@ func _build_portrait() -> void:
 	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_portrait_box.add_child(_portrait)
 	_speaker_name = Label.new()
-	_speaker_name.position = Vector2(4, 30)
-	_speaker_name.size = Vector2(FACE_W + 4.0, 14)
+	_speaker_name.position = Vector2(4, 29)
+	_speaker_name.size = Vector2(FACE_W + 4.0, 11)
 	_speaker_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_speaker_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_speaker_name.add_theme_font_size_override("font_size", 8)
 	_speaker_name.add_theme_color_override("font_color", UiStyle.DARK)
 	_speaker_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_speaker_name)
+	# Five small hearts: how close the boy is to this neighbor.
+	_heart_row = HBoxContainer.new()
+	_heart_row.position = Vector2(5, 42)
+	_heart_row.size = Vector2(FACE_W, 6)
+	_heart_row.add_theme_constant_override("separation", 1)
+	_heart_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(_heart_row)
+	var heart_picture: Texture2D = load("res://assets/ui/Terracotta pixel heart icon.png") as Texture2D
+	for i: int in Friendship.MAX_HEARTS:
+		var heart: TextureRect = TextureRect.new()
+		heart.texture = heart_picture
+		heart.custom_minimum_size = Vector2(7, 7)
+		heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_heart_row.add_child(heart)
+		_heart_marks.append(heart)
+	_heart_row.visible = false
 
 ## Shows who is talking until set_speaker("") or the talk ends.
 func set_speaker(person: String) -> void:
 	_speaker = person if SPEAKERS.has(person) else ""
+	_heart_row.visible = false
 	_place_speaker()
+
+## Fills that many of the five hearts under the speaker's face.
+func set_hearts(count: int) -> void:
+	for i: int in _heart_marks.size():
+		_heart_marks[i].modulate = Color.WHITE if i < count else Color(0.3, 0.22, 0.18, 0.85)
+	_heart_row.visible = _speaker != ""
 
 func _place_speaker() -> void:
 	var shown: bool = _speaker != ""
 	_portrait_box.visible = shown
 	_speaker_name.visible = shown
+	if not shown:
+		_heart_row.visible = false
 	_label.position.x = 8.0 + (FACE_W + 4.0 if shown else 0.0)
 	_label.size.x = 414.0 - (FACE_W + 4.0 if shown else 0.0)
 	if shown:
@@ -155,6 +184,7 @@ func open_lines(lines: PackedStringArray) -> void:
 
 func ask(text: String) -> void:
 	_close_offer()
+	_heart_row.visible = false
 	_choosing = true
 	_lines = PackedStringArray([text])
 	_index = 0
@@ -208,7 +238,7 @@ func _show_offer_page() -> void:
 		var parts: PackedStringArray = _choice_parts(rows[i])
 		var button: Button = Button.new()
 		button.text = parts[1]
-		button.position = Vector2(8, 46.0 + 36.0 * i)
+		button.position = Vector2(8, _first_row() + 36.0 * i)
 		button.size = Vector2(414, 34)
 		button.focus_mode = Control.FOCUS_NONE
 		button.add_theme_font_size_override("font_size", 12)
@@ -238,9 +268,13 @@ func _clear_offer_buttons() -> void:
 		button.queue_free()
 	_offer_buttons.clear()
 
+## Buttons start lower when a neighbor's hearts show under the face.
+func _first_row() -> float:
+	return 54.0 if _heart_row.visible else 46.0
+
 func _fit_actions(rows: int) -> void:
 	_label.size = Vector2(414, 40)
-	var height: float = 52.0 + 36.0 * rows
+	var height: float = _first_row() + 6.0 + 36.0 * rows
 	_panel.size = Vector2(430, height)
 	_panel.position = Vector2(40, 288.0 - height - 6.0)
 

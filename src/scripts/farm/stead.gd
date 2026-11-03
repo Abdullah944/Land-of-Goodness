@@ -301,6 +301,9 @@ func apply_buildings() -> void:
 	var works: VillageWorks = get_parent().get_node_or_null("VillageWorks") as VillageWorks
 	if works != null:
 		works.apply_place()
+	var fairs: Festivals = get_parent().get_node_or_null("Festivals") as Festivals
+	if fairs != null:
+		fairs.apply_place()
 	var coop_node: CanvasItem = place.get_node_or_null("Coop") as CanvasItem
 	if coop_node != null:
 		coop_node.visible = coop

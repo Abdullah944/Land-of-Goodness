@@ -60,11 +60,22 @@ def drum(seconds, freq, rng, noise=0.25):
     return out
 
 
-def make_music(path):
-    """Slow original melody on the D Hijaz scale: oud, low drone, and a soft frame drum."""
-    rng = random.Random(21)
-    scale = [146.83, 155.56, 185.00, 196.00, 220.00, 233.08, 261.63, 293.66, 311.13, 369.99, 392.00]
-    beat = 60.0 / 66.0
+HIJAZ = [146.83, 155.56, 185.00, 196.00, 220.00, 233.08, 261.63, 293.66, 311.13, 369.99, 392.00]
+# D Bayati with the quarter tone rounded to the nearest note, for a softer winter tune.
+BAYATI = [146.83, 160.0, 174.61, 196.00, 220.00, 233.08, 261.63, 293.66, 320.0, 349.23, 392.00]
+# Each season's tune: seed, scale, beats per minute, pitch shift, drum level, and how long the strings ring.
+SEASONS = {
+    "summer": (34, HIJAZ, 78.0, 1.0, 1.3, 0.996),
+    "autumn": (55, HIJAZ, 60.0, 0.75, 0.8, 0.997),
+    "winter": (89, BAYATI, 54.0, 1.0, 0.4, 0.998),
+}
+
+
+def make_music(path, seed=21, scale=HIJAZ, bpm=66.0, shift=1.0, drums=1.0, ring=0.996):
+    """Slow original melody on an Arabic scale: oud, low drone, and a soft frame drum."""
+    rng = random.Random(seed)
+    scale = [f * shift for f in scale]
+    beat = 60.0 / bpm
     # Each pair is a scale step and a length in beats. None is a rest.
     phrases = [
         [(7, 1), (6, 0.5), (5, 0.5), (4, 2), (2, 1), (3, 1), (4, 2), (None, 2)],
@@ -74,6 +85,9 @@ def make_music(path):
         [(4, 1), (6, 1), (5, 1), (4, 1), (3, 0.5), (2, 0.5), (3, 1), (4, 2), (None, 2)],
         [(3, 1), (2, 1), (1, 1), (0, 3), (None, 2)],
     ]
+    if seed != 21:
+        # Other seasons play the same phrases in their own order, so each tune sounds new.
+        rng.shuffle(phrases)
     bars = 16
     seconds = bars * 4 * beat + 2.0
     track = [0.0] * int(seconds * RATE)
@@ -81,20 +95,20 @@ def make_music(path):
     for phrase in phrases:
         for step, length in phrase:
             if step is not None:
-                note = pluck(scale[step], 2.2, rng, bright=0.55)
+                note = pluck(scale[step], 2.2, rng, bright=0.55, damping=ring)
                 mix(track, note, at, 0.42)
                 if rng.random() < 0.22:
                     mix(track, pluck(scale[step], 1.4, rng, bright=0.5), at + beat * 0.25, 0.18)
             at += length * beat
     for bar in range(bars):
         start = bar * 4 * beat
-        mix(track, pluck(73.42, 4.0, rng, bright=0.5, damping=0.998), start, 0.34)
+        mix(track, pluck(73.42 * shift, 4.0, rng, bright=0.5, damping=0.998), start, 0.34)
         if bar % 2 == 1:
-            mix(track, pluck(110.0, 3.0, rng, bright=0.5, damping=0.998), start + 2 * beat, 0.2)
-        mix(track, drum(0.4, 92.0, rng), start, 0.14)
-        mix(track, drum(0.2, 210.0, rng, 0.4), start + 1.5 * beat, 0.05)
-        mix(track, drum(0.4, 92.0, rng), start + 2 * beat, 0.09)
-        mix(track, drum(0.2, 210.0, rng, 0.4), start + 3 * beat, 0.05)
+            mix(track, pluck(110.0 * shift, 3.0, rng, bright=0.5, damping=0.998), start + 2 * beat, 0.2)
+        mix(track, drum(0.4, 92.0, rng), start, 0.14 * drums)
+        mix(track, drum(0.2, 210.0, rng, 0.4), start + 1.5 * beat, 0.05 * drums)
+        mix(track, drum(0.4, 92.0, rng), start + 2 * beat, 0.09 * drums)
+        mix(track, drum(0.2, 210.0, rng, 0.4), start + 3 * beat, 0.05 * drums)
     fade = int(1.5 * RATE)
     for i in range(fade):
         track[-1 - i] *= i / fade
@@ -143,7 +157,17 @@ def main():
     write_wav(os.path.join(OUT, "mine.wav"), [a + b for a, b in zip(tone(1250.0, 0.22, 26.0, 0.5), thud(0.22, 240.0, 30.0, 0.7, rng))])
     write_wav(os.path.join(OUT, "level.wav"), chord([293.66, 369.99, 440.0, 587.33, 739.99], 0.8, 0.11, rng))
     make_music(os.path.join(OUT, "music_village.mp3"))
+    make_season_music()
+
+
+def make_season_music():
+    for name, (seed, scale, bpm, shift, drums, ring) in SEASONS.items():
+        make_music(os.path.join(OUT, "music_%s.mp3" % name), seed, scale, bpm, shift, drums, ring)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if sys.argv[1:] == ["seasons"]:
+        make_season_music()
+    else:
+        main()

@@ -27,6 +27,9 @@ const BIG_REACH: Dictionary = {"CaveEntrance": 40.0}
 const SHORE_FINDS: Array[String] = ["wood", "wood", "fish", "dates", "stone", "copper", "pearl"]
 const NOTE_MS: int = 7000
 
+## Skips the fishing game. Only the tests turn this on.
+var quick_fish: bool = false
+
 func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	var place: Node = _place()
 	if place == null:
@@ -48,7 +51,7 @@ func try_use(dirt: TileMapLayer, cell: Vector2i) -> bool:
 		return true
 	var pond: Node2D = _pond_at(place, dirt, cell)
 	if pond != null:
-		fish_at(str(place.name), str(pond.name))
+		cast(str(place.name), str(pond.name))
 		return true
 	if _matches(place, "CaveEntrance", dirt, cell):
 		_enter_cave()
@@ -207,6 +210,26 @@ func on_new_day() -> void:
 	gathered.clear()
 	apply_gathered()
 
+## Opens the fishing game, or fishes at once when tests ask for quick fishing. A rested spot just says so.
+func cast(place_name: String, spot_name: String = "FishingSpot") -> void:
+	var game: FishGame = get_tree().current_scene.get_node_or_null("UI/FishGame") as FishGame if get_tree().current_scene != null else null
+	if quick_fish or game == null or int(fish_spots.get("%s/%s" % [place_name, spot_name], -1)) == _day():
+		fish_at(place_name, spot_name)
+		return
+	if game.is_open():
+		return
+	if not game.finished.is_connected(_on_fish_game):
+		game.finished.connect(_on_fish_game)
+	game.start(place_name, spot_name)
+
+func _on_fish_game(caught: bool) -> void:
+	var game: FishGame = get_tree().current_scene.get_node_or_null("UI/FishGame") as FishGame
+	if caught and game != null:
+		fish_at(game.place_name, game.spot_name)
+	elif not caught:
+		note = Locale.t("fish_lost")
+		_refresh()
+
 func fish_at(place_name: String, spot_name: String = "FishingSpot") -> bool:
 	var key: String = "%s/%s" % [place_name, spot_name]
 	if int(fish_spots.get(key, -1)) == _day():
@@ -340,6 +363,7 @@ func _talk() -> void:
 	var greeting: String = _line("greeting")
 	if not quest_done:
 		greeting = Locale.t("greeting_quest")
+	greeting = _friend_line("jassim", greeting)
 	dialogue.offer(_with_request(greeting, "jassim"), _with_help("jassim", _menu_choices()))
 
 func talk_role(role: String) -> void:
@@ -356,17 +380,17 @@ func talk_role(role: String) -> void:
 		"carpenter":
 			_shop = "work"
 			var rows: PackedStringArray = _labeled(["craft", "build", "animals", "supplies", "give_food", "cancel"])
-			dialogue.offer(_with_request(_line("carpenter"), role), _with_help(role, rows))
+			dialogue.offer(_with_request(_friend_line(role, _line("carpenter")), role), _with_help(role, rows))
 		"elder":
 			_shop = "menu"
-			dialogue.offer(_with_request(_elder_line(), role), _with_help(role, _elder_choices()))
+			dialogue.offer(_with_request(_friend_line(role, _elder_line()), role), _with_help(role, _elder_choices()))
 		"fisherman":
 			_shop = "menu"
-			dialogue.offer(_with_request(_line("fisherman"), role), _with_help(role, _labeled(["give_food", "cancel"])))
+			dialogue.offer(_with_request(_friend_line(role, _line("fisherman")), role), _with_help(role, _labeled(["give_food", "cancel"])))
 		"merchant":
 			_shop = "menu"
 			var rows: PackedStringArray = _labeled(["sell_goods", "buy_seeds", "buy_feed", "give_food", "cancel"])
-			dialogue.offer(_with_request(_line("merchant"), role), _with_help(role, rows))
+			dialogue.offer(_with_request(_friend_line(role, _line("merchant")), role), _with_help(role, rows))
 		_:
 			_talk()
 
@@ -382,6 +406,9 @@ func _on_shop_choice(choice: String) -> void:
 		return
 	if choice == "works":
 		_fund_work()
+		return
+	if choice == "festival":
+		_join_fair()
 		return
 	if _shop == "gift":
 		_give_gift(choice)
@@ -438,7 +465,7 @@ func _offer_gift() -> void:
 		return
 	var inventory: Inventory = _inventory()
 	var choices: PackedStringArray = []
-	for item_id: String in Kindness.FOODS:
+	for item_id: String in Kindness.FOODS + Kindness.GIFTS:
 		var count: int = inventory.count_of(item_id)
 		if count > 0:
 			choices.append("%s|%s x%d" % [item_id, Locale.item(item_id), count])
@@ -455,6 +482,9 @@ func _give_gift(choice: String) -> void:
 		return
 	if _kindness().give_food(_gift_to, choice):
 		note = Locale.t("gift_thanks") % Kindness.GIFT_POINTS
+		var friends: Friendship = _friends()
+		if friends != null:
+			note = "%s %s" % [Locale.t("gift_" + friends.gift(_gift_to, choice)), note]
 		_chime("gather")
 		_save()
 	else:
@@ -528,6 +558,9 @@ func _elder_choices() -> PackedStringArray:
 		var project: Dictionary = works.next_project()
 		if not project.is_empty():
 			rows.append("works|%s: %s" % [Locale.t(str(project["id"])), Stead.cost_text(project["costs"])])
+	var fairs: Festivals = _fairs()
+	if fairs != null and fairs.can_join():
+		rows.insert(0, "festival|%s" % (Locale.t("fair_join") % Locale.t("fair_" + str(fairs.today()["id"]))))
 	rows.append_array(_labeled(["give_food", "give_fund", "cancel"]))
 	return rows
 
@@ -561,6 +594,35 @@ func _with_help(person: String, rows: PackedStringArray) -> PackedStringArray:
 	var result: PackedStringArray = PackedStringArray([help_row])
 	result.append_array(rows)
 	return result
+
+## A neighbor's heart talk or birthday line takes the place of today's greeting.
+func _friend_line(person: String, line: String) -> String:
+	var friends: Friendship = _friends()
+	if friends == null:
+		return line
+	var special: String = friends.talk(person)
+	_dialogue().set_hearts(friends.hearts(person))
+	return special if special != "" else line
+
+func _join_fair() -> void:
+	var fairs: Festivals = _fairs()
+	if fairs == null:
+		return
+	var fair: Dictionary = fairs.today()
+	if not fairs.join():
+		_say(Locale.t("fair_done"))
+		return
+	note = Locale.t("fair_gift") % [int(fair["amount"]), Locale.item(str(fair["gift"])), Festivals.KHAIR]
+	_chime("level")
+	_save()
+	_dialogue().open_lines(PackedStringArray([Locale.t("fair_line_" + str(fair["id"])), note]))
+	_refresh()
+
+func _friends() -> Friendship:
+	return get_parent().get_node_or_null("Friendship") as Friendship
+
+func _fairs() -> Festivals:
+	return get_parent().get_node_or_null("Festivals") as Festivals
 
 func _works() -> VillageWorks:
 	return get_parent().get_node_or_null("VillageWorks") as VillageWorks

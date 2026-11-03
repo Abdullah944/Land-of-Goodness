@@ -34,6 +34,7 @@ func _run() -> void:
 	var inventory: Inventory = systems.get_node("Inventory") as Inventory
 	var stead: Stead = systems.get_node("Stead") as Stead
 	var activities: Activities = systems.get_node("Activities") as Activities
+	activities.quick_fish = true
 	var farm: FarmField = systems.get_node("FarmField") as FarmField
 	var loader: LevelLoader = systems.get_node("LevelLoader") as LevelLoader
 	var home_marks: Array[String] = _daily_marks(main)

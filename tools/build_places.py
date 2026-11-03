@@ -263,6 +263,8 @@ def forest():
     s.spawn("VillageReturn", 670, 0)
     s.door("ExitFarm", 0, -620, HOME, "ForestReturn", 76, 24)
     s.door("ExitVillage", 722, 0, VILLAGE, "ForestReturn", 24, 76)
+    # The east shore of the woods lake, where the boy can fish.
+    s.area("FishingSpot", "res://src/scripts/World/fish_spot.gd", -78, 40, 46, 90)
     for i, (x, y) in enumerate([(-180, -300), (210, -340), (420, -210), (250, 160), (-60, -120), (-480, 400)]):
         s.mark("Wood%d" % i, TREE, x, y, group="tree", block=(14, 8))
     for i, (x, y) in enumerate([(60, -140), (150, 40), (290, 70), (-520, -240), (480, 180), (-280, 380), (360, 430), (-560, 90)]):

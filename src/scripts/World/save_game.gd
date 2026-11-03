@@ -64,6 +64,10 @@ func write_now() -> void:
 	var works: Variant = get_parent().get_node_or_null("VillageWorks")
 	if works != null:
 		data["works"] = works.to_data()
+	for system: String in ["Friendship", "Festivals"]:
+		var part: Node = get_parent().get_node_or_null(system)
+		if part != null:
+			data[system.to_lower()] = part.call("to_data")
 	_write_safely(JSON.stringify(data))
 
 ## Writes a temporary file, keeps the last good save as a backup, then swaps the new file in.
@@ -121,6 +125,10 @@ func _apply(data: Dictionary) -> void:
 	var works: Variant = get_parent().get_node_or_null("VillageWorks")
 	if works != null:
 		works.from_data(_section(data, "works"))
+	for system: String in ["Friendship", "Festivals"]:
+		var part: Node = get_parent().get_node_or_null(system)
+		if part != null:
+			part.call("from_data", _section(data, system.to_lower()))
 	has_position = bool(data.get("has_position", false))
 	saved_position = Vector2(float(data.get("x", 0.0)), float(data.get("y", 0.0)))
 

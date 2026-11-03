@@ -26,6 +26,7 @@ func _run() -> void:
 	var inventory: Inventory = systems.get_node("Inventory") as Inventory
 	var stead: Stead = systems.get_node("Stead") as Stead
 	var activities: Activities = systems.get_node("Activities") as Activities
+	activities.quick_fish = true
 	var farm: FarmField = systems.get_node("FarmField") as FarmField
 	var chest: ChestStore = systems.get_node("ChestStore") as ChestStore
 	var old_file: FileAccess = FileAccess.open(save.path, FileAccess.WRITE)
@@ -105,6 +106,7 @@ func _run() -> void:
 	await process_frame
 	check(_place_name(main) == "Village" and stead.place_name == "Village", "the village opens")
 	check(_buildings_vary(main) and _pictures_fit(main, "Village"), "town buildings are not one house copied")
+	_check_friends(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -205,8 +207,8 @@ func _check_kindness(main: Node, systems: Node, inventory: Inventory, clock: Gam
 	check(kindness.give_food("elder", "dates") and inventory.dates == 1 and kindness.points == 2, "a gift spends one food and earns Khair")
 	check(not kindness.give_food("elder", "dates") and inventory.dates == 1 and kindness.points == 2, "one gift per person each day")
 	check(kindness.give_food("fisherman", "dates") and kindness.points == 4, "another neighbor can receive a gift")
-	inventory.wood = 3
-	check(not kindness.give_food("merchant", "wood") and inventory.wood == 3, "only food can be shared")
+	inventory.stone = 3
+	check(not kindness.give_food("merchant", "stone") and inventory.stone == 3, "only food and real gifts can be given")
 	check(not kindness.give_food("merchant", "dates") and kindness.points == 4, "a gift needs food in the bag")
 	inventory.dinars = Kindness.FUND_PRICE - 1
 	check(not kindness.give_fund() and inventory.dinars == Kindness.FUND_PRICE - 1, "giving needs enough dinars")
@@ -553,6 +555,66 @@ func _pictures_fit(main: Node, place: String) -> bool:
 				fits = false
 	return fits
 
+func _check_friends(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var fairs: Festivals = systems.get_node("Festivals") as Festivals
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var old_day: int = clock.day
+	var old_season: String = clock.season
+	friends.from_data({})
+	friends.talk("elder")
+	friends.talk("elder")
+	check(int(friends.points.get("elder", 0)) == Friendship.TALK_POINTS, "a neighbor grows closer from one talk a day")
+	check(friends.gift("elder", "dates") == "love" and friends.gift("fisherman", "fish") == "dislike", "neighbors love and dislike different gifts")
+	check(int(friends.points.get("fisherman", 0)) == 0 and friends.hearts("elder") == 0, "hearts never drop below zero")
+	friends.points["merchant"] = Friendship.HEART * 2
+	check(friends.talk("merchant") == Locale.t("heart_merchant_2") and friends.talk("merchant") != Locale.t("heart_merchant_2"), "a heart talk plays once at two hearts")
+	clock.season = "Summer"
+	clock.day = 12
+	check(friends.is_birthday("elder") and friends.birthday_today() == "elder", "the elder has a summer birthday")
+	var before: int = int(friends.points.get("elder", 0))
+	friends.gift("elder", "milk")
+	check(int(friends.points.get("elder", 0)) == before + 80 * Friendship.BIRTHDAY_TIMES, "a birthday gift counts three times")
+	var saved: Dictionary = friends.to_data()
+	friends.from_data(saved)
+	check(int(friends.points.get("elder", 0)) == before + 240 and friends.heart_talks_seen.has("merchant_2"), "hearts survive a save")
+	clock.season = "Spring"
+	clock.day = 4
+	fairs.joined_day = -1
+	check(str(fairs.today().get("id", "")) == "truffle" and fairs.morning_note() != "", "spring has the truffle fair")
+	var herbs: int = bag.count_of("forage")
+	check(fairs.join() and bag.count_of("forage") == herbs + 4 and not fairs.join(), "the fair gift comes once")
+	fairs.apply_place()
+	check(_place(main).get_node_or_null("FairRug") != null and _place(main).get_node_or_null("FairFlags-150") != null, "the square is dressed for the fair")
+	clock.day = 5
+	fairs.apply_place()
+	check(fairs.today().is_empty() and str(fairs.tomorrow().get("id", "")) == "", "no fair the next day")
+	clock.day = old_day
+	clock.season = old_season
+	friends.from_data({})
+	fairs.apply_place()
+
+func _check_fish_game(main: Node, activities: Activities) -> void:
+	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory
+	var game: FishGame = main.get_node("UI/FishGame") as FishGame
+	activities.quick_fish = false
+	var fish: int = bag.count_of("fish")
+	activities.cast("Home", "TestPondA")
+	check(game.is_open() and bag.count_of("fish") == fish, "a cast opens the fishing game")
+	var net: ColorRect = game.get("_net") as ColorRect
+	game.set("_x", 0.0 if net.position.x > 100.0 else FishGame.BAR_SIZE.x - 16.0)
+	game.set("_playing", true)
+	game.pull()
+	await create_timer(FishGame.RESULT_SECONDS + 0.2).timeout
+	check(not game.is_open() and bag.count_of("fish") == fish and not activities.fish_spots.has("Home/TestPondA"), "a pull outside the net loses the fish but not the day")
+	activities.cast("Home", "TestPondA")
+	game.land()
+	await create_timer(FishGame.RESULT_SECONDS + 0.2).timeout
+	check(bag.count_of("fish") == fish + 1 and not game.is_open(), "a pull inside the net catches a fish")
+	activities.quick_fish = true
+
 ## No one building picture fills more than half of a place's buildings.
 func _buildings_vary(main: Node) -> bool:
 	var counts: Dictionary = {}
@@ -590,6 +652,7 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	check(activities.tool_for_cell(zone_dirt, pond_cell) == "use", "a new pond can be fished")
 	check(activities.try_use(zone_dirt, pond_cell) and main.get_node("Systems/Inventory").count_of("fish") == pond_fish + 1, "a new pond gives a fish")
 	check(activities.try_use(zone_dirt, pond_cell) and main.get_node("Systems/Inventory").count_of("fish") == pond_fish + 1, "the pond rests until morning")
+	await _check_fish_game(main, activities)
 	var ore_cell: Vector2i = zone_dirt.local_to_map(zone_dirt.to_local((home.get_node("ZoneOre") as Node2D).global_position))
 	var copper: int = main.get_node("Systems/Inventory").count_of("copper")
 	check(activities.tool_for_cell(zone_dirt, ore_cell) == "pick" and activities.mine_at(zone_dirt, ore_cell) and main.get_node("Systems/Inventory").count_of("copper") == copper + 1, "the farm quarry gives copper")

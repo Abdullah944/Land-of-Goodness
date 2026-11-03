@@ -19,6 +19,9 @@
 [ext_resource type="Script" path="res://src/scripts/farm/kindness.gd" id="15_kind"]
 [ext_resource type="Script" path="res://src/scripts/farm/village_works.gd" id="16_works"]
 [ext_resource type="Script" path="res://src/scripts/ui/ending.gd" id="17_end"]
+[ext_resource type="Script" path="res://src/scripts/farm/friendship.gd" id="18_friends"]
+[ext_resource type="Script" path="res://src/scripts/farm/festivals.gd" id="19_fairs"]
+[ext_resource type="Script" path="res://src/scripts/ui/fish_game.gd" id="20_fish"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -62,6 +65,12 @@ script = ExtResource("15_kind")
 [node name="VillageWorks" type="Node" parent="Systems"]
 script = ExtResource("16_works")
 
+[node name="Friendship" type="Node" parent="Systems"]
+script = ExtResource("18_friends")
+
+[node name="Festivals" type="Node" parent="Systems"]
+script = ExtResource("19_fairs")
+
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true
 
@@ -81,6 +90,10 @@ script = ExtResource("11_panel")
 [node name="Dialogue" type="CanvasLayer" parent="UI"]
 process_mode = 3
 script = ExtResource("9_talk")
+
+[node name="FishGame" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("20_fish")
 
 [node name="TitleMenu" type="CanvasLayer" parent="UI"]
 process_mode = 3

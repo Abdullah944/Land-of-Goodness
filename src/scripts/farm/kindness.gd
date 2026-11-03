@@ -10,6 +10,8 @@ const FUND_POINTS: int = 3
 const FEED_POINTS: int = 1
 const FUND_PRICE: int = 10
 const FOODS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons", "fish", "dates", "eggs", "milk"]
+## Things that are not food but still make a good present.
+const GIFTS: Array[String] = ["pearl", "copper", "wool", "forage", "wood"]
 const LEVELS: Array[Dictionary] = [
 	{"at": 10, "item": "seeds", "amount": 3},
 	{"at": 30, "item": "tomato_seeds", "amount": 3},
@@ -29,7 +31,7 @@ func gifted_today(person: String) -> bool:
 
 func give_food(person: String, item_id: String) -> bool:
 	var bag: Inventory = _bag()
-	if bag == null or person == "" or gifted_today(person) or not item_id in FOODS:
+	if bag == null or person == "" or gifted_today(person) or not (item_id in FOODS or item_id in GIFTS):
 		return false
 	if not bag.take_item(item_id, 1):
 		return false

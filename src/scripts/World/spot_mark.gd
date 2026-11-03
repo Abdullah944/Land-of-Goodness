@@ -230,9 +230,10 @@ func _draw() -> void:
 		if not _frames.is_empty() or _breathes or _sways:
 			UiStyle.draw_shadow(self, Vector2(0, ground_y - 1.0), size.x * (0.3 if _sways else 0.42))
 		if walking:
-			var turn: float = sin(_clock() * 10.0) * 0.06
-			draw_set_transform(Vector2(-sin(turn) * ground_y, ground_y - cos(turn) * ground_y), turn)
-		elif _sways:
+			_draw_steps(shown, Rect2(origin, size))
+			_draw_talk_mark()
+			return
+		if _sways:
 			var lean: float = sin(_clock() * 1.1) * 0.03
 			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(lean, 1), Vector2(-lean * ground_y, 0)))
 		elif _breathes:
@@ -245,6 +246,26 @@ func _draw() -> void:
 	draw_rect(Rect2(-8, -8, 16, 16), mark_color)
 	if title != "":
 		draw_string(ThemeDB.fallback_font, Vector2(-16, -12), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("3f2d27"))
+
+## A walking step: the body bobs twice a stride while the left and right feet lift in turn under the robe.
+func _draw_steps(shown: Texture2D, box: Rect2) -> void:
+	const FEET: float = 0.16
+	const LIFT: float = 1.6
+	var stride: float = sin(_clock() * 9.0)
+	var pixels: Vector2 = shown.get_size()
+	var scale_by: Vector2 = box.size / pixels
+	var feet_top: float = floorf(pixels.y * (1.0 - FEET))
+	var half: float = floorf(pixels.x * 0.5)
+	var feet_h: float = pixels.y - feet_top
+	for side: int in 2:
+		var lift: float = maxf(0.0, stride if side == 0 else -stride) * LIFT
+		var source: Rect2 = Rect2(half * side, feet_top, half if side == 0 else pixels.x - half, feet_h)
+		var at: Vector2 = box.position + Vector2(source.position.x * scale_by.x, feet_top * scale_by.y - lift - bob)
+		draw_texture_rect_region(shown, Rect2(at, source.size * scale_by), source)
+	# The robe is drawn last and reaches a little lower, so a lifted foot tucks under it with no gap.
+	var robe_h: float = minf(pixels.y, feet_top + 2.0)
+	var body_bob: float = absf(stride) * LIFT * 0.6 + bob
+	draw_texture_rect_region(shown, Rect2(box.position - Vector2(0, body_bob), Vector2(box.size.x, robe_h * scale_by.y)), Rect2(0, 0, pixels.x, robe_h))
 
 func _fit(texture: Texture2D, pixels: int) -> Texture2D:
 	var image: Image = texture.get_image()
