@@ -122,6 +122,17 @@ static func draw_shadow(canvas: CanvasItem, at: Vector2, width: float) -> void:
 	canvas.draw_circle(Vector2.ZERO, width * 0.5, Color(0.1, 0.08, 0.05, 0.28))
 	canvas.draw_set_transform(Vector2.ZERO)
 
+## A building's own outline laid on the ground behind it, leaning right as if the sun were low on the left.
+## Without it a painted building looks pasted on the grass. box is where the building is drawn, feet at its bottom.
+static func draw_building_shadow(canvas: CanvasItem, picture: Texture2D, box: Rect2) -> void:
+	var feet: Vector2 = Vector2(box.get_center().x, box.end.y)
+	canvas.draw_set_transform_matrix(Transform2D(Vector2(1.0, 0.0), Vector2(-0.38, 0.5), feet))
+	canvas.draw_texture_rect(picture, Rect2(box.position - feet, box.size), false, Color(0.12, 0.09, 0.05, 0.3))
+	canvas.draw_set_transform(Vector2.ZERO)
+	canvas.draw_set_transform(feet + Vector2(box.size.x * 0.03, -2.0), 0.0, Vector2(1.0, 0.09))
+	canvas.draw_circle(Vector2.ZERO, box.size.x * 0.5, Color(0.1, 0.08, 0.05, 0.2))
+	canvas.draw_set_transform(Vector2.ZERO)
+
 ## The same oval as a node, for sprites that are not drawn by hand.
 static func shadow_node(at: Vector2, width: float) -> Polygon2D:
 	var oval: PackedVector2Array = PackedVector2Array()

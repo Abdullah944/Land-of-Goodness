@@ -10,6 +10,8 @@ signal picked(choice: String)
 const _PANEL_AT: Vector2 = Vector2(40, 200)
 const _PANEL_SIZE: Vector2 = Vector2(430, 70)
 const MAX_ROWS: int = 6
+## One choice row: a button with the Arabic font is about thirty-five pixels tall.
+const ROW_STEP: float = 38.0
 const MORE: String = "__more"
 
 var _offer_all: PackedStringArray = []
@@ -237,8 +239,9 @@ func _show_offer_page() -> void:
 		var parts: PackedStringArray = _choice_parts(rows[i])
 		var button: Button = Button.new()
 		button.text = parts[1]
-		button.position = Vector2(8, _first_row() + 36.0 * i)
-		button.size = Vector2(414, 34)
+		var spot: Rect2 = _offer_spot(i, rows.size())
+		button.position = spot.position
+		button.size = spot.size
 		button.focus_mode = Control.FOCUS_NONE
 		button.add_theme_font_size_override("font_size", 12)
 		button.clip_text = true
@@ -271,9 +274,17 @@ func _clear_offer_buttons() -> void:
 func _first_row() -> float:
 	return 54.0 if _heart_row.visible else 46.0
 
+## Short lists stay one wide row each; longer ones sit in two columns, so the panel never covers the screen.
+func _offer_spot(index: int, count: int) -> Rect2:
+	if count <= 3:
+		return Rect2(8, _first_row() + ROW_STEP * index, 414, ROW_STEP - 3.0)
+	var width: float = (414.0 - 6.0) * 0.5
+	return Rect2(8.0 + (index % 2) * (width + 6.0), _first_row() + ROW_STEP * (index / 2), width, ROW_STEP - 3.0)
+
 func _fit_actions(rows: int) -> void:
 	_label.size = Vector2(414, 40)
-	var height: float = _first_row() + 6.0 + 36.0 * rows
+	var lines: int = rows if rows <= 3 else (rows + 1) / 2
+	var height: float = _first_row() + 6.0 + ROW_STEP * lines
 	_panel.size = Vector2(430, height)
 	_panel.position = Vector2(40, 288.0 - height - 6.0)
 

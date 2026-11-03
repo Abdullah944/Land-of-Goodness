@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://co7ct1ryt5xeu"
+path="res://.godot/imported/mosque.png-12fd4333f66d1dd103557f03de3df2f8.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/mosque.png"
+dest_files=["res://.godot/imported/mosque.png-12fd4333f66d1dd103557f03de3df2f8.res"]
+
+[params]
+
+game_size=Vector2(163, 168)

@@ -47,7 +47,7 @@ func _ready() -> void:
 	if role == "fisherman" and _picture != null and not UiStyle.is_hd(person):
 		_picture = ImageTexture.create_from_image(UiStyle.crisp_sprite(_picture.get_image()))
 	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
-	var is_person: bool = name == "Neighbor" or role != ""
+	var is_person: bool = name == "Neighbor" or (role != "" and role != "mosque")
 	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm") or str(name).begins_with("Grove")
 	var is_pond: bool = name == "FishingSpot" or str(name).begins_with("Pond_")
 	# Painted HD people breathe; only the old pixel people have idle sheets drawn for them.
@@ -185,6 +185,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			activities.call("_talk")
 		get_viewport().set_input_as_handled()
+
+## Houses, shops and the mosque: big solid pictures that stand on the ground.
+func is_building() -> bool:
+	return stand_on_feet and block_size.x >= 60.0 and (role == "" or role == "mosque") and name != "Neighbor"
 
 func _near_player() -> bool:
 	var player: Player = _hero()

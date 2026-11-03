@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://bo02nu4ptlknl"
+path="res://.godot/imported/side.png-d1bb856033b6c8a4371d5cbafda218e0.res"
+
+[deps]
+
+source_file="res://assets/props/fence/side.png"
+dest_files=["res://.godot/imported/side.png-d1bb856033b6c8a4371d5cbafda218e0.res"]
+
+[params]
+
+game_size=Vector2(4, 19)

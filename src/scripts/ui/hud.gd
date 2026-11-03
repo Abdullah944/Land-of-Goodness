@@ -58,6 +58,12 @@ var _help_button: Button
 var _eat: Button
 var _tab_keys: Dictionary = {}
 var _world_map: WorldMap
+var _prayer_button: Button
+var _prayer_next: Label
+var _prayer_banner: PanelContainer
+var _prayer_text: Label
+## The last prayer the banner told about, so each one is told once.
+var _prayer_told: String = ""
 
 func _ready() -> void:
 	var rain: ColorRect = ColorRect.new()
@@ -88,6 +94,7 @@ func _ready() -> void:
 	add_child(_sleep_dark)
 	_sleep_dark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_sale()
+	_build_prayer_banner()
 	_fit_screen()
 	get_viewport().size_changed.connect(_fit_screen)
 	refresh()
@@ -243,6 +250,12 @@ func _refresh_settings(stead: Stead) -> void:
 	if stead != null:
 		labels[_music_button] = Locale.t("music") % Locale.t("level_%d" % stead.music_level)
 		labels[_sound] = Locale.t("effects") % Locale.t("level_%d" % stead.sfx_level)
+		labels[_prayer_button] = Locale.t("prayer_reminder") % Locale.t("switch_on" if stead.prayer_reminder else "switch_off")
+		_prayer_next.visible = _tab == "settings" and stead.prayer_reminder
+		if _prayer_next.visible:
+			var next: Array = PrayerTimes.next_prayer(PrayerTimes.today(), PrayerTimes.now_minutes())
+			_prayer_next.text = Locale.t("prayer_next") % [Locale.t(str(next[0])), PrayerTimes.clock_text(int(next[1]))]
+			Locale.apply_control(_prayer_next)
 	for button: Button in labels:
 		button.visible = _tab == "settings"
 		button.text = labels[button]
@@ -441,10 +454,17 @@ func _build_menu() -> void:
 	bar.add_child(_bag_money)
 	_zoom_in = _settings_button(0, 0, _zoom.bind(1.15))
 	_zoom_out = _settings_button(1, 0, _zoom.bind(0.87))
-	_music_button = _settings_button(0, 1, _cycle_music)
-	_sound = _settings_button(1, 1, _toggle_sound)
-	_language = _settings_button(0, 2, _toggle_language)
-	_help_button = _settings_button(1, 2, _show_help)
+	_music_button = _settings_button(2, 0, _cycle_music)
+	_sound = _settings_button(0, 1, _toggle_sound)
+	_language = _settings_button(1, 1, _toggle_language)
+	_help_button = _settings_button(2, 1, _show_help)
+	_prayer_button = _settings_button(0, 2, _toggle_prayer)
+	_prayer_next = _make_label(Vector2(20.0 + 146.0, 54.0 + 2 * 39.0), UiStyle.DARK)
+	_prayer_next.size = Vector2(282, 36)
+	_prayer_next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prayer_next.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_prayer_next.add_theme_font_size_override("font_size", 12)
+	_menu.add_child(_prayer_next)
 	_eat = _tab_button(Locale.t("eat"), Vector2(108, 3))
 	_eat.size = Vector2(60, 24)
 	_eat.focus_mode = Control.FOCUS_NONE
@@ -452,8 +472,9 @@ func _build_menu() -> void:
 	bar.add_child(_eat)
 
 func _settings_button(column: int, row: int, action: Callable) -> Button:
-	var button: Button = _tab_button("", Vector2(84.0 + column * 156.0, 60.0 + row * 40.0))
-	button.size = Vector2(144, 32)
+	# Three across, so seven settings fit inside the wooden window.
+	var button: Button = _tab_button("", Vector2(20.0 + column * 146.0, 54.0 + row * 39.0))
+	button.size = Vector2(136, 34)
 	button.add_theme_font_size_override("font_size", 12)
 	button.focus_mode = Control.FOCUS_NONE
 	button.pressed.connect(action)
@@ -646,6 +667,67 @@ func _cycle_music() -> void:
 	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).apply_levels()
 	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
 	refresh()
+
+func _toggle_prayer() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null:
+		return
+	stead.prayer_reminder = not stead.prayer_reminder
+	_prayer_told = ""
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
+	refresh()
+
+## A small wooden note at the top of the screen when a real prayer time comes, checked by the phone's clock.
+func _build_prayer_banner() -> void:
+	_prayer_banner = PanelContainer.new()
+	UiStyle.panel(_prayer_banner)
+	_prayer_banner.visible = false
+	_prayer_banner.mouse_filter = Control.MOUSE_FILTER_STOP
+	_prayer_banner.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_prayer_banner.visible = false)
+	_prayer_text = _make_label(Vector2.ZERO, UiStyle.DARK)
+	_prayer_text.add_theme_font_size_override("font_size", 12)
+	_prayer_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prayer_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_prayer_text.custom_minimum_size = Vector2(210, 24)
+	_prayer_banner.add_child(_prayer_text)
+	add_child(_prayer_banner)
+	var check: Timer = Timer.new()
+	check.wait_time = 15.0
+	check.autostart = true
+	check.timeout.connect(_check_prayer)
+	add_child(check)
+	_check_prayer.call_deferred()
+
+## Within fifteen minutes after a prayer time, the banner shows once for that prayer.
+func _check_prayer() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null or not stead.prayer_reminder:
+		return
+	var times: Dictionary = PrayerTimes.today()
+	var now: int = PrayerTimes.now_minutes()
+	var date: Dictionary = Time.get_date_dict_from_system()
+	for name: String in PrayerTimes.NAMES:
+		var at: int = int(times[name])
+		var key: String = "%d-%d-%d %s" % [date["year"], date["month"], date["day"], name]
+		if now >= at and now < at + 15 and key != _prayer_told:
+			_prayer_told = key
+			_show_prayer_banner(Locale.t("prayer_now") % Locale.t(name))
+
+func _show_prayer_banner(text: String) -> void:
+	_prayer_text.text = text
+	Locale.apply_control(_prayer_text)
+	_prayer_banner.reset_size()
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	_prayer_banner.position = Vector2((view.x - _prayer_banner.size.x) * 0.5, 10.0)
+	_prayer_banner.visible = true
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("level")
+	var token: String = _prayer_told
+	await get_tree().create_timer(12.0).timeout
+	if _prayer_told == token:
+		_prayer_banner.visible = false
 
 func _toggle_sound() -> void:
 	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead

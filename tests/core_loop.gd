@@ -90,7 +90,7 @@ func _run() -> void:
 	inventory.stone = 8
 	inventory.dinars = 100
 	var old_size: Vector2i = farm.farm_size
-	check(stead.build("expand") and farm.farm_size == Vector2i(4, 4) and old_size == Vector2i(3, 3), "the field grows to four by four")
+	check(stead.build("expand") and farm.farm_size == FarmField.LARGER_SIZE and old_size == Vector2i(12, 8), "the field grows larger")
 	inventory.add_item("copper", 3)
 	inventory.dinars = 120
 	check(stead.build("tools") and stead.tool_level == 1, "copper upgrades the watering can")
@@ -636,12 +636,12 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	check(home.get_node_or_null("ExitForest") != null and home.get_node_or_null("ExitVillage") != null, "the farm has two ways out")
 	check(home.get_node_or_null("Forest0") != null and home.get_node_or_null("Pond_0") != null, "the farm has a forest edge and more ponds")
 	var player_check: Player = main.find_child("Player", true, false) as Player
-	player_check.global_position = Vector2(-340, 90)
+	player_check.global_position = Vector2(-360, 257)
 	player_check.busy = false
-	player_check.set_walk_target(Vector2(-340, 230))
+	player_check.set_walk_target(Vector2(-360, 400))
 	for i: int in 200:
 		await physics_frame
-	check(player_check.global_position.y < 90.0, "the boy cannot walk onto a pond")
+	check(player_check.global_position.y < 257.0, "the boy cannot walk onto a pond")
 	player_check.cancel_tap()
 	var zone_dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
 	var pond_fish: int = main.get_node("Systems/Inventory").count_of("fish")

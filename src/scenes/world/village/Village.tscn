@@ -29,6 +29,7 @@
 [ext_resource type="Script" path="res://src/scripts/World/npc_route.gd" id="27_npc_route"]
 [ext_resource type="Texture2D" path="res://assets/characters/village/Merchant.png" id="28_merchant"]
 [ext_resource type="Texture2D" path="res://assets/characters/village/Carpenter.png" id="29_carpenter"]
+[ext_resource type="Texture2D" path="res://assets/building/Mosque/mosque.png" id="30_mosque"]
 
 [sub_resource type="RectangleShape2D" id="Rect_24x90"]
 size = Vector2(24, 90)
@@ -236,6 +237,15 @@ person = ExtResource("10_house_blue")
 fit_pixels = 137
 stand_on_feet = true
 block_size = Vector2(108, 37)
+
+[node name="Mosque" type="Node2D" parent="."]
+position = Vector2(320, 460)
+script = ExtResource("3_spot_mark")
+person = ExtResource("30_mosque")
+fit_pixels = 168
+stand_on_feet = true
+role = "mosque"
+block_size = Vector2(140, 40)
 
 [node name="Shop" type="Node2D" parent="."]
 position = Vector2(-170, -176)

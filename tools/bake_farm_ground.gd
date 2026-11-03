@@ -101,7 +101,7 @@ func _kind(place: String, shape: Dictionary, world: Vector2, patches: FastNoiseL
 	var patch: float = patches.get_noise_2d(world.x, world.y)
 	if bool(shape["sandy"]):
 		return WorldShapes.GRASS if patch > 0.2 else WorldShapes.SAND
-	return WorldShapes.DIRT if patch > 0.08 else WorldShapes.GRASS
+	return WorldShapes.DIRT if patch > float(shape.get("bare", 0.08)) else WorldShapes.GRASS
 
 func _color(kind: int, x: int, y: int, depth: float, grass: Image, roll: RandomNumberGenerator) -> Color:
 	var picked: Color = grass.get_pixel(x % grass.get_width(), y % grass.get_height())

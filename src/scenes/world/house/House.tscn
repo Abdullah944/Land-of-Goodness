@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://bitq6w4maknkg" path="res://assets/building/house/Desert Adobe Rooftop House Sprite.png" id="1_j04ud"]
 [ext_resource type="Script" uid="uid://dg760j5xi0drc" path="res://src/scripts/house/door.gd" id="2_0snax"]
+[ext_resource type="Script" path="res://src/scripts/World/building_shadow.gd" id="4_shadow"]
 [ext_resource type="PackedScene" uid="uid://doxblrlmf5jlc" path="res://src/scenes/world/house/House_inside.tscn" id="3_f2osk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ubrcs"]
@@ -11,6 +12,9 @@ size = Vector2(130, 80)
 size = Vector2(130, 14)
 
 [node name="house" type="Node2D" unique_id=1548424025]
+
+[node name="Shadow" type="Node2D" parent="."]
+script = ExtResource("4_shadow")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1958799620]
 position = Vector2(96, -133)

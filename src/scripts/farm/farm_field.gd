@@ -10,8 +10,16 @@ const SOIL_BED: Texture2D = preload("res://assets/farming/soil_bed.png")
 const SOIL_TILLED: Texture2D = preload("res://assets/farming/soil_tilled.png")
 const SOIL_WET: Texture2D = preload("res://assets/farming/soil_wet.png")
 
-@export var farm_origin: Vector2i = Vector2i(-11, -4)
-@export var farm_size: Vector2i = Vector2i(3, 3)
+## The fenced field beside the house. It starts here and grows right and down with each larger-field project.
+@export var farm_origin: Vector2i = Vector2i(-28, -1)
+@export var farm_size: Vector2i = Vector2i(12, 8)
+const LARGER_SIZE: Vector2i = Vector2i(16, 10)
+const LARGEST_SIZE: Vector2i = Vector2i(20, 12)
+const FIELD_SOIL: Script = preload("res://src/scripts/farm/field_soil.gd")
+const FENCE_RAIL: String = "res://assets/props/fence/rail.png"
+const FENCE_POST: String = "res://assets/props/fence/post.png"
+const FENCE_SIDE: String = "res://assets/props/fence/side.png"
+const FENCE_GATE: String = "res://assets/props/fence/gate.png"
 
 var plots: Dictionary = {}
 
@@ -85,14 +93,18 @@ func apply() -> void:
 	var crops: Node2D = Node2D.new()
 	crops.name = "Crops"
 	dirt.add_child(crops)
+	_add_fence(dirt)
+	var soil: Node2D = FIELD_SOIL.new() as Node2D
+	soil.name = "Soil"
 	for cell: Vector2i in _farm_cells():
 		if not _is_tilled(cell):
-			crops.add_child(_soil(dirt, cell, SOIL_BED))
+			soil.squares.append([dirt.map_to_local(cell), SOIL_BED])
 	for key: String in plots.keys():
 		var plot: Dictionary = plots[key]
 		var cell: Vector2i = _cell_from_key(key)
 		if bool(plot["tilled"]):
-			crops.add_child(_soil(dirt, cell, SOIL_WET if bool(plot["watered"]) else SOIL_TILLED))
+			soil.squares.append([dirt.map_to_local(cell), SOIL_WET if bool(plot["watered"]) else SOIL_TILLED])
+	crops.add_child(soil)
 	for key: String in plots.keys():
 		var plot: Dictionary = plots[key]
 		var cell: Vector2i = _cell_from_key(key)
@@ -278,12 +290,51 @@ func _crop_of(plot: Dictionary) -> Dictionary:
 		crop_id = CropCatalog.TURNIP
 	return CropCatalog.get_crop(crop_id)
 
-## Soil pictures make the field easy to find, and show at a glance what was watered.
-func _soil(dirt: TileMapLayer, cell: Vector2i, picture: Texture2D) -> Sprite2D:
-	var soil: Sprite2D = Sprite2D.new()
-	soil.texture = picture
-	soil.position = dirt.map_to_local(cell)
-	return soil
+## A wooden fence around the field with a gate on the side that faces the house, so the field is easy to find.
+## It is built again only when the field changes size.
+func _add_fence(dirt: TileMapLayer) -> void:
+	if not ResourceLoader.exists(FENCE_RAIL):
+		return
+	var size_key: String = "Fence_%d_%d" % [farm_size.x, farm_size.y]
+	var old: Node = dirt.get_node_or_null("Fence")
+	if old != null and old.get_meta("size_key", "") == size_key:
+		return
+	if old != null:
+		dirt.remove_child(old)
+		old.free()
+	var crops: Node2D = Node2D.new()
+	crops.name = "Fence"
+	crops.set_meta("size_key", size_key)
+	dirt.add_child(crops)
+	var top_left: Vector2 = dirt.map_to_local(farm_origin) - Vector2(8, 8)
+	var box: Rect2 = Rect2(top_left, Vector2(farm_size) * 16.0)
+	var rails: int = int(box.size.x / 32.0)
+	for row: float in [box.position.y - 1.0, box.end.y + 5.0]:
+		for i: int in rails:
+			var gate: bool = row < box.position.y and i == rails - 2
+			var at: Vector2 = Vector2(box.position.x + i * 32.0, row)
+			if gate:
+				crops.add_child(_fence_piece(FENCE_POST, at + Vector2(2, 0)))
+				crops.add_child(_fence_piece(FENCE_GATE, at + Vector2(16, 0)))
+				crops.add_child(_fence_piece(FENCE_POST, at + Vector2(30, 0)))
+			else:
+				crops.add_child(_fence_piece(FENCE_RAIL, at + Vector2(16, 0)))
+	for x: float in [box.position.x - 2.0, box.end.x + 2.0]:
+		var y: float = box.position.y + 10.0
+		while y < box.end.y + 4.0:
+			crops.add_child(_fence_piece(FENCE_SIDE, Vector2(x, y)))
+			y += 11.0
+
+## One fence picture, standing on its feet and drawn in the same order as everything else by its feet.
+func _fence_piece(path: String, feet: Vector2) -> Sprite2D:
+	var piece: Sprite2D = Sprite2D.new()
+	piece.texture = load(path) as Texture2D
+	piece.centered = false
+	piece.offset = Vector2(-piece.texture.get_width() * 0.5, -piece.texture.get_height())
+	piece.position = feet
+	piece.z_as_relative = false
+	piece.z_index = 2000 + int(feet.y)
+	return piece
 
 func _sprout(dirt: TileMapLayer, cell: Vector2i, plot: Dictionary) -> Sprite2D:
 	var crop: Dictionary = _crop_of(plot)

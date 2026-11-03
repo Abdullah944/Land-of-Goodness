@@ -14,12 +14,13 @@ const SHORE: int = 6
 const SAND: int = 7
 const PLANKS: int = 8
 
+## bare: how much noise it takes for a patch of bare dirt to show through the grass (higher is fewer patches).
 ## half: the middle-to-edge size of the clearing. wooded: dark forest around it. sandy: sand in place of grass.
 ## roads: [from, to, half width]. water: [from, to, half width]. lakes: [middle, radius]. planks: bridges and docks.
 ## exits: gaps cut through the forest. sea_from: below this height everything is sea.
 const PLACES: Dictionary = {
 	"Home": {
-		"half": Vector2(620, 500), "wooded": true, "sandy": false, "seed": 12,
+		"half": Vector2(620, 500), "wooded": true, "sandy": false, "seed": 12, "bare": 0.42,
 		"roads": [
 			[Vector2(-136, -62), Vector2(-70, -62), 11.0], [Vector2(-70, -62), Vector2(-40, 10), 11.0], [Vector2(-40, 10), Vector2(60, 76), 11.0],
 			[Vector2(60, 76), Vector2(260, 56), 11.0], [Vector2(260, 56), Vector2(720, 40), 11.0], [Vector2(-70, -62), Vector2(-200, -210), 9.0],
@@ -27,7 +28,7 @@ const PLACES: Dictionary = {
 			[Vector2(60, 76), Vector2(0, 180), 11.0], [Vector2(0, 180), Vector2(0, 620), 11.0],
 		],
 		"water": [], "lakes": [], "planks": [],
-		"dirt": [Rect2(-196, -84, 124, 124)],
+		"dirt": [],
 		"exits": [Rect2(380, 6, 400, 68), Rect2(-34, 320, 68, 320)],
 	},
 	"Road": {
@@ -36,7 +37,7 @@ const PLACES: Dictionary = {
 		"water": [], "lakes": [], "planks": [], "dirt": [], "exits": [],
 	},
 	"Village": {
-		"half": Vector2(800, 620), "wooded": true, "sandy": false, "seed": 27,
+		"half": Vector2(800, 620), "wooded": true, "sandy": false, "seed": 27, "bare": 0.42,
 		"roads": [
 			[Vector2(-900, -120), Vector2(-220, -60), 18.0], [Vector2(-180, -760), Vector2(-140, -160), 18.0], [Vector2(180, 760), Vector2(120, 100), 18.0],
 			[Vector2(-600, 760), Vector2(-400, 300), 16.0], [Vector2(-400, 300), Vector2(-160, 100), 16.0], [Vector2(240, -40), Vector2(900, -40), 16.0],

@@ -35,8 +35,8 @@ script = ExtResource("2_ii484")
 
 [node name="FarmField" type="Node" parent="Systems"]
 script = ExtResource("3_farm")
-farm_origin = Vector2i(-11, -4)
-farm_size = Vector2i(3, 3)
+farm_origin = Vector2i(-28, -1)
+farm_size = Vector2i(12, 8)
 
 [node name="Inventory" type="Node" parent="Systems"]
 script = ExtResource("4_bag")

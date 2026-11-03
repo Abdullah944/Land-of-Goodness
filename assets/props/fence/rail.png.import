@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://dl4sntrl7reko"
+path="res://.godot/imported/rail.png-d11732bef3e5b6c5775c9fbae10150f0.res"
+
+[deps]
+
+source_file="res://assets/props/fence/rail.png"
+dest_files=["res://.godot/imported/rail.png-d11732bef3e5b6c5775c9fbae10150f0.res"]
+
+[params]
+
+game_size=Vector2(32, 18)

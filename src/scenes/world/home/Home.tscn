@@ -654,7 +654,7 @@ group_name = "rock"
 z_index = 1
 
 [node name="DatePalm" type="Node2D" parent="."]
-position = Vector2(-250, 40)
+position = Vector2(-10, -220)
 script = ExtResource("4_mark")
 person = ExtResource("12_palm")
 stand_on_feet = true

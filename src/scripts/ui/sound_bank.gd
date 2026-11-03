@@ -1,5 +1,5 @@
 # src/scripts/ui/sound_bank.gd
-# Purpose: Plays the original music, a different tune each season, and short sounds. Their volumes stay with the farm progress.
+# Purpose: Plays calm nature sounds in place of music, a different mix each season, and short sounds. Their volumes stay with the farm progress.
 
 class_name SoundBank
 extends Node
@@ -7,12 +7,12 @@ extends Node
 const KINDS: Array[String] = ["coin", "gather", "ui", "hoe", "water", "harvest", "chop", "mine", "level"]
 ## Volume in decibels for levels 1 and 2. Level 0 is silent.
 const LEVEL_DB: Array[float] = [-80.0, -12.0, 0.0]
-const MUSIC_TRIM_DB: float = -6.0
+const MUSIC_TRIM_DB: float = -1.0
 const SEASON_SONGS: Dictionary = {
-	"Spring": "res://assets/audio/music_village.mp3",
-	"Summer": "res://assets/audio/music_summer.mp3",
-	"Autumn": "res://assets/audio/music_autumn.mp3",
-	"Winter": "res://assets/audio/music_winter.mp3",
+	"Spring": "res://assets/audio/nature_village.wav",
+	"Summer": "res://assets/audio/nature_summer.wav",
+	"Autumn": "res://assets/audio/nature_autumn.wav",
+	"Winter": "res://assets/audio/nature_winter.wav",
 }
 
 var _players: Dictionary = {}
@@ -52,7 +52,7 @@ func apply_levels() -> void:
 	if not _music.playing:
 		_music.play()
 
-## The current season's tune. Changing it restarts the music from the top.
+## The current season's nature sounds. Changing it starts them from the top.
 func song_path() -> String:
 	var clock: Node = get_parent().get_node_or_null("Clock")
 	var season: String = str(clock.get("season")) if clock != null else "Spring"
@@ -62,10 +62,13 @@ func _pick_song() -> void:
 	var path: String = song_path()
 	if _music.stream != null and _music.stream.resource_path == path:
 		return
-	var song: AudioStreamMP3 = load(path) as AudioStreamMP3
+	var song: AudioStreamWAV = load(path) as AudioStreamWAV
 	if song == null:
 		return
-	song.loop = true
+	# The file's end is blended into its start, so it loops all the way round with no jump.
+	song.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	song.loop_begin = 0
+	song.loop_end = int(song.get_length() * song.mix_rate)
 	var was_playing: bool = _music.playing
 	_music.stream = song
 	if was_playing:

@@ -16,6 +16,8 @@ var language: String = "ar"
 ## 0 is off, 1 is soft, 2 is full.
 var music_level: int = 2
 var sfx_level: int = 2
+## Shows the next real prayer time in the menu and a gentle note when one comes.
+var prayer_reminder: bool = true
 
 const SCENES: Dictionary = {
 	"Home": "res://src/scenes/world/home/Home.tscn",
@@ -283,7 +285,7 @@ func is_established() -> bool:
 func apply_buildings() -> void:
 	var farm: FarmField = get_parent().get_node_or_null("FarmField") as FarmField
 	if farm != null and expanded:
-		farm.farm_size = Vector2i(5, 5) if is_built("expand2") else Vector2i(4, 4)
+		farm.farm_size = FarmField.LARGEST_SIZE if is_built("expand2") else FarmField.LARGER_SIZE
 	var bag: Inventory = _bag()
 	if bag != null:
 		bag.max_hearts = 7.0 if is_built("house") else 5.0
@@ -333,6 +335,7 @@ func to_data() -> Dictionary:
 		"language": language,
 		"music_level": music_level,
 		"sfx_level": sfx_level,
+		"prayer_reminder": prayer_reminder,
 	}
 
 func from_data(data: Dictionary) -> void:
@@ -367,6 +370,7 @@ func from_data(data: Dictionary) -> void:
 		language = "ar"
 	music_level = clampi(int(data.get("music_level", 2)), 0, 2)
 	sfx_level = clampi(int(data.get("sfx_level", 2 if bool(data.get("sfx", true)) else 0)), 0, 2)
+	prayer_reminder = bool(data.get("prayer_reminder", true))
 	Locale.language = language
 	apply_buildings()
 

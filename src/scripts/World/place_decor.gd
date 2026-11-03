@@ -38,20 +38,22 @@ const OBJECT_CUTS: Dictionary = {
 	TUFT: [Vector2i(1, 1), 15], FENCE: [Vector2i(2, 1), 26], HAY: [Vector2i(1, 2), 28], POT: [Vector2i(0, 3), 17],
 }
 
+## The fenced crop field next to the house at its largest. Nothing else grows or lies inside it.
+const FIELD_ROOM: Rect2 = Rect2(-470, -40, 364, 240)
+
 const LAYOUTS: Dictionary = {
 	"Home": {
 		"seed": 41,
-		"count": 620,
-		"picks": [TUFT, TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, WEEDS, STONES, TWIGS, ROCKS, SHRUB],
+		"count": 300,
+		"picks": [TUFT, TUFT, TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, STONES],
 		"avoid": [
-			Rect2(-186, -74, 104, 96), Rect2(-220, -220, 170, 150), Rect2(-430, -300, 100, 90), Rect2(260, -230, 140, 110),
+			FIELD_ROOM, Rect2(-230, -200, 190, 150), Rect2(-450, 260, 190, 150), Rect2(-220, -220, 170, 150), Rect2(-430, -300, 100, 90), Rect2(260, -230, 140, 110),
 			Rect2(240, 110, 160, 160), Rect2(68, 130, 104, 110), Rect2(50, -10, 46, 56), Rect2(-40, 20, 50, 40),
 			Rect2(50, -190, 80, 90), Rect2(170, -140, 80, 90), Rect2(-446, 66, 212, 210), Rect2(84, -296, 132, 132), Rect2(364, 192, 112, 108),
 		],
 		"fixed": [
-			[FENCE, Vector2(-168, 34)], [FENCE, Vector2(-144, 34)], [FENCE, Vector2(-120, 34)], [FENCE, Vector2(-96, 34)],
-			[FENCE, Vector2(32, 250)], [FENCE, Vector2(56, 250)], [STUMP, Vector2(-30, -180)], [HAY, Vector2(236, 262)],
-			[HAY, Vector2(30, 228)], [POT, Vector2(-54, -90)], [STUMP, Vector2(-300, 120)], [STUMP, Vector2(420, -60)],
+			[STUMP, Vector2(-30, -180)], [HAY, Vector2(236, 262)],
+			[HAY, Vector2(30, 228)], [POT, Vector2(-54, -90)], [STUMP, Vector2(420, -60)],
 			[LOG, Vector2(-220, -300)], [LOG, Vector2(430, 330)], [LOG, Vector2(-480, -60)], [LOG, Vector2(300, -380)], [LOG, Vector2(-120, 380)],
 		],
 	},
@@ -119,7 +121,7 @@ const TREES_BY_PLACE: Dictionary = {
 	"Village": ["sidr", "ghaf", "leafy", "tamarisk", "sidr"],
 	"Orchard": ["sidr", "ghaf", "acacia"],
 }
-const BUSH_COUNTS: Dictionary = {"Home": 46, "Forest": 60, "Village": 34, "Orchard": 20, "Road": 18, "Harbor": 14}
+const BUSH_COUNTS: Dictionary = {"Home": 18, "Forest": 60, "Village": 34, "Orchard": 20, "Road": 18, "Harbor": 14}
 const BUSHES_GREEN: Array[String] = ["bush", "bush_pink", "bush_white", "bush", "sapling", "rocks_moss", "outcrop"]
 const BUSHES_DRY: Array[String] = ["bush_dry", "dune_grass", "outcrop", "bush_dry", "dune_grass"]
 ## Sandstone walls that give the quarry and the shores some height. [place, spots]
@@ -132,27 +134,26 @@ const CLIFFS: Dictionary = {
 const PALM_PICTURE: String = "res://assets/nature/Date palm.png"
 ## Tree groups inside the farm clearing. They are scenery and cannot be chopped.
 const FARM_TREES: Array[Vector2] = [
-	Vector2(-420, -120), Vector2(-440, 60), Vector2(-280, -280), Vector2(-120, 270), Vector2(-70, 300), Vector2(70, 300),
-	Vector2(200, 300), Vector2(420, 130), Vector2(430, -120), Vector2(300, 60), Vector2(380, -40), Vector2(-300, -60),
-	Vector2(-120, 130), Vector2(20, -230), Vector2(-20, -280), Vector2(60, -280), Vector2(250, -280), Vector2(-250, -130),
-	Vector2(-210, 110), Vector2(120, 110),
+	Vector2(-280, -280), Vector2(-70, 320), Vector2(70, 330), Vector2(200, 320), Vector2(430, 130), Vector2(450, -120),
+	Vector2(420, -40), Vector2(-20, -290), Vector2(60, -300), Vector2(250, -300),
 ]
-const FARM_PALMS: Array[Vector2] = [Vector2(-310, 40), Vector2(-360, -30), Vector2(-260, 130), Vector2(170, 120), Vector2(400, 180)]
+## Palms stand in a row along the field's far side, and one by the house.
+const FARM_PALMS: Array[Vector2] = [Vector2(-500, -40), Vector2(-500, 70), Vector2(-500, 180), Vector2(400, 200), Vector2(-40, -150)]
 ## Extra ponds, as in a real clearing. [spot, width, solid footprint]
 const FARM_PONDS: Array = [
-	[Vector2(-340, 170), 190, Vector2(160, 134)], [Vector2(150, -230), 110, Vector2(92, 78)], [Vector2(420, 246), 90, Vector2(74, 62)],
+	[Vector2(-360, 330), 170, Vector2(144, 120)],
 ]
-const MORE_GROVES: int = 44
+const MORE_GROVES: int = 16
 const ROCK_PICTURE: String = "res://assets/nature/Chunky desert rock sprite.png"
 const COPPER_PICTURE: String = "res://assets/props/ore_copper.png"
 const HERB_PICTURE: String = "res://assets/nature/Wild herb.png"
 ## Each corner of the farm has its own daily job. These come back every morning.
 const QUARRY: Array[Vector2] = [Vector2(-320, -170), Vector2(-280, -240), Vector2(-430, -190)]
 const QUARRY_ORE: Vector2 = Vector2(-340, -290)
-const WOODLOT: Array[Vector2] = [Vector2(-210, 245), Vector2(-120, 215), Vector2(-60, 255)]
+const WOODLOT: Array[Vector2] = [Vector2(-200, 280), Vector2(-120, 250), Vector2(-60, 290)]
 const HERB_PATCH: Array[Vector2] = [Vector2(250, -30), Vector2(340, -60), Vector2(280, 100)]
 
-const MORE_DEBRIS: int = 70
+const MORE_DEBRIS: int = 30
 const ROOM: String = "res://assets/building/house/room/%s.png"
 const ROOM_AREA: Rect2 = Rect2(-120, 6, 288, 154)
 const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_window", "wall", "wall_shelf", "wall_window"]
@@ -289,23 +290,40 @@ static func _hd_ground(place_name: String, world_size: Vector2) -> ShaderMateria
 	paint.set_shader_parameter("world_size", world_size)
 	return paint
 
-## A thick ring of still trees around the clearing, with gaps at the exits.
+## The edge of a place is a tidy wall of green trees in rows that follow the border, with gaps at the exits,
+## so it is always clear where the place ends.
+const EDGE_TREES: Array[String] = ["sidr", "leafy", "ghaf", "sidr", "leafy"]
+const EDGE_ROWS: Array[float] = [0.99, 1.06, 1.13]
+const EDGE_STEP: float = 30.0
+
 static func _add_forest(place: Node, place_name: String) -> void:
-	var half: Vector2 = WorldShapes.PLACES[place_name]["half"]
 	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
 	roll.seed = 77
 	var made: int = 0
-	var y: float = -half.y - 110.0
-	while y < half.y + 130.0:
-		var x: float = -half.x - 110.0
-		while x < half.x + 110.0:
-			var at: Vector2 = Vector2(x + roll.randf() * 24.0, y + roll.randf() * 20.0)
-			var edge: float = WorldShapes.edge(place_name, at)
-			if edge > 1.0 and edge < 1.22 and not WorldShapes.in_exit(place_name, at) and not WorldShapes.keep_clear(place_name, at):
-				PropPiece.add_to(place, {"name": "Forest%d" % made, "path": _tree(place_name, made), "at": at, "block": Vector2(18, 10)})
-				made += 1
-			x += 46.0
-		y += 42.0
+	for row: int in EDGE_ROWS.size():
+		var walked: float = EDGE_STEP * 0.5 * float(row % 2)
+		var last: Vector2 = _edge_point(place_name, 0.0, EDGE_ROWS[row])
+		var turn: float = 0.0
+		while turn < TAU:
+			turn += 0.004
+			var point: Vector2 = _edge_point(place_name, turn, EDGE_ROWS[row])
+			walked += point.distance_to(last)
+			last = point
+			if walked < EDGE_STEP:
+				continue
+			walked = roll.randf_range(-3.0, 3.0)
+			var at: Vector2 = point + Vector2(roll.randf_range(-3.0, 3.0), roll.randf_range(-2.0, 2.0))
+			if WorldShapes.in_exit(place_name, at) or WorldShapes.keep_clear(place_name, at):
+				continue
+			var kind: String = EDGE_TREES[roll.randi_range(0, EDGE_TREES.size() - 1)]
+			PropPiece.add_to(place, {"name": "Forest%d" % made, "path": PLANT % kind, "at": at, "block": Vector2(18, 10)})
+			made += 1
+
+## The point in this direction where the place's edge measure equals the given value. The measure grows evenly outward.
+static func _edge_point(place_name: String, turn: float, measure: float) -> Vector2:
+	var half: Vector2 = WorldShapes.PLACES[place_name]["half"]
+	var way: Vector2 = Vector2(cos(turn) * half.x, sin(turn) * half.y)
+	return way * measure / WorldShapes.edge(place_name, way)
 
 ## Groups of trees on the farm, away from the roads and buildings.
 static func _add_groves(place: Node) -> void:
@@ -317,7 +335,8 @@ static func _add_groves(place: Node) -> void:
 		var at: Vector2 = Vector2(roll.randf_range(-570.0, 570.0), roll.randf_range(-460.0, 460.0))
 		if WorldShapes.edge("Home", at) > 0.95 or _blocked(at, avoid) or WorldShapes.on_road("Home", at, 30.0) or WorldShapes.in_exit("Home", at):
 			continue
-		if at.distance_to(Vector2.ZERO) < 240.0:
+		# Groves only near the edge of the farm, so the middle stays open for paths, the field, and the animals.
+		if WorldShapes.edge("Home", at) < 0.72:
 			continue
 		var is_palm: bool = i % 4 == 0
 		PropPiece.add_to(place, {"name": "Palm_grove%d" % made, "path": PALM_PICTURE if is_palm else _tree("Home", i), "at": at, "block": Vector2(14, 8)})
@@ -328,6 +347,8 @@ static func _add_debris(place: Node, cleared: Dictionary) -> void:
 		var row: Array = DEBRIS[i]
 		var mark_name: String = "Debris%d" % i
 		if bool(cleared.get("cleared_" + mark_name, false)):
+			continue
+		if FIELD_ROOM.has_point(row[2]):
 			continue
 		PropPiece.add_to(place, {"name": mark_name, "texture": _cuts[int(row[0])], "at": row[2], "group": str(row[1])})
 	var roll: RandomNumberGenerator = RandomNumberGenerator.new()

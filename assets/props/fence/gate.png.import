@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://dej5xtgqgyhg0"
+path="res://.godot/imported/gate.png-4939531f995de3a67f8659315f7613aa.res"
+
+[deps]
+
+source_file="res://assets/props/fence/gate.png"
+dest_files=["res://.godot/imported/gate.png-4939531f995de3a67f8659315f7613aa.res"]
+
+[params]
+
+game_size=Vector2(20, 19)

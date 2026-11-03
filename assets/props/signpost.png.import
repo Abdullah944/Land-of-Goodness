@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://ys47bggr61xy"
+path="res://.godot/imported/signpost.png-757e3082a98c38da9e24b5015db39262.res"
+
+[deps]
+
+source_file="res://assets/props/signpost.png"
+dest_files=["res://.godot/imported/signpost.png-757e3082a98c38da9e24b5015db39262.res"]
+
+[params]
+
+game_size=Vector2(37, 40)

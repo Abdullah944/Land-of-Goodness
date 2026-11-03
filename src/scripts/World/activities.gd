@@ -374,6 +374,9 @@ func talk_role(role: String) -> void:
 	_gift_to = role
 	dialogue.set_speaker(role)
 	match role:
+		"mosque":
+			_shop = "mosque"
+			dialogue.offer(Locale.t("mosque_line"), _labeled(["pray", "cancel"]))
 		"workbench":
 			_shop = "work"
 			dialogue.offer(Locale.t("workbench"), _labeled(["craft", "build", "animals", "quests", "cancel"]))
@@ -442,6 +445,11 @@ func _on_shop_choice(choice: String) -> void:
 		return
 	if _shop == "work":
 		_work_choice(choice)
+		return
+	if _shop == "mosque":
+		_shop = ""
+		if choice == "pray":
+			_pray()
 		return
 	if _shop == "craft" or _shop == "build" or _shop == "animals" or _shop == "supplies":
 		_work_action(choice)
@@ -676,6 +684,18 @@ func _seed_label(crop: Dictionary) -> String:
 
 func _menu_choices() -> PackedStringArray:
 	return _labeled(["sell_turnips", "sell_goods", "buy_seeds", "give_food", "cancel"])
+
+## A quiet moment in the mosque. Once a day it also brings back one heart.
+func _pray() -> void:
+	var stead: Stead = get_parent().get_node_or_null("Stead") as Stead
+	var inventory: Inventory = get_parent().get_node("Inventory") as Inventory
+	var clock: GameClock = get_parent().get_node("Clock") as GameClock
+	var today: String = "%s %d" % [clock.season, clock.day]
+	if stead != null and str(stead.flags.get("prayed_day", "")) != today:
+		stead.flags["prayed_day"] = today
+		inventory.hearts = minf(inventory.max_hearts, inventory.hearts + 1.0)
+	note = Locale.t("prayed")
+	_save()
 
 func _labeled(keys: Array) -> PackedStringArray:
 	var choices: PackedStringArray = []
