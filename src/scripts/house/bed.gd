@@ -12,8 +12,11 @@ var _show_mark: bool = false
 var _asking: bool = false
 
 func _ready() -> void:
-	_bed = _fit(load(BED_PATH) as Texture2D, 64)
-	_quilt = _fit(load(QUILT_PATH) as Texture2D, 36)
+	var bed: Texture2D = load(BED_PATH) as Texture2D
+	_bed = _fit(bed, 64)
+	# The painted HD bed already has its quilt; only the old pixel bed needs the overlay.
+	if not UiStyle.is_hd(bed):
+		_quilt = _fit(load(QUILT_PATH) as Texture2D, 36)
 	_add_body()
 	var dialogue: DialogueBox = get_tree().current_scene.get_node("UI/Dialogue") as DialogueBox
 	dialogue.answered.connect(_on_answer)
@@ -138,12 +141,4 @@ func foot_point() -> Vector2:
 	return global_position + Vector2(0, 6)
 
 func _fit(texture: Texture2D, pixels: int) -> Texture2D:
-	var image: Image = texture.get_image()
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var longest: int = maxi(image.get_width(), image.get_height())
-	var width: int = maxi(1, int(round(float(image.get_width()) * pixels / float(longest))))
-	var height: int = maxi(1, int(round(float(image.get_height()) * pixels / float(longest))))
-	image.resize(width, height, Image.INTERPOLATE_LANCZOS)
-	return ImageTexture.create_from_image(image)
+	return UiStyle.fit_picture(texture, pixels)

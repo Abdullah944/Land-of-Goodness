@@ -459,12 +459,9 @@ func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activit
 	for i: int in 3:
 		await process_frame
 	var elder: Node = _place(main).get_node("Elder")
-	check(elder.get("_frames").size() == 8, "the elder has eight idle frames")
-	var first: Vector2 = elder.get("_frames")[0].get_size()
-	var same: bool = true
-	for frame: Texture2D in elder.get("_frames"):
-		same = same and frame.get_size() == first
-	check(same, "idle frames all share one size, so the feet stay still")
+	# Painted HD villagers breathe gently instead of playing an idle sheet.
+	check(bool(elder.get("_breathes")) and elder.get("_frames").is_empty(), "the HD elder breathes while standing")
+	check(elder.get("person") is HdPicture, "the elder is a painted HD picture")
 	check(_place(main).get_node_or_null("Decor") != null and _place(main).get_node("Decor").get_child_count() > 0, "the village has ground details")
 	activities.talk_role("elder")
 	check(dialogue._portrait_box.visible and dialogue._portrait.texture != null, "a villager talks with a portrait")

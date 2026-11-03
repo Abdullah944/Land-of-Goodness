@@ -7,6 +7,17 @@ extends CharacterBody2D
 @export var move_speed: float = 60.0
 var facing: String = "Down"
 const REACH: int = 2
+## The boy's painted HD animations: prefix, sheet, frames per row, frames per second, loops.
+## A stride is eight frames, so walking keeps the old pace of one stride a second.
+const HD_SHEETS: Array = [
+	["walk_", "res://assets/characters/boy/hd/walk.png", 8, 8.0, true],
+	["idle_", "res://assets/characters/boy/hd/idle.png", 4, 3.0, true],
+	["hold_", "res://assets/characters/boy/hd/idle.png", 4, 3.0, true],
+	["hoe_", "res://assets/characters/boy/hd/hoe.png", 4, 4.0, false],
+	["water_", "res://assets/characters/boy/hd/water.png", 4, 4.0, false],
+	["axe_", "res://assets/characters/boy/hd/axe.png", 4, 8.0, false],
+	["pick_", "res://assets/characters/boy/hd/pickaxe.png", 4, 8.0, false],
+]
 
 var tapped_cell: Vector2i = Vector2i.ZERO
 var has_tapped_cell: bool = false
@@ -218,19 +229,18 @@ func _ready() -> void:
 	sprite.scale = Vector2(0.75, 0.75)
 	sprite.position.y += 5.0
 	sprite.sprite_frames = sprite.sprite_frames.duplicate(true)
-	_add_swing(sprite, "res://assets/characters/boy/animation/axe/Kuwaiti farm boy axe-swing sprite sheet.png", "axe_")
-	_add_swing(sprite, "res://assets/characters/boy/animation/pickaxe/Kuwaiti farmer pickaxe strike sprite sheet.png", "pick_")
+	for row: Array in HD_SHEETS:
+		_add_sheet(sprite, str(row[1]), str(row[0]), int(row[2]), float(row[3]), bool(row[4]))
 
 func _process(_delta: float) -> void:
 	z_index = 2000 + int(global_position.y + 20.0)
 
-func _add_swing(sprite: AnimatedSprite2D, path: String, prefix: String) -> void:
+## Builds one animation per facing from a painted HD sheet whose rows are Down, Left, Right, Up.
+func _add_sheet(sprite: AnimatedSprite2D, path: String, prefix: String, columns: int, speed: float, loops: bool) -> void:
 	var picture: Texture2D = load(path) as Texture2D
 	if picture == null:
 		return
-	var sheet: Image = picture.get_image()
-	var cell_w: int = int(sheet.get_width() / 4.0)
-	var cell_h: int = int(sheet.get_height() / 4.0)
+	var cell: Vector2 = picture.get_size() / Vector2(columns, 4)
 	var frames: SpriteFrames = sprite.sprite_frames
 	var faces: Array[String] = ["Down", "Left", "Right", "Up"]
 	for row: int in 4:
@@ -238,18 +248,10 @@ func _add_swing(sprite: AnimatedSprite2D, path: String, prefix: String) -> void:
 		if frames.has_animation(anim):
 			frames.remove_animation(anim)
 		frames.add_animation(anim)
-		frames.set_animation_speed(anim, 8.0)
-		frames.set_animation_loop(anim, false)
-		for col: int in 4:
-			var cell: Image = sheet.get_region(Rect2i(col * cell_w, row * cell_h, cell_w, cell_h))
-			var used: Rect2i = cell.get_used_rect()
-			if used.size != Vector2i.ZERO:
-				cell = cell.get_region(used)
-			var longest: int = maxi(cell.get_width(), cell.get_height())
-			var width: int = maxi(1, int(round(float(cell.get_width()) * 64.0 / float(longest))))
-			var height: int = maxi(1, int(round(float(cell.get_height()) * 68.0 / float(longest))))
-			cell.resize(width, height, Image.INTERPOLATE_LANCZOS)
-			frames.add_frame(anim, ImageTexture.create_from_image(cell))
+		frames.set_animation_speed(anim, speed)
+		frames.set_animation_loop(anim, loops)
+		for column: int in columns:
+			frames.add_frame(anim, UiStyle.region_picture(picture, Rect2(Vector2(column, row) * cell, cell), cell))
 
 func _snap_indoor(world_position: Vector2) -> Vector2:
 	var place: Node = _current_place()

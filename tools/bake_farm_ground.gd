@@ -1,11 +1,21 @@
 # tools/bake_farm_ground.gd
 # Purpose: Paints each place's ground once from the shapes in WorldShapes: grass, dirt, sand, roads, water, and bridges.
+# It writes a small colored map (used by the world map) and three mask maps that tell the ground shader
+# which painted texture lies where (see WorldShapes.mask_path and src/shaders/ground_blend.gdshader).
 # Run from the project root: Godot --headless --path . -s tools/bake_farm_ground.gd
 
 extends SceneTree
 
 const BLOCK: int = 4
 const MARGIN: Vector2 = Vector2(140, 140)
+## Which mask channel each kind of ground lights: 0-2 the first mask's red, green, blue, 3-5 the second, 6-7 the third.
+## How far, in mask pixels, each ground kind fades into its neighbors.
+const SOFTEN: int = 2
+const MASK_SLOTS: Dictionary = {
+	WorldShapes.GRASS: 0, WorldShapes.DIRT: 1, WorldShapes.SAND: 2, WorldShapes.SHORE: 2,
+	WorldShapes.ROAD: 3, WorldShapes.COBBLE: 4, WorldShapes.WATER: 5,
+	WorldShapes.PLANKS: 6, WorldShapes.FOREST_FLOOR: 7,
+}
 
 func _init() -> void:
 	var grass: Image = (load("res://assets/props/ground_grass.png") as Texture2D).get_image()
@@ -27,6 +37,9 @@ func _bake(place: String, grass: Image) -> void:
 	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
 	roll.seed = int(shape["seed"])
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	var masks: Array[Image] = []
+	for i: int in 3:
+		masks.append(Image.create(int(ceil(float(width) / BLOCK)), int(ceil(float(height) / BLOCK)), false, Image.FORMAT_RGB8))
 	for by: int in range(0, height, BLOCK):
 		for bx: int in range(0, width, BLOCK):
 			var world: Vector2 = Vector2(bx - width * 0.5, by - height * 0.5)
@@ -35,7 +48,36 @@ func _bake(place: String, grass: Image) -> void:
 			for y: int in range(by, by + BLOCK):
 				for x: int in range(bx, bx + BLOCK):
 					image.set_pixel(x, y, _color(kind, x, y, depth, grass, roll))
+			_mark(masks, Vector2i(bx / BLOCK, by / BLOCK), kind, depth)
 	image.save_png(WorldShapes.ground_path(place))
+	for i: int in 3:
+		_soften(masks[i], SOFTEN)
+		_soften(masks[i], SOFTEN)
+		masks[i].save_png(WorldShapes.mask_path(place, i))
+
+## A box blur across and then down, so the shader's noise has a soft slope to carve wavy edges from.
+func _soften(mask: Image, radius: int) -> void:
+	for pass_down: int in 2:
+		var copy: Image = mask.duplicate() as Image
+		var size: Vector2i = mask.get_size()
+		var step: Vector2i = Vector2i(0, 1) if pass_down == 1 else Vector2i(1, 0)
+		for y: int in size.y:
+			for x: int in size.x:
+				var sum: Color = Color(0, 0, 0)
+				for k: int in range(-radius, radius + 1):
+					var at: Vector2i = (Vector2i(x, y) + step * k).clamp(Vector2i.ZERO, size - Vector2i.ONE)
+					sum += copy.get_pixelv(at)
+				mask.set_pixel(x, y, sum / float(radius * 2 + 1))
+
+## Lights the one mask channel that stands for this kind of ground. The third mask's blue holds water depth.
+func _mark(masks: Array[Image], at: Vector2i, kind: int, depth: float) -> void:
+	var slot: int = int(MASK_SLOTS[kind])
+	var colors: Array[Color] = [Color.BLACK, Color.BLACK, Color.BLACK]
+	colors[slot / 3][slot % 3] = 1.0
+	if kind == WorldShapes.WATER:
+		colors[2].b = clampf(depth / 90.0, 0.0, 1.0)
+	for i: int in 3:
+		masks[i].set_pixelv(at, colors[i])
 
 func _kind(place: String, shape: Dictionary, world: Vector2, patches: FastNoiseLite) -> int:
 	if WorldShapes.on_planks(place, world):

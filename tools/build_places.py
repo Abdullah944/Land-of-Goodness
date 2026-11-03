@@ -70,7 +70,6 @@ class Scene:
 
     def ground(self, name, texture, points):
         self.node(name, "Polygon2D", props=[
-            "texture_filter = 1",
             "texture_repeat = 2",
             'texture = ExtResource("%s")' % self.res("Texture2D", texture),
             "polygon = PackedVector2Array(%s)" % ", ".join("%d, %d" % p for p in points),

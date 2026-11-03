@@ -283,7 +283,6 @@ func _soil(dirt: TileMapLayer, cell: Vector2i, picture: Texture2D) -> Sprite2D:
 	var soil: Sprite2D = Sprite2D.new()
 	soil.texture = picture
 	soil.position = dirt.map_to_local(cell)
-	soil.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	return soil
 
 func _sprout(dirt: TileMapLayer, cell: Vector2i, plot: Dictionary) -> Sprite2D:
@@ -298,7 +297,6 @@ func _sprout(dirt: TileMapLayer, cell: Vector2i, plot: Dictionary) -> Sprite2D:
 	sprout.centered = true
 	var height: float = sprout.region_rect.size.y
 	sprout.position = dirt.map_to_local(cell) + Vector2(0, (16.0 - height) * 0.5)
-	sprout.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	if bool(plot["watered"]):
 		sprout.modulate = Color("c5e4ea")
 	return sprout

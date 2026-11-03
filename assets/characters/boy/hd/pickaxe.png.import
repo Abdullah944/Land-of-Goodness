@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://s6wwnf3mauxq"
+path="res://.godot/imported/pickaxe.png-566586953fb07cee6e7a6020af98564c.res"
+
+[deps]
+
+source_file="res://assets/characters/boy/hd/pickaxe.png"
+dest_files=["res://.godot/imported/pickaxe.png-566586953fb07cee6e7a6020af98564c.res"]
+
+[params]
+
+game_size=Vector2(256, 272)

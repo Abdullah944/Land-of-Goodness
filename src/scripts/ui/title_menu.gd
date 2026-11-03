@@ -40,7 +40,6 @@ func _build() -> void:
 	window.texture = ImageTexture.create_from_image(image)
 	window.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	window.stretch_mode = TextureRect.STRETCH_SCALE
-	window.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	window.size = Vector2(300, 200)
 	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_page.add_child(window)

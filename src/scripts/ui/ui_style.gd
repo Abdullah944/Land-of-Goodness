@@ -38,6 +38,43 @@ static func button(target: Button) -> void:
 
 static var _glow: Texture2D
 
+## A picture that keeps all its file detail while the game sees it at game_size.
+static func hd_texture(image: Image, game_size: Vector2) -> Texture2D:
+	var copy: Image = image.duplicate() as Image
+	if not copy.has_mipmaps():
+		copy.generate_mipmaps()
+	var texture: ImageTexture = ImageTexture.create_from_image(copy)
+	texture.set_size_override(Vector2i(maxi(1, int(round(game_size.x))), maxi(1, int(round(game_size.y)))))
+	return texture
+
+## True for a painted HD picture (see addons/khair_hd).
+static func is_hd(texture: Texture2D) -> bool:
+	return texture is HdPicture
+
+## Crops the empty border and sizes the picture so its longest side is the given game pixels, keeping all its detail.
+static func fit_picture(texture: Texture2D, pixels: float) -> Texture2D:
+	var image: Image = pixels_of(texture)
+	var used: Rect2i = image.get_used_rect()
+	if used.size != Vector2i.ZERO:
+		image = image.get_region(used)
+	var longest: float = float(maxi(image.get_width(), image.get_height()))
+	return hd_texture(image, Vector2(image.get_size()) * pixels / longest)
+
+## One part of a picture, given in game pixels, shown at the given game size with all its detail.
+static func region_picture(texture: Texture2D, rect: Rect2, game_size: Vector2) -> Texture2D:
+	var image: Image = pixels_of(texture)
+	var detail: float = float(image.get_width()) / texture.get_width()
+	var box: Rect2i = Rect2i(Vector2i((rect.position * detail).round()), Vector2i((rect.size * detail).round()))
+	return hd_texture(image.get_region(box), game_size)
+
+## The picture's pixels without mipmaps, so regions and used rects can be read.
+static func pixels_of(texture: Texture2D) -> Image:
+	var image: Image = texture.get_image()
+	if image.has_mipmaps():
+		image = image.duplicate() as Image
+		image.clear_mipmaps()
+	return image
+
 ## Gives a small sprite the same crisp look as everyone else: hard edges, few colors, and a dark outline.
 static func crisp_sprite(source: Image) -> Image:
 	var picture: Image = Image.create(source.get_width() + 2, source.get_height() + 2, false, Image.FORMAT_RGBA8)

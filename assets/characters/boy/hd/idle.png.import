@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://ch7628h7hivfr"
+path="res://.godot/imported/idle.png-f71742166ae08912371145ce5b7166a8.res"
+
+[deps]
+
+source_file="res://assets/characters/boy/hd/idle.png"
+dest_files=["res://.godot/imported/idle.png-f71742166ae08912371145ce5b7166a8.res"]
+
+[params]
+
+game_size=Vector2(128, 192)

@@ -107,12 +107,6 @@ func _icon(path: String) -> Texture2D:
 	var source: Texture2D = load(path) as Texture2D
 	if source == null:
 		return null
-	var image: Image = source.get_image()
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var factor: float = ICON_SIZE / float(maxi(image.get_width(), image.get_height()))
-	image.resize(maxi(1, int(image.get_width() * factor)), maxi(1, int(image.get_height() * factor)), Image.INTERPOLATE_LANCZOS)
-	var icon: Texture2D = ImageTexture.create_from_image(image)
+	var icon: Texture2D = UiStyle.fit_picture(source, ICON_SIZE)
 	_icons[path] = icon
 	return icon

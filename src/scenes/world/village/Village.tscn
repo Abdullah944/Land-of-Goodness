@@ -153,7 +153,7 @@ block_size = Vector2(36, 10)
 position = Vector2(-340, -220)
 script = ExtResource("3_spot_mark")
 person = ExtResource("9_house_tower")
-fit_pixels = 195
+fit_pixels = 156
 stand_on_feet = true
 block_size = Vector2(125, 43)
 
@@ -161,7 +161,7 @@ block_size = Vector2(125, 43)
 position = Vector2(-470, 60)
 script = ExtResource("3_spot_mark")
 person = ExtResource("10_house_blue")
-fit_pixels = 150
+fit_pixels = 158
 stand_on_feet = true
 block_size = Vector2(125, 43)
 
@@ -177,7 +177,7 @@ block_size = Vector2(116, 40)
 position = Vector2(230, -300)
 script = ExtResource("3_spot_mark")
 person = ExtResource("12_house_green")
-fit_pixels = 195
+fit_pixels = 158
 stand_on_feet = true
 block_size = Vector2(125, 43)
 
@@ -185,7 +185,7 @@ block_size = Vector2(125, 43)
 position = Vector2(-310, 340)
 script = ExtResource("3_spot_mark")
 person = ExtResource("10_house_blue")
-fit_pixels = 150
+fit_pixels = 158
 stand_on_feet = true
 block_size = Vector2(125, 43)
 
@@ -193,7 +193,7 @@ block_size = Vector2(125, 43)
 position = Vector2(-60, 470)
 script = ExtResource("3_spot_mark")
 person = ExtResource("9_house_tower")
-fit_pixels = 181
+fit_pixels = 146
 stand_on_feet = true
 block_size = Vector2(116, 40)
 
@@ -209,7 +209,7 @@ block_size = Vector2(125, 43)
 position = Vector2(690, -290)
 script = ExtResource("3_spot_mark")
 person = ExtResource("13_house_coral")
-fit_pixels = 150
+fit_pixels = 158
 stand_on_feet = true
 block_size = Vector2(125, 43)
 
@@ -217,7 +217,7 @@ block_size = Vector2(125, 43)
 position = Vector2(690, 230)
 script = ExtResource("3_spot_mark")
 person = ExtResource("12_house_green")
-fit_pixels = 181
+fit_pixels = 147
 stand_on_feet = true
 block_size = Vector2(116, 40)
 
@@ -233,7 +233,7 @@ block_size = Vector2(116, 40)
 position = Vector2(-560, 260)
 script = ExtResource("3_spot_mark")
 person = ExtResource("10_house_blue")
-fit_pixels = 130
+fit_pixels = 137
 stand_on_feet = true
 block_size = Vector2(108, 37)
 
@@ -241,7 +241,7 @@ block_size = Vector2(108, 37)
 position = Vector2(-170, -176)
 script = ExtResource("3_spot_mark")
 person = ExtResource("14_shop")
-fit_pixels = 123
+fit_pixels = 120
 stand_on_feet = true
 block_size = Vector2(103, 36)
 
@@ -249,7 +249,7 @@ block_size = Vector2(103, 36)
 position = Vector2(-620, -180)
 script = ExtResource("3_spot_mark")
 person = ExtResource("15_burj")
-fit_pixels = 100
+fit_pixels = 50
 stand_on_feet = true
 block_size = Vector2(43, 15)
 

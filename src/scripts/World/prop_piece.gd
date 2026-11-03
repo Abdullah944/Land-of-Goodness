@@ -16,7 +16,6 @@ static func add_to(place: Node, piece: Dictionary) -> void:
 		var mat: Sprite2D = Sprite2D.new()
 		mat.name = str(piece["name"])
 		mat.texture = picture
-		mat.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		mat.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 		mat.region_enabled = true
 		mat.region_rect = Rect2(Vector2.ZERO, piece.get("size", picture.get_size()))

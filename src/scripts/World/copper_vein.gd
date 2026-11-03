@@ -38,5 +38,4 @@ func _add_picture() -> void:
 	var picture: Sprite2D = Sprite2D.new()
 	picture.name = "Picture"
 	picture.texture = ore
-	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(picture)

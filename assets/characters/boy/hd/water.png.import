@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://ctsol218vcvvu"
+path="res://.godot/imported/water.png-fef8e8591404baccd6c613c6d9e1dfe5.res"
+
+[deps]
+
+source_file="res://assets/characters/boy/hd/water.png"
+dest_files=["res://.godot/imported/water.png-fef8e8591404baccd6c613c6d9e1dfe5.res"]
+
+[params]
+
+game_size=Vector2(256, 272)

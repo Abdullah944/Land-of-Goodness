@@ -25,7 +25,6 @@ size = Vector2(24, 24)
 y_sort_enabled = true
 
 [node name="Floor" type="Polygon2D" parent="."]
-texture_filter = 1
 texture_repeat = 2
 texture = ExtResource("1_ground_cave")
 polygon = PackedVector2Array(-528, -408, 528, -408, 528, 408, -528, 408)

@@ -44,14 +44,16 @@ func _ready() -> void:
 		_picture = _fit(person, fit_pixels)
 	else:
 		_picture = person
-	if role == "fisherman" and _picture != null:
+	if role == "fisherman" and _picture != null and not UiStyle.is_hd(person):
 		_picture = ImageTexture.create_from_image(UiStyle.crisp_sprite(_picture.get_image()))
 	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
 	var is_person: bool = name == "Neighbor" or role != ""
 	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm") or str(name).begins_with("Grove")
 	var is_pond: bool = name == "FishingSpot" or str(name).begins_with("Pond_")
-	_breathes = is_person and not IDLE_SHEETS.has(str(name))
-	if IDLE_SHEETS.has(str(name)):
+	# Painted HD people breathe; only the old pixel people have idle sheets drawn for them.
+	var idles: bool = IDLE_SHEETS.has(str(name)) and not UiStyle.is_hd(person)
+	_breathes = is_person and not idles
+	if idles:
 		_load_idle(str(IDLE_SHEETS[str(name)]))
 	if is_pond:
 		var shimmer: ShaderMaterial = ShaderMaterial.new()
@@ -268,12 +270,4 @@ func _draw_steps(shown: Texture2D, box: Rect2) -> void:
 	draw_texture_rect_region(shown, Rect2(box.position - Vector2(0, body_bob), Vector2(box.size.x, robe_h * scale_by.y)), Rect2(0, 0, pixels.x, robe_h))
 
 func _fit(texture: Texture2D, pixels: int) -> Texture2D:
-	var image: Image = texture.get_image()
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var longest: int = maxi(image.get_width(), image.get_height())
-	var width: int = maxi(1, int(round(float(image.get_width()) * pixels / float(longest))))
-	var height: int = maxi(1, int(round(float(image.get_height()) * pixels / float(longest))))
-	image.resize(width, height, Image.INTERPOLATE_LANCZOS)
-	return ImageTexture.create_from_image(image)
+	return UiStyle.fit_picture(texture, pixels)

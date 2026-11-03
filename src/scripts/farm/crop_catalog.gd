@@ -8,7 +8,7 @@ const TURNIP: String = "turnip"
 const TOMATO: String = "tomato"
 const WHEAT: String = "wheat"
 const WATERMELON: String = "watermelon"
-const PLANTS: Texture2D = preload("res://assets/Basic pack/Objects/Basic_Plants.png")
+const PLANTS: Texture2D = preload("res://assets/farming/crops/turnip.png")
 const TOMATO_SHEET: Texture2D = preload("res://assets/farming/crops/tomato.png")
 const WHEAT_SHEET: Texture2D = preload("res://assets/farming/crops/wheat.png")
 const MELON_SHEET: Texture2D = preload("res://assets/farming/crops/watermelon.png")
@@ -26,10 +26,10 @@ const _CROPS: Dictionary = {
 		"seasons": ["Spring", "Summer", "Autumn"],
 		"texture": PLANTS,
 		"sprites": [
-			Rect2(0, 0, 16, 16),
-			Rect2(32, 0, 16, 16),
-			Rect2(64, 0, 16, 16),
-			Rect2(80, 16, 16, 16),
+			Rect2(0, 0, 32, 32),
+			Rect2(32, 0, 32, 32),
+			Rect2(64, 0, 32, 32),
+			Rect2(96, 0, 32, 32),
 		],
 	},
 	"tomato": {

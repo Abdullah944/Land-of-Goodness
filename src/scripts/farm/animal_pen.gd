@@ -21,7 +21,13 @@ static var _sheets: Dictionary = {}
 func _sheet(kind: String) -> Texture2D:
 	if _sheets.has(kind):
 		return _sheets[kind]
-	var image: Image = (load(SHEETS[kind]) as Texture2D).get_image()
+	var picture: Texture2D = load(SHEETS[kind]) as Texture2D
+	if UiStyle.is_hd(picture):
+		# Painted HD animals keep their detail; the game sees four fifths of the sheet's game size.
+		var painted: Texture2D = UiStyle.hd_texture(UiStyle.pixels_of(picture), picture.get_size() * 0.8)
+		_sheets[kind] = painted
+		return painted
+	var image: Image = picture.get_image()
 	var cell: int = int(image.get_width() * 0.5)
 	var small: int = maxi(1, int(cell * 0.8))
 	var sheet: Image = null
@@ -51,7 +57,6 @@ func sync(animals: Array) -> void:
 		var sprite: Sprite2D = Sprite2D.new()
 		sprite.texture = _sheet(kind)
 		sprite.hframes = 2
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sprite.position = area.position + Vector2(fmod(17.0 * i, area.size.x), fmod(7.0 * i, area.size.y))
 		sprite.modulate = Color.WHITE if bool(row.get("fed", false)) else Color(0.92, 0.88, 0.85)
 		add_child(sprite)

@@ -5,6 +5,12 @@ class_name PlaceDecor
 extends RefCounted
 
 const SHEET: String = "res://assets/props/ground_details.png"
+## The painted textures the HD ground blends, by shader name.
+const GROUND_TEXTURES: Dictionary = {
+	"grass": "res://assets/world/hd/grass.png", "dirt": "res://assets/world/hd/dirt.png", "sand": "res://assets/world/hd/sand.png",
+	"road": "res://assets/world/hd/road.png", "cobble": "res://assets/world/hd/cobble.png", "water": "res://assets/world/hd/water.png",
+	"planks": "res://assets/world/hd/planks.png", "forest": "res://assets/world/hd/forest.png",
+}
 const GRID: int = 4
 const SCALE: float = 0.62
 const TUFT: int = 0
@@ -29,6 +35,7 @@ const OBJECT_CUTS: Dictionary = {
 	YELLOW: [Vector2i(2, 2), 20], PINK: [Vector2i(3, 2), 20], SHRUB: [Vector2i(1, 3), 24], STONES: [Vector2i(0, 1), 12],
 	TWIGS: [Vector2i(3, 1), 22], WEEDS: [Vector2i(0, 2), 20], STUMP: [Vector2i(1, 0), 34], ROCKS: [Vector2i(2, 0), 26],
 	LOG: [Vector2i(0, 0), 46], SHELLS: [Vector2i(3, 0), 26], TRUFFLE: [Vector2i(2, 3), 18], DRY_GRASS: [Vector2i(3, 3), 20],
+	TUFT: [Vector2i(1, 1), 15], FENCE: [Vector2i(2, 1), 26], HAY: [Vector2i(1, 2), 28], POT: [Vector2i(0, 3), 17],
 }
 
 const LAYOUTS: Dictionary = {
@@ -251,16 +258,36 @@ static func _lay_ground(place: Node, place_name: String) -> void:
 	ground.name = "PaintedGround"
 	ground.texture = picture
 	ground.z_index = -1
-	ground.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var shimmer: ShaderMaterial = ShaderMaterial.new()
-	shimmer.shader = load("res://src/shaders/water_shimmer.gdshader") as Shader
 	var clock: Node = place.get_tree().current_scene.get_node_or_null("Systems/Clock") if place.is_inside_tree() else null
 	var tint: Color = WorldShapes.season_grass(str(clock.get("season"))) if clock != null else Color.WHITE
-	shimmer.set_shader_parameter("grass_tint", Vector3(tint.r, tint.g, tint.b))
-	ground.material = shimmer
+	var paint: ShaderMaterial = _hd_ground(place_name, picture.get_size())
+	if paint != null:
+		# The mask map stands in for the colored map, stretched over the same ground.
+		ground.texture = load(WorldShapes.mask_path(place_name, 0)) as Texture2D
+		ground.scale = picture.get_size() / ground.texture.get_size()
+	else:
+		paint = ShaderMaterial.new()
+		paint.shader = load("res://src/shaders/water_shimmer.gdshader") as Shader
+	paint.set_shader_parameter("grass_tint", Vector3(tint.r, tint.g, tint.b))
+	ground.material = paint
 	place.add_child(ground)
 	place.move_child(ground, 0)
 	WorldShapes.add_water_walls(place)
+
+## The painted HD ground for a place, or null when its masks are missing.
+static func _hd_ground(place_name: String, world_size: Vector2) -> ShaderMaterial:
+	for i: int in 3:
+		if not ResourceLoader.exists(WorldShapes.mask_path(place_name, i)):
+			return null
+	var paint: ShaderMaterial = ShaderMaterial.new()
+	paint.shader = load("res://src/shaders/ground_blend.gdshader") as Shader
+	paint.set_shader_parameter("mask_a", load(WorldShapes.mask_path(place_name, 0)))
+	paint.set_shader_parameter("mask_b", load(WorldShapes.mask_path(place_name, 1)))
+	paint.set_shader_parameter("mask_c", load(WorldShapes.mask_path(place_name, 2)))
+	for kind: String in GROUND_TEXTURES:
+		paint.set_shader_parameter(kind, load(GROUND_TEXTURES[kind]))
+	paint.set_shader_parameter("world_size", world_size)
+	return paint
 
 ## A thick ring of still trees around the clearing, with gaps at the exits.
 static func _add_forest(place: Node, place_name: String) -> void:
@@ -362,7 +389,7 @@ static func _cut_objects() -> void:
 	var sheet: Texture2D = load(OBJECTS) as Texture2D
 	if sheet == null:
 		return
-	var image: Image = sheet.get_image()
+	var image: Image = UiStyle.pixels_of(sheet)
 	var cell: int = int(float(image.get_width()) / float(GRID))
 	_cuts.resize(maxi(_cuts.size(), DRY_GRASS + 1))
 	for key: int in OBJECT_CUTS:
@@ -373,8 +400,7 @@ static func _cut_objects() -> void:
 			continue
 		part = part.get_region(used)
 		var factor: float = float(OBJECT_CUTS[key][1]) / float(maxi(part.get_width(), part.get_height()))
-		part.resize(maxi(1, int(part.get_width() * factor)), maxi(1, int(part.get_height() * factor)), Image.INTERPOLATE_LANCZOS)
-		_cuts[key] = ImageTexture.create_from_image(part)
+		_cuts[key] = UiStyle.hd_texture(part, Vector2(part.get_size()) * factor)
 
 static func _blocked(at: Vector2, avoid: Array) -> bool:
 	for box: Rect2 in avoid:

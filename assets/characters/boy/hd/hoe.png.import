@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://cg2r8jfx3muhw"
+path="res://.godot/imported/hoe.png-0952ab682b8b002974d5b0664f6c4eca.res"
+
+[deps]
+
+source_file="res://assets/characters/boy/hd/hoe.png"
+dest_files=["res://.godot/imported/hoe.png-0952ab682b8b002974d5b0664f6c4eca.res"]
+
+[params]
+
+game_size=Vector2(256, 272)

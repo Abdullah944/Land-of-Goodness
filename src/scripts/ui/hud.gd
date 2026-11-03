@@ -665,15 +665,7 @@ func _player() -> Player:
 	return get_tree().current_scene.find_child("Player", true, false) as Player
 
 func _fit_icon(path: String, pixels: int) -> Texture2D:
-	var image: Image = _open_image(path)
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var longest: int = maxi(image.get_width(), image.get_height())
-	var width: int = maxi(1, int(round(float(image.get_width()) * pixels / float(longest))))
-	var height: int = maxi(1, int(round(float(image.get_height()) * pixels / float(longest))))
-	image.resize(width, height, Image.INTERPOLATE_LANCZOS)
-	return ImageTexture.create_from_image(image)
+	return UiStyle.fit_picture(load(path) as Texture2D, pixels)
 
 func _open_image(path: String) -> Image:
 	var texture: Texture2D = load(path) as Texture2D
@@ -843,10 +835,7 @@ func _bag_icon(spec: Dictionary) -> Texture2D:
 	var sprites: Array = crop.get("sprites", [])
 	var index: int = 0 if str(spec["kind"]) == "seed" else maxi(sprites.size() - 1, 0)
 	var rect: Rect2 = sprites[index]
-	var texture: Texture2D = crop["texture"]
-	var image: Image = texture.get_image().get_region(Rect2i(int(rect.position.x), int(rect.position.y), int(rect.size.x), int(rect.size.y)))
-	image.resize(16, 16, Image.INTERPOLATE_NEAREST)
-	return ImageTexture.create_from_image(image)
+	return UiStyle.region_picture(crop["texture"], rect, Vector2(16, 16))
 
 func _on_bag_drag(event: InputEvent) -> void:
 	if _bag_scroll == null:

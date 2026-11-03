@@ -105,6 +105,12 @@ static func has_place(place: String) -> bool:
 static func ground_path(place: String) -> String:
 	return "res://assets/world/ground_%s.png" % place.to_lower()
 
+## One of the three mask maps the ground shader reads. Each mask pixel covers MASK_BLOCK world pixels.
+static func mask_path(place: String, index: int) -> String:
+	return "res://assets/world/mask_%s_%d.png" % [place.to_lower(), index]
+
+const MASK_BLOCK: int = 4
+
 ## Below 1 is inside the clearing. The edge wobbles, so it never looks like a rectangle.
 static func edge(place: String, world: Vector2) -> float:
 	var half: Vector2 = PLACES[place]["half"]

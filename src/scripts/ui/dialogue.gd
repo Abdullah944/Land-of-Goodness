@@ -144,13 +144,12 @@ func _place_speaker() -> void:
 func _face(person: String) -> Texture2D:
 	if _faces.has(person):
 		return _faces[person]
-	var image: Image = (load(str(SPEAKERS[person])) as Texture2D).get_image()
+	var image: Image = UiStyle.pixels_of(load(str(SPEAKERS[person])) as Texture2D)
 	var used: Rect2i = image.get_used_rect()
 	var side: int = mini(used.size.x, int(used.size.y * 0.5))
 	var left: int = used.position.x + int((used.size.x - side) * 0.5)
 	var cut: Image = image.get_region(Rect2i(left, used.position.y, side, side))
-	cut.resize(64, 64, Image.INTERPOLATE_LANCZOS)
-	var face: Texture2D = ImageTexture.create_from_image(cut)
+	var face: Texture2D = UiStyle.hd_texture(cut, Vector2(64, 64))
 	_faces[person] = face
 	return face
 

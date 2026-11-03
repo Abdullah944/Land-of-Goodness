@@ -323,22 +323,11 @@ func _icon(item_id: String) -> Texture2D:
 		if not seed and not harvest:
 			continue
 		var rect: Rect2 = sprites[0] if seed else sprites[sprites.size() - 1]
-		var texture: Texture2D = crop["texture"]
-		var image: Image = texture.get_image().get_region(Rect2i(int(rect.position.x), int(rect.position.y), int(rect.size.x), int(rect.size.y)))
-		image.resize(16, 16, Image.INTERPOLATE_NEAREST)
-		return ImageTexture.create_from_image(image)
+		return UiStyle.region_picture(crop["texture"], rect, Vector2(16, 16))
 	return _fit_icon("res://assets/farming/Six Pixel Farm Seeds.png")
 
 func _fit_icon(path: String) -> Texture2D:
-	var image: Image = (load(path) as Texture2D).get_image()
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var longest: int = maxi(image.get_width(), image.get_height())
-	var width: int = maxi(1, int(round(float(image.get_width()) * 16.0 / float(longest))))
-	var height: int = maxi(1, int(round(float(image.get_height()) * 16.0 / float(longest))))
-	image.resize(width, height, Image.INTERPOLATE_NEAREST)
-	return ImageTexture.create_from_image(image)
+	return UiStyle.fit_picture(load(path) as Texture2D, 16)
 
 func _bag() -> Inventory:
 	return get_tree().current_scene.get_node("Systems/Inventory") as Inventory

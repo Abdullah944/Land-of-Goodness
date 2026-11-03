@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://bgrg1kq5tvqb7"
+path="res://.godot/imported/axe.png-9b08c9e74cfdc99c4d4aa6fdd2d3b43e.res"
+
+[deps]
+
+source_file="res://assets/characters/boy/hd/axe.png"
+dest_files=["res://.godot/imported/axe.png-9b08c9e74cfdc99c4d4aa6fdd2d3b43e.res"]
+
+[params]
+
+game_size=Vector2(256, 272)

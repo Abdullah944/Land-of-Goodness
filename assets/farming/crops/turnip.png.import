@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://d452cfnei8he"
+path="res://.godot/imported/turnip.png-6c79e46532cb728a5c41fad190bd2bae.res"
+
+[deps]
+
+source_file="res://assets/farming/crops/turnip.png"
+dest_files=["res://.godot/imported/turnip.png-6c79e46532cb728a5c41fad190bd2bae.res"]
+
+[params]
+
+game_size=Vector2(128, 32)
