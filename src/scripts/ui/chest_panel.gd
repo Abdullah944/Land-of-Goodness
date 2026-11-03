@@ -100,9 +100,16 @@ func _name_labels() -> void:
 		var label: Label = content.get_node(label_name) as Label
 		label.text = Locale.t(title_keys[label_name])
 		Locale.apply_control(label)
+	var close: Button = content.get_node("Close") as Button
+	close.text = Locale.t("tab_close")
+	Locale.apply_control(close)
 	for row: Dictionary in _rows:
 		if row.has("name"):
 			(row["name"] as Label).text = Locale.item(str(row["item"]))
+		for action: String in ["store", "take"]:
+			var title: Label = (row[action] as Node).get_child(0) as Label
+			title.text = Locale.t(action + "_one")
+			Locale.apply_control(title)
 
 func is_open() -> bool:
 	return _open
@@ -267,25 +274,11 @@ func _cropped_window() -> Texture2D:
 
 func _close_button() -> Button:
 	var button: Button = Button.new()
-	var image: Image = (load("res://assets/ui/tabs/Cozy pixel-art beige Close tab.png") as Texture2D).get_image()
-	var used: Rect2i = image.get_used_rect()
-	if used.size != Vector2i.ZERO:
-		image = image.get_region(used)
-	var height: int = 20
-	var width: int = maxi(1, int(round(float(image.get_width()) * float(height) / float(image.get_height()))))
-	image.resize(width, height, Image.INTERPOLATE_NEAREST)
-	var picture: Texture2D = ImageTexture.create_from_image(image)
-	button.icon = picture
-	button.expand_icon = true
-	button.flat = true
-	button.custom_minimum_size = Vector2(width, height)
-	button.size = Vector2(width, height)
+	button.size = Vector2(70, 22)
+	button.custom_minimum_size = Vector2(70, 22)
 	button.focus_mode = Control.FOCUS_NONE
-	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
-	button.add_theme_stylebox_override("normal", empty)
-	button.add_theme_stylebox_override("hover", empty)
-	button.add_theme_stylebox_override("pressed", empty)
-	button.add_theme_stylebox_override("focus", empty)
+	button.add_theme_font_size_override("font_size", 11)
+	UiStyle.button(button)
 	return button
 
 func _label(text: String, at: Vector2, size: Vector2) -> Label:
@@ -303,7 +296,7 @@ func _item_name(item_id: String) -> String:
 
 func _icon(item_id: String) -> Texture2D:
 	var extra_icon: String = GoodsCatalog.icon_path(item_id)
-	if extra_icon != "" and item_id in GoodsCatalog.extra_ids():
+	if extra_icon != "":
 		return _fit_icon(extra_icon)
 	match item_id:
 		"seeds":

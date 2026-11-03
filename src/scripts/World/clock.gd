@@ -6,6 +6,7 @@ extends Node
 
 const SEASONS: Array[String] = ["Spring", "Summer", "Autumn", "Winter"]
 const NIGHT_COLOR: Color = Color(0.36, 0.42, 0.68)
+const SEASON_LIGHT: Dictionary = {"Spring": Color.WHITE, "Summer": Color(1.0, 0.98, 0.9), "Autumn": Color(1.0, 0.93, 0.82), "Winter": Color(0.96, 0.97, 1.0)}
 
 var day: int = 1
 var minute: float = 6.0 * 60.0
@@ -106,7 +107,7 @@ func _paint_sky() -> void:
 		darkness = lerpf(0.35, 0.0, hour - 6.0)
 	var tint: CanvasModulate = get_tree().current_scene.get_node_or_null("NightTint") as CanvasModulate
 	if tint != null:
-		tint.color = Color.WHITE.lerp(NIGHT_COLOR, darkness)
+		tint.color = SEASON_LIGHT.get(season, Color.WHITE).lerp(NIGHT_COLOR, darkness)
 	var lamps_on: bool = darkness > 0.25
 	for light: Node in get_tree().get_nodes_in_group("night_light"):
 		if bool(light.get("enabled")) != lamps_on:

@@ -39,6 +39,7 @@ func _ready() -> void:
 		add_to_group(group_name)
 	if person == null:
 		return
+	_use_season_picture()
 	if fit_pixels > 0:
 		_picture = _fit(person, fit_pixels)
 	else:
@@ -47,7 +48,7 @@ func _ready() -> void:
 		_picture = ImageTexture.create_from_image(UiStyle.crisp_sprite(_picture.get_image()))
 	_phase = fmod(absf(global_position.x * 0.37 + global_position.y * 0.11), TAU)
 	var is_person: bool = name == "Neighbor" or role != ""
-	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm")
+	_sways = group_name in ["tree", "date", "forage"] or str(name).begins_with("Palm") or str(name).begins_with("Grove")
 	var is_pond: bool = name == "FishingSpot" or str(name).begins_with("Pond_")
 	_breathes = is_person and not IDLE_SHEETS.has(str(name))
 	if IDLE_SHEETS.has(str(name)):
@@ -65,6 +66,15 @@ func _ready() -> void:
 		z_index = 2000 + int(global_position.y)
 		modulate = Color(0.78, 0.86, 0.8)
 		set_process(false)
+
+func _use_season_picture() -> void:
+	var scene: Node = get_tree().current_scene
+	var clock: Node = scene.get_node_or_null("Systems/Clock") if scene != null else null
+	if clock == null or person.resource_path == "":
+		return
+	var path: String = WorldShapes.seasonal_picture(person.resource_path, str(clock.get("season")))
+	if path != person.resource_path:
+		person = load(path) as Texture2D
 
 ## Cuts a sheet of eight idle frames, with one crop for all so the feet never jump.
 func _load_idle(path: String) -> void:

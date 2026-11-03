@@ -3,9 +3,11 @@
 [ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="1_place_bounds"]
 [ext_resource type="Script" path="res://src/scripts/house/door.gd" id="2_door"]
 [ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="3_spot_mark"]
-[ext_resource type="Texture2D" path="res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png" id="4_leafy_16-bit"]
+[ext_resource type="Texture2D" path="res://assets/nature/plants/ghaf.png" id="4_ghaf"]
 [ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="5_wild_herb"]
 [ext_resource type="Texture2D" path="res://assets/nature/Chunky desert rock sprite.png" id="6_chunky_deser"]
+[ext_resource type="Texture2D" path="res://assets/nature/plants/sidr.png" id="7_sidr"]
+[ext_resource type="Texture2D" path="res://assets/nature/plants/acacia.png" id="8_acacia"]
 
 [sub_resource type="RectangleShape2D" id="Rect_76x24"]
 size = Vector2(76, 24)
@@ -47,8 +49,7 @@ shape = SubResource("Rect_24x76")
 [node name="Wood0" type="Node2D" parent="."]
 position = Vector2(-180, -300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -56,8 +57,7 @@ block_size = Vector2(14, 8)
 [node name="Wood1" type="Node2D" parent="."]
 position = Vector2(210, -340)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -65,8 +65,7 @@ block_size = Vector2(14, 8)
 [node name="Wood2" type="Node2D" parent="."]
 position = Vector2(420, -210)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -74,8 +73,7 @@ block_size = Vector2(14, 8)
 [node name="Wood3" type="Node2D" parent="."]
 position = Vector2(250, 160)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -83,8 +81,7 @@ block_size = Vector2(14, 8)
 [node name="Wood4" type="Node2D" parent="."]
 position = Vector2(-60, -120)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -92,8 +89,7 @@ block_size = Vector2(14, 8)
 [node name="Wood5" type="Node2D" parent="."]
 position = Vector2(-480, 400)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 96
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 group_name = "tree"
 block_size = Vector2(14, 8)
@@ -181,231 +177,202 @@ group_name = "rock"
 [node name="Palm0" type="Node2D" parent="."]
 position = Vector2(-420, -400)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm1" type="Node2D" parent="."]
 position = Vector2(-300, -480)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm2" type="Node2D" parent="."]
 position = Vector2(-160, -520)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm3" type="Node2D" parent="."]
 position = Vector2(160, -500)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm4" type="Node2D" parent="."]
 position = Vector2(320, -470)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm5" type="Node2D" parent="."]
 position = Vector2(470, -400)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm6" type="Node2D" parent="."]
 position = Vector2(580, -160)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm7" type="Node2D" parent="."]
 position = Vector2(560, 110)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm8" type="Node2D" parent="."]
 position = Vector2(620, 300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm9" type="Node2D" parent="."]
 position = Vector2(480, 380)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm10" type="Node2D" parent="."]
 position = Vector2(300, 470)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm11" type="Node2D" parent="."]
 position = Vector2(180, 560)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm12" type="Node2D" parent="."]
 position = Vector2(-180, 500)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm13" type="Node2D" parent="."]
 position = Vector2(-330, 520)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm14" type="Node2D" parent="."]
 position = Vector2(-500, 500)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm15" type="Node2D" parent="."]
 position = Vector2(-620, 340)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm16" type="Node2D" parent="."]
 position = Vector2(-640, 40)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm17" type="Node2D" parent="."]
 position = Vector2(-620, -160)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm18" type="Node2D" parent="."]
 position = Vector2(-520, -340)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm19" type="Node2D" parent="."]
 position = Vector2(-90, -300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm20" type="Node2D" parent="."]
 position = Vector2(120, -220)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm21" type="Node2D" parent="."]
 position = Vector2(330, -20)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm22" type="Node2D" parent="."]
 position = Vector2(440, 60)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm23" type="Node2D" parent="."]
 position = Vector2(120, 170)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm24" type="Node2D" parent="."]
 position = Vector2(-470, -110)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm25" type="Node2D" parent="."]
 position = Vector2(-90, 300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("7_sidr")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm26" type="Node2D" parent="."]
 position = Vector2(280, 300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 112
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm27" type="Node2D" parent="."]
 position = Vector2(400, 250)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 88
+person = ExtResource("8_acacia")
 stand_on_feet = true
 block_size = Vector2(14, 8)
 
 [node name="Palm28" type="Node2D" parent="."]
 position = Vector2(-400, 300)
 script = ExtResource("3_spot_mark")
-person = ExtResource("4_leafy_16-bit")
-fit_pixels = 100
+person = ExtResource("4_ghaf")
 stand_on_feet = true
 block_size = Vector2(14, 8)

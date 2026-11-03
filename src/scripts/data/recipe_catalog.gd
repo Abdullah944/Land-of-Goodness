@@ -33,12 +33,15 @@ const BUILDINGS: Dictionary = {
 	"decor_table": {"name_key": "decor_table", "costs": {"wood": 6, "dinars": 250}, "requires": "house"},
 	"decor_plant": {"name_key": "decor_plant", "costs": {"forage": 2, "dinars": 150}, "requires": "house"},
 	"decor_lantern": {"name_key": "decor_lantern", "costs": {"copper": 1, "dinars": 200}, "requires": "house"},
+	"decor_cushions": {"name_key": "decor_cushions", "costs": {"wool": 2, "dinars": 220}, "requires": "house"},
+	"decor_green_rug": {"name_key": "decor_green_rug", "costs": {"wool": 3, "dinars": 320}, "requires": "house"},
+	"decor_tree": {"name_key": "decor_tree", "costs": {"forage": 3, "dinars": 180}, "requires": "house"},
 }
 
 ## The order the build menu lists things.
 const BUILD_ORDER: Array[String] = [
 	"coop", "barn", "expand", "tools", "house", "coop2", "barn2", "expand2", "tools2",
-	"decor_rug", "decor_table", "decor_plant", "decor_lantern",
+	"decor_rug", "decor_table", "decor_plant", "decor_lantern", "decor_cushions", "decor_green_rug", "decor_tree",
 ]
 
 ## Pictures that a bought decoration adds inside the house.
@@ -47,6 +50,9 @@ const DECOR: Dictionary = {
 	"decor_table": {"place": "HouseInside", "name": "DecorTable", "path": "res://assets/props/table.png", "at": Vector2(70, 128), "block": Vector2(24, 8)},
 	"decor_plant": {"place": "HouseInside", "name": "DecorPlant", "path": "res://assets/props/plant.png", "at": Vector2(150, 118)},
 	"decor_lantern": {"place": "HouseInside", "name": "DecorLantern", "path": "res://assets/props/lantern.png", "at": Vector2(150, 96)},
+	"decor_cushions": {"place": "HouseInside", "name": "DecorCushions", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(-70, 130)},
+	"decor_green_rug": {"place": "HouseInside", "name": "DecorGreenRug", "path": "res://assets/building/house/room/rug_green.png", "at": Vector2(-64, 40), "flat": true},
+	"decor_tree": {"place": "HouseInside", "name": "DecorTree", "path": "res://assets/building/house/room/plant.png", "at": Vector2(-108, 70)},
 }
 
 const BUNDLE_PRICE: int = 70

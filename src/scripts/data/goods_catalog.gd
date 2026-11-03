@@ -5,18 +5,20 @@ class_name GoodsCatalog
 extends RefCounted
 
 const _EXTRAS: Dictionary = {
-	"fish": {"sell": 30, "icon": "res://assets/fish/Cozy Gulf Fish Pixel Icon.png"},
-	"wood": {"sell": 4, "icon": "res://assets/nature/Pixel art cut wood log.png"},
-	"stone": {"sell": 4, "icon": "res://assets/nature/Tiny pixel stone chunk.png"},
-	"dates": {"sell": 15, "icon": "res://assets/farming/Date inventory icon.png"},
-	"forage": {"sell": 12, "icon": "res://assets/farming/Wild herb inventory icon.png"},
-	"eggs": {"sell": 18, "icon": "res://assets/items/Egg.png"},
-	"milk": {"sell": 45, "icon": "res://assets/items/Milk.png"},
-	"wool": {"sell": 36, "icon": "res://assets/items/Wool.png"},
-	"feed": {"sell": 0, "icon": "res://assets/items/Feed.png"},
-	"copper": {"sell": 40, "icon": "res://assets/items/Copper.png"},
-	"pearl": {"sell": 120, "icon": "res://assets/items/Pearl.png"},
+	"fish": {"sell": 30, "icon": "res://assets/items/goods/fish.png"},
+	"wood": {"sell": 4, "icon": "res://assets/items/goods/wood.png"},
+	"stone": {"sell": 4, "icon": "res://assets/items/goods/stone.png"},
+	"dates": {"sell": 15, "icon": "res://assets/items/goods/dates.png"},
+	"forage": {"sell": 12, "icon": "res://assets/items/goods/forage.png"},
+	"eggs": {"sell": 18, "icon": "res://assets/items/goods/eggs.png"},
+	"milk": {"sell": 45, "icon": "res://assets/items/goods/milk.png"},
+	"wool": {"sell": 36, "icon": "res://assets/items/goods/wool.png"},
+	"feed": {"sell": 0, "icon": "res://assets/items/goods/feed.png"},
+	"copper": {"sell": 40, "icon": "res://assets/items/goods/copper.png"},
+	"pearl": {"sell": 120, "icon": "res://assets/items/goods/pearl.png"},
 }
+
+const _CROP_ICONS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons"]
 
 static func extra_ids() -> PackedStringArray:
 	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper", "pearl"])
@@ -41,4 +43,6 @@ static func sellable_ids() -> PackedStringArray:
 	return ids
 
 static func icon_path(item_id: String) -> String:
+	if item_id in _CROP_ICONS:
+		return "res://assets/items/goods/%s.png" % item_id
 	return str(_EXTRAS.get(item_id, {}).get("icon", ""))

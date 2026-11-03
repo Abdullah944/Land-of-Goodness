@@ -114,6 +114,21 @@
       "asset_id": "453b79f7-0dcc-4daa-8555-065e97092294",
       "sha12": "dfeb87d232f5",
       "label": "assets/nature/Date palm.png (resized)"
+    },
+    {
+      "asset_id": "9166c716-d5ef-4941-981e-77cd95f184ca",
+      "sha12": "a9625f51ac3c",
+      "label": "assets/props/world_objects.png"
+    },
+    {
+      "asset_id": "f528cbd3-e8f0-4068-9a08-adb41e17040c",
+      "sha12": "81afd6a3c0e2",
+      "label": "assets/items/goods_sheet.png"
+    },
+    {
+      "asset_id": "8a046f82-c434-40fe-9370-85c39b4a7f34",
+      "sha12": "6db19c77cd6b",
+      "label": "assets/props/world_plants.png"
     }
   ]
 }

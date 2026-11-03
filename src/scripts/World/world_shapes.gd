@@ -80,6 +80,25 @@ const PLACES: Dictionary = {
 	},
 }
 
+## A tree's picture for this season. Gulf winters bring bare branches, not snow.
+static func seasonal_picture(path: String, season: String) -> String:
+	if season == "Autumn" and (path.ends_with("plants/ghaf.png") or path.ends_with("plants/sidr.png")):
+		return path.replace(".png", "_autumn.png")
+	if season == "Winter" and path.ends_with("plants/ghaf.png"):
+		return path.replace(".png", "_winter.png")
+	return path
+
+## How green ground shifts with the season.
+static func season_grass(season: String) -> Color:
+	match season:
+		"Summer":
+			return Color(1.08, 1.0, 0.78)
+		"Autumn":
+			return Color(1.22, 0.94, 0.62)
+		"Winter":
+			return Color(1.0, 0.96, 0.78)
+	return Color.WHITE
+
 static func has_place(place: String) -> bool:
 	return PLACES.has(place)
 

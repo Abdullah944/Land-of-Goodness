@@ -19,6 +19,17 @@ const FENCE: int = 8
 const HAY: int = 9
 const POT: int = 10
 const ROCKS: int = 11
+const LOG: int = 14
+const SHELLS: int = 15
+const TRUFFLE: int = 16
+const DRY_GRASS: int = 17
+const OBJECTS: String = "res://assets/props/world_objects.png"
+## Newer pictures: which object sheet cell replaces a detail, and its longest side in pixels.
+const OBJECT_CUTS: Dictionary = {
+	YELLOW: [Vector2i(2, 2), 20], PINK: [Vector2i(3, 2), 20], SHRUB: [Vector2i(1, 3), 24], STONES: [Vector2i(0, 1), 12],
+	TWIGS: [Vector2i(3, 1), 22], WEEDS: [Vector2i(0, 2), 20], STUMP: [Vector2i(1, 0), 34], ROCKS: [Vector2i(2, 0), 26],
+	LOG: [Vector2i(0, 0), 46], SHELLS: [Vector2i(3, 0), 26], TRUFFLE: [Vector2i(2, 3), 18], DRY_GRASS: [Vector2i(3, 3), 20],
+}
 
 const LAYOUTS: Dictionary = {
 	"Home": {
@@ -34,26 +45,27 @@ const LAYOUTS: Dictionary = {
 			[FENCE, Vector2(-168, 34)], [FENCE, Vector2(-144, 34)], [FENCE, Vector2(-120, 34)], [FENCE, Vector2(-96, 34)],
 			[FENCE, Vector2(32, 250)], [FENCE, Vector2(56, 250)], [STUMP, Vector2(-30, -180)], [HAY, Vector2(236, 262)],
 			[HAY, Vector2(30, 228)], [POT, Vector2(-54, -90)], [STUMP, Vector2(-300, 120)], [STUMP, Vector2(420, -60)],
+			[LOG, Vector2(-220, -300)], [LOG, Vector2(430, 330)], [LOG, Vector2(-480, -60)], [LOG, Vector2(300, -380)], [LOG, Vector2(-120, 380)],
 		],
 	},
 	"Road": {
 		"seed": 53,
 		"count": 90,
-		"picks": [TUFT, TUFT, ROCKS, ROCKS, STONES, SHRUB, TWIGS, YELLOW],
+		"picks": [DRY_GRASS, DRY_GRASS, TUFT, ROCKS, ROCKS, STONES, SHRUB, TWIGS, YELLOW],
 		"avoid": [],
 		"fixed": [[STUMP, Vector2(-180, 110)], [HAY, Vector2(120, -70)], [FENCE, Vector2(-60, -48)], [FENCE, Vector2(-36, -48)], [FENCE, Vector2(-12, -48)]],
 	},
 	"Forest": {
 		"seed": 61,
 		"count": 620,
-		"picks": [TUFT, TUFT, TUFT, WEEDS, WEEDS, SHRUB, SHRUB, PINK, YELLOW, STUMP, TWIGS, STONES],
+		"picks": [TUFT, TUFT, TUFT, WEEDS, WEEDS, SHRUB, SHRUB, PINK, YELLOW, STUMP, TWIGS, STONES, TRUFFLE],
 		"avoid": [],
-		"fixed": [],
+		"fixed": [[LOG, Vector2(380, -330)], [LOG, Vector2(-420, -300)], [LOG, Vector2(420, 330)], [LOG, Vector2(-380, 420)]],
 	},
 	"Orchard": {
 		"seed": 17,
 		"count": 240,
-		"picks": [TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, STONES, SHRUB],
+		"picks": [TUFT, TUFT, TUFT, DRY_GRASS, YELLOW, PINK, WEEDS, STONES, SHRUB],
 		"avoid": [Rect2(-410, -210, 220, 120)],
 		"fixed": [[STUMP, Vector2(300, -80)], [HAY, Vector2(140, -40)]],
 	},
@@ -68,14 +80,14 @@ const LAYOUTS: Dictionary = {
 		"seed": 7,
 		"count": 34,
 		"area": Rect2(-236, -110, 472, 320),
-		"picks": [STONES, STONES, ROCKS, ROCKS, TWIGS],
+		"picks": [STONES, STONES, ROCKS, ROCKS, TWIGS, TRUFFLE],
 		"avoid": [Rect2(-60, 150, 120, 60), Rect2(50, 30, 60, 60), Rect2(-100, 10, 60, 60)],
 		"fixed": [],
 	},
 	"Harbor": {
 		"seed": 31,
 		"count": 170,
-		"picks": [STONES, ROCKS, TWIGS, TUFT, TUFT, SHRUB],
+		"picks": [STONES, ROCKS, TWIGS, DRY_GRASS, DRY_GRASS, SHELLS, SHELLS, SHRUB],
 		"avoid": [],
 		"fixed": [[HAY, Vector2(-40, -130)]],
 	},
@@ -92,6 +104,24 @@ const DEBRIS: Array = [
 	[WEEDS, "debris_weed", Vector2(0, 176)], [WEEDS, "debris_weed", Vector2(-255, 207)],
 ]
 const TREE_PICTURE: String = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
+const PLANT: String = "res://assets/nature/plants/%s.png"
+## Which trees grow where, and how the bushes and rocks are mixed.
+const TREES_BY_PLACE: Dictionary = {
+	"Home": ["ghaf", "sidr", "leafy", "ghaf", "acacia", "sidr", "tamarisk"],
+	"Forest": ["ghaf", "ghaf", "sidr", "ghaf", "acacia"],
+	"Village": ["sidr", "ghaf", "leafy", "tamarisk", "sidr"],
+	"Orchard": ["sidr", "ghaf", "acacia"],
+}
+const BUSH_COUNTS: Dictionary = {"Home": 46, "Forest": 60, "Village": 34, "Orchard": 20, "Road": 18, "Harbor": 14}
+const BUSHES_GREEN: Array[String] = ["bush", "bush_pink", "bush_white", "bush", "sapling", "rocks_moss", "outcrop"]
+const BUSHES_DRY: Array[String] = ["bush_dry", "dune_grass", "outcrop", "bush_dry", "dune_grass"]
+## Sandstone walls that give the quarry and the shores some height. [place, spots]
+const CLIFFS: Dictionary = {
+	"Home": [Vector2(-560, -330), Vector2(-500, -390), Vector2(-430, -420), Vector2(-360, -440), Vector2(-290, -440), Vector2(-220, -450), Vector2(-540, -250)],
+	"Forest": [Vector2(-620, 480), Vector2(-560, 530), Vector2(-490, 570), Vector2(-420, 590), Vector2(600, 460), Vector2(540, 520)],
+	"Village": [Vector2(-700, -430), Vector2(-640, -480), Vector2(-570, -500), Vector2(-500, -520), Vector2(690, 470), Vector2(640, 520)],
+	"Harbor": [Vector2(-700, -330), Vector2(-640, -350), Vector2(650, -340), Vector2(700, -300)],
+}
 const PALM_PICTURE: String = "res://assets/nature/Date palm.png"
 ## Tree groups inside the farm clearing. They are scenery and cannot be chopped.
 const FARM_TREES: Array[Vector2] = [
@@ -162,11 +192,14 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 	place.add_child(decor)
 	if shaped and bool(WorldShapes.PLACES[place_name]["wooded"]):
 		_add_forest(place, place_name)
+	if shaped:
+		_add_bushes(place, place_name, layout)
+		_add_cliffs(place, place_name)
 	if place.name == "Home":
 		_add_debris(place, cleared)
 		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-50, -66)})
 		for i: int in FARM_TREES.size():
-			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": TREE_PICTURE, "at": FARM_TREES[i], "fit": 90 + i % 3 * 10, "block": Vector2(14, 8)})
+			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": _tree("Home", i), "at": FARM_TREES[i], "block": Vector2(14, 8)})
 		for i: int in FARM_PALMS.size():
 			PropPiece.add_to(place, {"name": "Palm_farm%d" % i, "path": PALM_PICTURE, "at": FARM_PALMS[i], "block": Vector2(10, 6)})
 		for i: int in FARM_PONDS.size():
@@ -182,6 +215,28 @@ static func _add_zones(place: Node) -> void:
 		PropPiece.add_to(place, {"name": "ZoneStump%d" % i, "texture": _cuts[STUMP], "at": WOODLOT[i], "group": "tree"})
 	for i: int in HERB_PATCH.size():
 		PropPiece.add_to(place, {"name": "ZoneHerb%d" % i, "path": HERB_PICTURE, "at": HERB_PATCH[i], "group": "forage"})
+
+static func _tree(place_name: String, index: int) -> String:
+	var kinds: Array = TREES_BY_PLACE.get(place_name, ["sidr"])
+	var kind: String = str(kinds[index % kinds.size()])
+	return PLANT % kind
+
+static func _add_bushes(place: Node, place_name: String, layout: Dictionary) -> void:
+	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
+	roll.seed = int(layout["seed"]) + 5
+	var area: Rect2 = _clearing(place_name)
+	var kinds: Array[String] = BUSHES_DRY if bool(WorldShapes.PLACES[place_name]["sandy"]) else BUSHES_GREEN
+	for i: int in int(BUSH_COUNTS.get(place_name, 0)):
+		var at: Vector2 = area.position + Vector2(roll.randf() * area.size.x, roll.randf() * area.size.y)
+		var kind: String = kinds[roll.randi_range(0, kinds.size() - 1)]
+		if WorldShapes.keep_clear(place_name, at) or WorldShapes.edge(place_name, at) > 0.96 or WorldShapes.in_exit(place_name, at) or _blocked(at, layout["avoid"]):
+			continue
+		PropPiece.add_to(place, {"name": "Grove_bush%d" % i, "path": PLANT % kind, "at": at, "block": Vector2(18, 8) if kind.begins_with("bush") or kind.ends_with("crop") else Vector2.ZERO})
+
+static func _add_cliffs(place: Node, place_name: String) -> void:
+	var spots: Array = CLIFFS.get(place_name, [])
+	for i: int in spots.size():
+		PropPiece.add_to(place, {"name": "Cliff%d" % i, "path": PLANT % "cliff", "at": spots[i], "block": Vector2(70, 18)})
 
 static func _clearing(place_name: String) -> Rect2:
 	var half: Vector2 = WorldShapes.PLACES[place_name]["half"]
@@ -199,6 +254,9 @@ static func _lay_ground(place: Node, place_name: String) -> void:
 	ground.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var shimmer: ShaderMaterial = ShaderMaterial.new()
 	shimmer.shader = load("res://src/shaders/water_shimmer.gdshader") as Shader
+	var clock: Node = place.get_tree().current_scene.get_node_or_null("Systems/Clock") if place.is_inside_tree() else null
+	var tint: Color = WorldShapes.season_grass(str(clock.get("season"))) if clock != null else Color.WHITE
+	shimmer.set_shader_parameter("grass_tint", Vector3(tint.r, tint.g, tint.b))
 	ground.material = shimmer
 	place.add_child(ground)
 	place.move_child(ground, 0)
@@ -217,7 +275,7 @@ static func _add_forest(place: Node, place_name: String) -> void:
 			var at: Vector2 = Vector2(x + roll.randf() * 24.0, y + roll.randf() * 20.0)
 			var edge: float = WorldShapes.edge(place_name, at)
 			if edge > 1.0 and edge < 1.22 and not WorldShapes.in_exit(place_name, at) and not WorldShapes.keep_clear(place_name, at):
-				PropPiece.add_to(place, {"name": "Forest%d" % made, "path": TREE_PICTURE, "at": at, "fit": 84 + made % 3 * 12, "block": Vector2(18, 10)})
+				PropPiece.add_to(place, {"name": "Forest%d" % made, "path": _tree(place_name, made), "at": at, "block": Vector2(18, 10)})
 				made += 1
 			x += 46.0
 		y += 42.0
@@ -235,7 +293,7 @@ static func _add_groves(place: Node) -> void:
 		if at.distance_to(Vector2.ZERO) < 240.0:
 			continue
 		var is_palm: bool = i % 4 == 0
-		PropPiece.add_to(place, {"name": "Palm_grove%d" % made, "path": PALM_PICTURE if is_palm else TREE_PICTURE, "at": at, "fit": 72 if is_palm else 92 + i % 3 * 10, "block": Vector2(14, 8)})
+		PropPiece.add_to(place, {"name": "Palm_grove%d" % made, "path": PALM_PICTURE if is_palm else _tree("Home", i), "at": at, "block": Vector2(14, 8)})
 		made += 1
 
 static func _add_debris(place: Node, cleared: Dictionary) -> void:
@@ -300,6 +358,24 @@ static func _room_edge(box: Rect2, color: Color) -> Polygon2D:
 	strip.polygon = PackedVector2Array([box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)])
 	return strip
 
+static func _cut_objects() -> void:
+	var sheet: Texture2D = load(OBJECTS) as Texture2D
+	if sheet == null:
+		return
+	var image: Image = sheet.get_image()
+	var cell: int = int(float(image.get_width()) / float(GRID))
+	_cuts.resize(maxi(_cuts.size(), DRY_GRASS + 1))
+	for key: int in OBJECT_CUTS:
+		var at: Vector2i = OBJECT_CUTS[key][0]
+		var part: Image = image.get_region(Rect2i(at * cell, Vector2i(cell, cell)))
+		var used: Rect2i = part.get_used_rect()
+		if used.size == Vector2i.ZERO:
+			continue
+		part = part.get_region(used)
+		var factor: float = float(OBJECT_CUTS[key][1]) / float(maxi(part.get_width(), part.get_height()))
+		part.resize(maxi(1, int(part.get_width() * factor)), maxi(1, int(part.get_height() * factor)), Image.INTERPOLATE_LANCZOS)
+		_cuts[key] = ImageTexture.create_from_image(part)
+
 static func _blocked(at: Vector2, avoid: Array) -> bool:
 	for box: Rect2 in avoid:
 		if box.has_point(at):
@@ -331,3 +407,4 @@ static func _cut_sheet() -> void:
 			part = part.get_region(used)
 			part.resize(maxi(1, int(part.get_width() * SCALE)), maxi(1, int(part.get_height() * SCALE)), Image.INTERPOLATE_LANCZOS)
 			_cuts.append(ImageTexture.create_from_image(part))
+	_cut_objects()

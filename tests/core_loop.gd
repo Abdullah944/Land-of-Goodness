@@ -274,6 +274,10 @@ func _check_finish(main: Node, systems: Node, inventory: Inventory, stead: Stead
 	var kindness: Kindness = systems.get_node("Kindness") as Kindness
 	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
 	check(_locale_is_whole(), "every line exists in both languages with the same blanks")
+	check(_icons_are_whole(), "every good has a new bag icon")
+	check(WorldShapes.seasonal_picture("res://x/plants/ghaf.png", "Winter").ends_with("ghaf_winter.png"), "the ghaf tree is bare in winter")
+	check(WorldShapes.seasonal_picture("res://x/plants/sidr.png", "Autumn").ends_with("sidr_autumn.png"), "the sidr tree turns in autumn")
+	check(WorldShapes.seasonal_picture("res://x/plants/ghaf.png", "Spring").ends_with("plants/ghaf.png"), "the ghaf tree is green in spring")
 	dialogue.open_lines(PackedStringArray(["x"]))
 	check(clock.held_by_ui(), "the clock waits while a talk box is open")
 	dialogue._advance()
@@ -528,13 +532,31 @@ func _check_debris(main: Node, loader: LevelLoader, activities: Activities) -> v
 	check(lamp != null and lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color != Color.WHITE, "lamps glow at night")
 	clock.minute = 10.0 * 60.0
 	clock._paint_sky()
-	check(not lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color == Color.WHITE, "lamps rest in daylight")
+	check(not lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color.r > 0.9, "lamps rest in daylight")
 	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
 	for i: int in 3:
 		await process_frame
 
+## A picture with no size set draws at full size and can hide the whole screen.
+func _pictures_fit(main: Node, place: String) -> bool:
+	var fits: bool = true
+	for mark: Node in _place(main).get_children():
+		var picture: Variant = mark.get("_picture")
+		if picture is Texture2D:
+			var drawn: Vector2 = (picture as Texture2D).get_size()
+			if int(mark.get("fit_pixels")) == 0 and _frames_empty(mark):
+				drawn *= float(mark.get("person_scale"))
+			if maxf(drawn.x, drawn.y) > 240.0:
+				print("TOO BIG in %s: %s %s" % [place, mark.name, drawn])
+				fits = false
+	return fits
+
+func _frames_empty(mark: Node) -> bool:
+	return (mark.get("_frames") as Array).is_empty()
+
 func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> void:
 	var home: Node = _place(main)
+	check(_pictures_fit(main, "Home"), "no picture on the farm is giant")
 	check(home.get_node_or_null("ExitForest") != null and home.get_node_or_null("ExitVillage") != null, "the farm has two ways out")
 	check(home.get_node_or_null("Forest0") != null and home.get_node_or_null("Pond_0") != null, "the farm has a forest edge and more ponds")
 	var player_check: Player = main.find_child("Player", true, false) as Player
@@ -604,6 +626,7 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 		for i: int in 3:
 			await process_frame
 		check(_place(main).get_node_or_null("PaintedGround") != null, "%s has painted ground" % _place_name(main))
+		check(_pictures_fit(main, _place_name(main)), "no picture in %s is giant" % _place_name(main))
 		var way: Node2D = _place(main).get_node(str(row[1])) as Node2D
 		player.busy = false
 		player.global_position = way.global_position + (Vector2.ZERO - way.global_position).normalized() * 60.0
@@ -631,6 +654,14 @@ func _bag_total(main: Node) -> int:
 	for item_id: String in Inventory.all_stored_ids():
 		total += bag.count_of(item_id)
 	return total
+
+func _icons_are_whole() -> bool:
+	var whole: bool = true
+	for item_id: String in GoodsCatalog.sellable_ids():
+		if GoodsCatalog.icon_path(item_id) == "" or not ResourceLoader.exists(GoodsCatalog.icon_path(item_id)):
+			print("NO ICON %s" % item_id)
+			whole = false
+	return whole
 
 func _locale_is_whole() -> bool:
 	var whole: bool = true

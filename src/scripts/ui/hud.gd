@@ -208,6 +208,7 @@ func refresh() -> void:
 	_craft.visible = _tab == "bag"
 	_world_map.visible = _tab == "map"
 	_eat.visible = _tab == "bag"
+	_eat.size = Vector2(60, 24)
 	_eat.text = Locale.t("eat")
 	Locale.apply_control(_eat)
 	_refresh_settings(stead)
@@ -802,8 +803,8 @@ func _build_bag_rows(list: Panel) -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.position = Vector2(2, 2)
-		icon.size = Vector2(16, 16)
+		icon.position = Vector2(1, 1)
+		icon.size = Vector2(18, 18)
 		slot.add_child(icon)
 		var name: Label = _make_label(Vector2(28, 0), Color("3f2d27"))
 		name.text = Locale.item(str(spec["item"]))
@@ -830,6 +831,8 @@ func _build_bag_rows(list: Panel) -> void:
 
 func _bag_icon(spec: Dictionary) -> Texture2D:
 	var item: String = str(spec["item"])
+	if GoodsCatalog.icon_path(item) != "":
+		return _fit_icon(GoodsCatalog.icon_path(item), 18)
 	if item == "seeds":
 		return _fit_icon("res://assets/farming/Six Pixel Farm Seeds.png", 16)
 	if item == "turnips":

@@ -160,7 +160,9 @@ HOUSE = "res://assets/building/house/Desert Adobe Rooftop House Sprite.png"
 PEOPLE = "res://assets/characters/village/%s.png"
 
 
-TREE = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
+TREE = "res://assets/nature/plants/ghaf.png"
+SIDR = "res://assets/nature/plants/sidr.png"
+ACACIA = "res://assets/nature/plants/acacia.png"
 ROCK = "res://assets/nature/Chunky desert rock sprite.png"
 STALL = "res://assets/building/village/Market stall.png"
 DHOW = "res://assets/building/harbor/Dhow.png"
@@ -242,7 +244,7 @@ def forest():
     s.door("ExitFarm", 0, -620, HOME, "ForestReturn", 76, 24)
     s.door("ExitVillage", 722, 0, VILLAGE, "ForestReturn", 24, 76)
     for i, (x, y) in enumerate([(-180, -300), (210, -340), (420, -210), (250, 160), (-60, -120), (-480, 400)]):
-        s.mark("Wood%d" % i, TREE, x, y, fit=96, group="tree", block=(14, 8))
+        s.mark("Wood%d" % i, TREE, x, y, group="tree", block=(14, 8))
     for i, (x, y) in enumerate([(60, -140), (150, 40), (290, 70), (-520, -240), (480, 180), (-280, 380), (360, 430), (-560, 90)]):
         s.mark("Herb%d" % i, HERB, x, y, group="forage")
     for i, (x, y) in enumerate([(200, 300), (-600, 240), (540, -300)]):
@@ -251,7 +253,7 @@ def forest():
              (180, 560), (-180, 500), (-330, 520), (-500, 500), (-620, 340), (-640, 40), (-620, -160), (-520, -340), (-90, -300), (120, -220), (330, -20),
              (440, 60), (120, 170), (-470, -110), (-90, 300), (280, 300), (400, 250), (-400, 300)]
     for i, (x, y) in enumerate(trees):
-        s.mark("Palm%d" % i, TREE, x, y, fit=88 + i % 3 * 12, block=(14, 8))
+        s.mark("Palm%d" % i, (TREE, SIDR, TREE, ACACIA)[i % 4], x, y, block=(14, 8))
     s.save("src/scenes/world/forest/Forest.tscn")
 
 
