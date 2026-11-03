@@ -35,7 +35,7 @@ const PIECES: Dictionary = {
 		{"place": "Harbor", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(114, 120)},
 	],
 	"diwaniya": [
-		{"place": "Village", "name": "WorkDiwaniya", "path": "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "at": Vector2(-120, 300), "fit": 170, "block": Vector2(144, 48)},
+		{"place": "Village", "name": "WorkDiwaniya", "path": "res://assets/building/town/majlis.png", "at": Vector2(-120, 300), "fit": 190, "block": Vector2(163, 56)},
 		{"place": "Village", "name": "WorkRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(30, 280), "flat": true},
 		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-20, 250)},
 		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(80, 250)},

@@ -165,7 +165,21 @@ SIDR = "res://assets/nature/plants/sidr.png"
 ACACIA = "res://assets/nature/plants/acacia.png"
 ROCK = "res://assets/nature/Chunky desert rock sprite.png"
 STALL = "res://assets/building/village/Market stall.png"
+TOWN = os.path.join(ROOT, "assets/building/town/%s.png")
 DHOW = "res://assets/building/harbor/Dhow.png"
+
+
+def picture_size(path):
+    with open(path, "rb") as f:
+        head = f.read(24)
+    return struct.unpack(">II", head[16:24])
+
+
+def building(s, name, kind, x, y, width):
+    """One town building, sized by how wide it stands, with a solid base the boy walks around."""
+    w, h = picture_size(TOWN % kind)
+    fit = int(round(width * max(w, h) / w))
+    s.mark(name, "res://assets/building/town/%s.png" % kind, x, y, fit=fit, block=(int(width * 0.86), int(width * 0.3)))
 
 
 def props(s, rows, prefix="Prop"):
@@ -194,11 +208,17 @@ def village():
     s.mark("Counter", PROP % "counter", 200, -20, fit=70, block=(62, 12))
     s.mark("ShelfSeeds", PROP % "shelf_seeds", 214, -90, block=(36, 10))
     # Homes spread around the square, with gardens between them.
-    for i, (x, y, fit) in enumerate([(-340, -220, 150), (-470, 60, 150), (-40, -300, 140), (230, -300, 150), (-310, 340, 150),
-                                     (-60, 470, 140), (310, 240, 150), (690, -290, 150), (690, 230, 140), (-600, -330, 140), (-560, 260, 130)]):
-        s.mark("House%d" % i, HOUSE, x, y, fit=fit, block=(int(fit * 0.84), int(fit * 0.29)))
-    for i, part in enumerate(["wall_window", "wall_door", "wall_plain", "wall_door"]):
-        s.mark("Shop%d" % i, PROP % part, -240 + i * 64, -180, fit=72, block=(64, 22))
+    # Each home looks different: wind towers, painted doors, whitewash.
+    for i, (kind, x, y, width) in enumerate([("house_tower", -340, -220, 146), ("house_blue", -470, 60, 146), ("house", -40, -300, 136),
+                                             ("house_green", 230, -300, 146), ("house_blue", -310, 340, 146), ("house_tower", -60, 470, 136),
+                                             ("house", 310, 240, 146), ("house_coral", 690, -290, 146), ("house_green", 690, 230, 136),
+                                             ("house", -600, -330, 136), ("house_blue", -560, 260, 126)]):
+        if kind == "house":
+            s.mark("House%d" % i, HOUSE, x, y, fit=int(width * 1.03), block=(int(width * 0.86), int(width * 0.3)))
+        else:
+            building(s, "House%d" % i, kind, x, y, width)
+    building(s, "Shop", "shop", -170, -176, 120)
+    building(s, "Watchtower", "burj", -620, -180, 50)
     props(s, [("lantern", -240, -60), ("lantern", 260, -170), ("lantern", -230, 120), ("lantern", 250, 120), ("lantern", 470, -80), ("lantern", 600, -80),
               ("barrel", 150, -150), ("crate", 180, -150), ("basket", -160, -140), ("sack", -190, -130), ("pot_big", -220, 80), ("pot_green", -194, 84),
               ("basket", 230, 60), ("crate", 330, 110), ("crate", 346, 122), ("sack", 310, 124), ("barrel", -420, 110), ("barrel", -440, 116),
@@ -266,8 +286,10 @@ def harbor():
     s.mark("Dhow", DHOW, 320, 240, fit=170)
     s.mark("DhowSmall", DHOW, -240, 220, fit=100)
     s.mark("ShoreCrate", PROP % "crate_fish", -160, 62, group="shore")
-    for i, (x, y, fit) in enumerate([(-440, -120, 150), (-140, -200, 140), (470, -160, 150), (-600, 40, 130), (610, 20, 130)]):
-        s.mark("Hut%d" % i, HOUSE, x, y, fit=fit, block=(int(fit * 0.84), int(fit * 0.29)))
+    # Fishers live in palm-frond huts and grey coral-stone houses.
+    for i, (kind, x, y, width) in enumerate([("barasti", -440, -120, 124), ("house_coral", -140, -200, 136), ("barasti", 470, -160, 124),
+                                             ("barasti", -600, 40, 110), ("house_coral", 610, 20, 126)]):
+        building(s, "Hut%d" % i, kind, x, y, width)
     props(s, [("crate_fish", 130, 70), ("barrel", -20, 70), ("crate", 170, 60), ("crate", 184, 70), ("sack", 148, 40), ("basket", -60, 40), ("barrel", 36, 110),
               ("lantern", 6, 200), ("lantern", 114, 200), ("lantern", 6, 330), ("lantern", 114, 330), ("crate_fish", -300, 30), ("barrel", -330, 40), ("basket", 300, 40),
               ("pot_big", -390, -60), ("plant", 420, -70), ("sack", 260, -40), ("crate", -100, -110)])

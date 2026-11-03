@@ -104,11 +104,13 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	check(_place_name(main) == "Village" and stead.place_name == "Village", "the village opens")
+	check(_buildings_vary(main) and _pictures_fit(main, "Village"), "town buildings are not one house copied")
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
 	await process_frame
 	check(_place_name(main) == "Harbor" and bool(stead.visited.get("Harbor", false)), "the harbor opens")
+	check(_buildings_vary(main) and _pictures_fit(main, "Harbor"), "harbor homes are huts and coral houses")
 	loader.go_to(load("res://src/scenes/world/orchard/Orchard.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -550,6 +552,21 @@ func _pictures_fit(main: Node, place: String) -> bool:
 				print("TOO BIG in %s: %s %s" % [place, mark.name, drawn])
 				fits = false
 	return fits
+
+## No one building picture fills more than half of a place's buildings.
+func _buildings_vary(main: Node) -> bool:
+	var counts: Dictionary = {}
+	var total: int = 0
+	for mark: Node in _place(main).get_children():
+		var picture: Variant = mark.get("person")
+		if picture is Texture2D and ((picture as Texture2D).resource_path.contains("/building/town/") or (picture as Texture2D).resource_path.contains("Rooftop House")):
+			counts[(picture as Texture2D).resource_path] = int(counts.get((picture as Texture2D).resource_path, 0)) + 1
+			total += 1
+	for path: String in counts:
+		if int(counts[path]) * 2 > total + 1:
+			print("TOO SAME: %s %d of %d" % [path, counts[path], total])
+			return false
+	return total >= 4 and counts.size() >= 2
 
 func _frames_empty(mark: Node) -> bool:
 	return (mark.get("_frames") as Array).is_empty()

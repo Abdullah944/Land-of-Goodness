@@ -18,7 +18,7 @@ const PLACES: Dictionary = {
 	"Cave": [Vector2(28, 28), "res://assets/building/Cave/Sandstone Cave Entrance.png", "to_cave"],
 	"Road": [Vector2(176, 56), "res://assets/props/stall_produce.png", "to_road"],
 	"Forest": [Vector2(112, 124), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
-	"Village": [Vector2(276, 66), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_village"],
+	"Village": [Vector2(276, 66), "res://assets/building/town/house_tower.png", "to_village"],
 	"Orchard": [Vector2(250, 18), "res://assets/nature/Date palm.png", "to_orchard"],
 	"Harbor": [Vector2(292, 118), "res://assets/building/harbor/Dhow.png", "to_harbor"],
 }
