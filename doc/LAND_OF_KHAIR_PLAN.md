@@ -1,6 +1,6 @@
 # أرض الخير — Land of Khair
 
-> **Living development plan** · Version 1.0 · Updated 2026-10-31  
+> **Living development plan** · Version 1.1 · Updated 2026-11-04  
 > Status: Active planning and iterative development  
 > Repository: `Abdullah944/Land-of-Goodness`  
 > Engine: Godot 4.7.x · Targets: iOS and Android
@@ -28,19 +28,59 @@ The long-term identity includes **optional** Islamic experiences (prayer times, 
 
 Use observations, timing measurements, and public documentation to inform **original** implementations. Do not copy other games' protected artwork, music, maps, dialog, or code. Only apply reverse-engineering tools to targets the project is authorized to analyze.
 
+## 1a. Game rules (design reference)
+
+The short version of what the game is today. Every new feature should fit these rules; change a rule here first, with the owner's yes, before building against it.
+
+**The world.** A boy runs a small family farm in a Gulf village. Places join edge to edge:
+
+| Place | What it is for |
+| --- | --- |
+| Farm (المزرعة) | The house, the fenced crop field, the workbench, coop and barn, ponds, and daily corners: quarry (stone, copper), woodlot (wood), herb patch |
+| House | Bed (sleep to the next morning) and the storage chest |
+| Cave | Mining |
+| Caravan road (طريق القافلة) | The way east from the farm to the village |
+| Ghaf woods (غابة الغاف) | The way south from the farm to the village; lake, river, and a waterfall sound |
+| Village (القرية) | The market plaza, homes, the mosque, the river with two bridges, and the villagers |
+| Harbor (الميناء) | The dock, dhows, the sea, and a shore crate |
+| Palm orchard (بستان النخيل) | Date palms, north of the village |
+
+Each exit has a wooden signpost with the place name, and the edges of every place are rows of trees, so it is always clear where a place ends.
+
+**People.** Jassim the neighbor (first quest, buys turnips), the elder (village projects and the Khair gift), the merchant (sells seeds and feed, buys goods), the carpenter (crafting and building), and the fisherman. Friendship hearts grow with gifts and talks.
+
+**The day.** Wake at 6:00, work the farm, visit the village, and sleep to save the day. Tools cost a little of the boy's hearts; food restores one heart, and sleep restores all. One day in four may rain, which waters every crop.
+
+**Farming.** Turnip, tomato, wheat, and watermelon, each with its own seasons. The fenced field starts at 12 by 8 squares and grows to 16 by 10 and 20 by 12 with the larger-field projects. Chickens, goats, sheep, and cows give eggs, milk, and wool when fed.
+
+**Seasons.** Spring, summer, autumn, and winter, with seasonal trees, grass, and fairs. Gulf winters have bare branches, never snow.
+
+**Progress and the ending.** Reach the farm goal (quests in the menu), then build five village projects for the elder: well, palm grove, market, harbor dock, and diwaniya. When they are done and the Khair meter is full, the village festival and credits play. The farm stays open afterward.
+
+**The Khair meter** counts in-game kindness only: gifts to neighbors, helping the village, and feeding animals. It never falls, and it never scores worship.
+
+**Faith, gently and optionally.** The village mosque can be visited to pray (a calm moment and one heart, once a day). The menu can show the next real prayer time for Kuwait City and a soft reminder banner while the game is open; it can be turned off. Prayer is never scored, rewarded with money, or paid for. Quran and adhan audio are not in the game.
+
+**Sound.** No music. Real CC0 nature recordings (BigSoundBank) play in turns with silence between: forest and evening birds, a cricket in summer and autumn, rain on rainy days, and a waterfall by water. No Arabic-scale or Islamic-style tunes, and no nature sounds made by code.
+
+**Look.** Painted 2D HD art made with SpriteCook, in one warm hand-painted style. Learn ideas from Stardew Valley; never copy its art, maps, text, or music.
+
+**Always:** no combat, no ads, no pay-to-win, Arabic first with English in Settings, and touch-first controls (tap to walk and act, pinch to zoom).
+
 ## 2. Technical and art decisions
 
 | Area | Current decision |
 | --- | --- |
 | Engine | Godot 4.7.x; maintain existing project rather than restarting |
-| Rendering | 2D pixel art, nearest-neighbor, crisp edges, landscape on mobile |
+| Rendering | **Changed 2026-11-03:** painted 2D HD art with smooth filtering, landscape on mobile. HD pictures keep about four times the detail and report their old game size through the `khair_hd` importer in `addons/khair_hd` |
 | World tile | 16×16 pixels |
 | Character target | Chibi, approximately 32×48 pixels in idle view |
 | Controls | Tap-to-move, drag movement, pinch zoom; desktop controls for development |
 | Palette | Cream `#FFF3DC`, beige `#E7C99A`, deep brown `#3F2D27`, date brown `#7A4F32`, palm green `#5E9B62`, sage `#8EAD72`, Gulf blue `#55AFC4`, teal `#4F9F9A`, terracotta `#C96F4A`, gold `#D9A441` |
-| Artwork | Test AI reference art (Higgsfield, etc.), then verify transparency, size, palette, pixel grids, and animation consistency; retain existing assets unless replacements are approved |
+| Artwork | SpriteCook HD art with a style reference; asset ids in `spritecook-assets.json`. Verify transparency and size before import |
+| Sound | Real CC0 recordings from BigSoundBank, looped by `tools/loop_nature.py`; effects from `tools/make_audio.py` |
 | Source control | GitHub `main`, review and test changes before pushing |
-| iPhone testing | TestFlight builds; automate approved builds later |
+| iPhone testing | Cable installs to the iPhone 16e with `xcodebuild` and `devicectl`; run `doc/PLAYTEST_CHECKLIST.md` before each install. TestFlight for wider testing |
 | Coding style | One focused responsibility per script, short file header comments, readable code, data-driven content; avoid unnecessary changes |
 
 ## 3. Confirmed state of the existing prototype
@@ -119,7 +159,7 @@ The following are **reported by Cursor**; verify again after meaningful changes.
 
 ### Phase 5 — Islamic and family systems
 
-- [ ] Optional prayer times with location/accuracy settings and notification controls.
+- [ ] Optional prayer times with location/accuracy settings and notification controls. **Started 2026-11-03:** Kuwait City times (Kuwait method) and an in-game banner, with an on/off setting. Phone location and notifications while the game is closed are not built.
 - [ ] Quran reading/listening interface with vetted content and audio permissions.
 - [ ] Optional dhikr and reflective features; no worship leaderboards or paid religious access.
 - [ ] Islamic calendar/event support with content review.
@@ -238,7 +278,8 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 | Good meter | **Decided 2026-11-01:** counts in-game kindness only. Prayer and Quran stay optional and unscored. The game does not claim real reward or heaven | Decided |
 | 2D or 3D | **Decided 2026-11-01:** stay 2D | Decided |
 | Everyday testing | **Decided 2026-11-01:** real iPhone, because the simulator is heavy on the 8 GB MacBook Air | Decided |
-| Religious content reviewer | A scholar or teacher must review Quran, prayer times, and Arabic lines, including the Khair meter's "جزاك الله خيراً" lines; no reviewer named yet | Before any religious feature ships |
+| Religious content reviewer | A scholar or teacher must review Quran, prayer times, and Arabic lines, including the Khair meter's "جزاك الله خيراً" lines; no reviewer named yet. **2026-11-03:** the owner asked for the mosque and the prayer reminder now; both still need this review | Before release |
+| Background sound | **Decided 2026-11-03:** real nature recordings only, no music, no Arabic or Islamic-style tunes | Decided |
 | Revenue model | **Decided 2026-11-01:** free, no ads, one optional purchase; recheck after player validation | Before release |
 | Build automation | Approval-gated macOS/GitHub workflow | After reliable manual releases |
 
@@ -246,6 +287,10 @@ Phase 2.3 is still open until the iPhone test of the chest in build 9 passes.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-04 | Added the game rules section and `doc/PLAYTEST_CHECKLIST.md`. |
+| 2026-11-03 | Real CC0 nature recordings replace all music and code-made sounds. Birds play a different stretch each time with rests of silence, rain fades in on rainy days, and a waterfall plays by water (commit e83e63d). |
+| 2026-11-03 | Owner's list: one fenced crop field by the house that grows with upgrades, a tidier farm, rows of trees at every edge, wooden signposts at exits, building shadows, two-column choice menus, the village mosque, and Kuwait City prayer times with a reminder (commit 08fb6c3). Core test 208 of 208 and playthrough 15 of 15. Installed on the iPhone 16e. |
+| 2026-11-03 | The whole game moved to painted 2D HD art (commit 1050ef5). |
 | 2026-11-02 | World pass: natural farm clearing with forest edge and ponds, caravan road and ghaf woods areas, a world Map tab, and Stardew-like scale. Not yet played by hand. |
 | 2026-11-02 | Look pass after studying the Stardew Valley mobile video: SpriteCook villagers, animals, and buildings, idle animations, ground details, debris to clear, night lamps, a furnished house, portrait talk boxes, and a new title screen. Core test 150 of 150 and playthrough 15 of 15 passed on side saves. Not yet played on a phone. |
 | 2026-11-02 | Production branch milestone 4: village projects, daily requests, festival ending, money sinks, working hearts, original music and sounds, visible field, house moved onto the map, and exit signs. Core test 132 of 132 and playthrough 15 of 15 passed on side saves. Full play on the iPhone is still required. |
