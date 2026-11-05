@@ -2,7 +2,7 @@
 # Purpose: Paints each place's ground once from the shapes in WorldShapes: grass, dirt, sand, roads, water, and bridges.
 # It writes a small colored map (used by the world map) and three mask maps that tell the ground shader
 # which painted texture lies where (see WorldShapes.mask_path and src/shaders/ground_blend.gdshader).
-# Run from the project root: Godot --headless --path . -s tools/bake_farm_ground.gd
+# Run from the project root: Godot --headless --path . -s tools/bake_farm_ground.gd (set BAKE_ONLY=Home for one place)
 
 extends SceneTree
 
@@ -21,9 +21,14 @@ func _init() -> void:
 	var grass: Image = (load("res://assets/props/ground_grass.png") as Texture2D).get_image()
 	grass.convert(Image.FORMAT_RGBA8)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/world"))
+	# BAKE_ONLY=Home paints just that place, so the other grounds stay as they are.
+	var only: String = OS.get_environment("BAKE_ONLY")
+	var baked: int = 0
 	for place: String in WorldShapes.PLACES:
-		_bake(place, grass)
-	print("BAKED %d places" % WorldShapes.PLACES.size())
+		if only == "" or only == place:
+			_bake(place, grass)
+			baked += 1
+	print("BAKED %d places" % baked)
 	quit(0)
 
 func _bake(place: String, grass: Image) -> void:
@@ -98,6 +103,9 @@ func _kind(place: String, shape: Dictionary, world: Vector2, patches: FastNoiseL
 	for box: Rect2 in shape["dirt"]:
 		if box.has_point(world):
 			return WorldShapes.DIRT
+	for box: Rect2 in shape.get("lawn", []):
+		if box.has_point(world):
+			return WorldShapes.GRASS
 	var patch: float = patches.get_noise_2d(world.x, world.y)
 	if bool(shape["sandy"]):
 		return WorldShapes.GRASS if patch > 0.2 else WorldShapes.SAND

@@ -20,6 +20,9 @@ const BUTTON_SIZE: Vector2 = Vector2(68, 26)
 var _page: Control
 var _scroll: ScrollContainer
 var _rows: Array[Dictionary] = []
+## The rows on screen now, top to bottom.
+var _shown: Array[Dictionary] = []
+var _empty: Label
 var _press: Vector2 = Vector2.ZERO
 var _scroll_at_press: int = 0
 var _holding: bool = false
@@ -83,6 +86,10 @@ func _ready() -> void:
 	var stored_ids: PackedStringArray = Inventory.all_stored_ids()
 	for i: int in stored_ids.size():
 		_add_row(body, stored_ids[i], i)
+	_empty = _label("", Vector2(0, 0), Vector2(content.size.x, ROW_H * 2.0))
+	_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	body.add_child(_empty)
 	_fit_screen()
 	get_viewport().size_changed.connect(_fit_screen)
 
@@ -103,6 +110,8 @@ func _name_labels() -> void:
 	var close: Button = content.get_node("Close") as Button
 	close.text = Locale.t("tab_close")
 	Locale.apply_control(close)
+	_empty.text = Locale.t("nothing_stored")
+	Locale.apply_control(_empty)
 	for row: Dictionary in _rows:
 		if row.has("name"):
 			(row["name"] as Label).text = Locale.item(str(row["item"]))
@@ -144,34 +153,40 @@ func close_panel() -> void:
 	if player != null:
 		player.busy = false
 
+## Each row is one line that the list moves up or hides, so only goods the boy owns are listed.
 func _add_row(body: Control, item_id: String, index: int) -> void:
-	var y: float = index * ROW_H
+	var line: Control = Control.new()
+	line.position = Vector2(0, index * ROW_H)
+	line.size = Vector2(body.custom_minimum_size.x, ROW_H)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(line)
 	var slot: TextureRect = TextureRect.new()
 	slot.texture = _icon(item_id)
 	slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slot.position = Vector2(ICON_X, y + (ROW_H - 20.0) * 0.5)
+	slot.position = Vector2(ICON_X, (ROW_H - 20.0) * 0.5)
 	slot.size = Vector2(20, 20)
-	body.add_child(slot)
-	var name: Label = _label(_item_name(item_id), Vector2(NAME_X, y), Vector2(NAME_W, ROW_H))
+	line.add_child(slot)
+	var name: Label = _label(_item_name(item_id), Vector2(NAME_X, 0), Vector2(NAME_W, ROW_H))
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.clip_text = true
-	body.add_child(name)
-	var bag_count: Label = _label("0", Vector2(BAG_X, y), Vector2(BAG_W, ROW_H))
+	line.add_child(name)
+	var bag_count: Label = _label("0", Vector2(BAG_X, 0), Vector2(BAG_W, ROW_H))
 	bag_count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	bag_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.add_child(bag_count)
-	var chest_count: Label = _label("0", Vector2(CHEST_X, y), Vector2(CHEST_W, ROW_H))
+	line.add_child(bag_count)
+	var chest_count: Label = _label("0", Vector2(CHEST_X, 0), Vector2(CHEST_W, ROW_H))
 	chest_count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	chest_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.add_child(chest_count)
-	var store: Control = _action_button("Store 1", Vector2(STORE_X, y + (ROW_H - BUTTON_SIZE.y) * 0.5))
-	body.add_child(store)
-	var take: Control = _action_button("Take 1", Vector2(TAKE_X, y + (ROW_H - BUTTON_SIZE.y) * 0.5))
-	body.add_child(take)
+	line.add_child(chest_count)
+	var store: Control = _action_button("Store 1", Vector2(STORE_X, (ROW_H - BUTTON_SIZE.y) * 0.5))
+	line.add_child(store)
+	var take: Control = _action_button("Take 1", Vector2(TAKE_X, (ROW_H - BUTTON_SIZE.y) * 0.5))
+	line.add_child(take)
 	_rows.append({
 		"item": item_id,
+		"line": line,
 		"bag": bag_count,
 		"chest": chest_count,
 		"store": store,
@@ -204,14 +219,15 @@ func _on_drag(event: InputEvent) -> void:
 
 func _tap_row(local_position: Vector2) -> void:
 	var index: int = int(local_position.y / ROW_H)
-	if index < 0 or index >= _rows.size():
+	if index < 0 or index >= _shown.size():
 		return
-	var row: Dictionary = _rows[index]
+	var row: Dictionary = _shown[index]
 	var store: Control = row["store"]
 	var take: Control = row["take"]
-	if Rect2(store.position, store.size).has_point(local_position):
+	var inside: Vector2 = local_position - (row["line"] as Control).position
+	if Rect2(store.position, store.size).has_point(inside):
 		_move(str(row["item"]), true)
-	elif Rect2(take.position, take.size).has_point(local_position):
+	elif Rect2(take.position, take.size).has_point(inside):
 		_move(str(row["item"]), false)
 
 func _move(item_id: String, into_chest: bool) -> void:
@@ -235,10 +251,17 @@ func _refresh() -> void:
 	var chest: ChestStore = _chest()
 	if bag == null or chest == null:
 		return
+	_shown.clear()
 	for row: Dictionary in _rows:
 		var item_id: String = str(row["item"])
 		var bag_count: int = bag.count_of(item_id)
 		var chest_count: int = chest.count_of(item_id)
+		var line: Control = row["line"]
+		line.visible = bag_count > 0 or chest_count > 0
+		if not line.visible:
+			continue
+		line.position.y = _shown.size() * ROW_H
+		_shown.append(row)
 		var bag_label: Label = row["bag"]
 		var chest_label: Label = row["chest"]
 		bag_label.text = str(bag_count)
@@ -247,6 +270,10 @@ func _refresh() -> void:
 		var take: CanvasItem = row["take"]
 		store.modulate.a = 1.0 if bag_count > 0 else 0.35
 		take.modulate.a = 1.0 if chest_count > 0 else 0.35
+	var list_body: Control = _scroll.get_child(0) as Control
+	list_body.custom_minimum_size.y = ROW_H * maxi(1, _shown.size())
+	_empty.visible = _shown.is_empty()
+
 
 func _action_button(title: String, at: Vector2) -> Control:
 	var button: Panel = Panel.new()

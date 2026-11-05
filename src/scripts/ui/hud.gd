@@ -14,6 +14,8 @@ const ICONS: Array[String] = [
 	"res://assets/tools/Cozy 16-bit pixel pickaxe.png",
 	"",
 ]
+## The toolbar square that shows and changes the seed in hand.
+const SEED_SLOT: int = 5
 const HEART_ICON: String = "res://assets/ui/Terracotta pixel heart icon.png"
 const KHAIR_W: float = 78.0
 
@@ -21,6 +23,10 @@ var _time: Label
 var _gold: Label
 var _note: Label
 var _bag_rows: Array[Dictionary] = []
+## The bag rows on screen now, top to bottom.
+var _bag_shown: Array[Dictionary] = []
+var _bag_body: Control
+var _bag_empty: Label
 var _clock_panel: Control
 var _toolbar: Control
 var _burger: Button
@@ -64,6 +70,12 @@ var _prayer_banner: PanelContainer
 var _prayer_text: Label
 ## The last prayer the banner told about, so each one is told once.
 var _prayer_told: String = ""
+## Small notes at the side for each item picked up: {item, amount, panel, label, left}.
+var _pickups: Array[Dictionary] = []
+const PICKUP_SECONDS: float = 2.6
+const PICKUP_MAX: int = 4
+var _picked_tool: String = "<none>"
+var _seed_count: Label
 
 func _ready() -> void:
 	var rain: ColorRect = ColorRect.new()
@@ -110,6 +122,79 @@ func _fit_screen() -> void:
 	_menu.position = Vector2((view.x - _menu.size.x) * 0.5, (view.y - _menu.size.y) * 0.5 + 18.0)
 	_note.position = Vector2((view.x - _note.size.x) * 0.5, view.y - 40.0)
 	_sale_panel.position = (view - _sale_panel.size) * 0.5
+
+## "+1 Wood" with its picture slides in at the side, and a second pick of the same item adds to it.
+func show_pickup(item: String, amount: int) -> void:
+	for row: Dictionary in _pickups:
+		if str(row["item"]) == item:
+			row["amount"] = int(row["amount"]) + amount
+			row["left"] = PICKUP_SECONDS
+			_pickup_text(row)
+			Juice.press(row["panel"])
+			return
+	var panel: PanelContainer = PanelContainer.new()
+	UiStyle.panel(panel)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var line: HBoxContainer = HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(line)
+	var icon: TextureRect = TextureRect.new()
+	icon.texture = Juice.item_icon(item)
+	icon.custom_minimum_size = Vector2(14, 14)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(icon)
+	var label: Label = _make_label(Vector2.ZERO, UiStyle.DARK)
+	label.add_theme_font_size_override("font_size", 10)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	line.add_child(label)
+	add_child(panel)
+	var row: Dictionary = {"item": item, "amount": amount, "panel": panel, "label": label, "left": PICKUP_SECONDS}
+	_pickup_text(row)
+	_pickups.push_front(row)
+	while _pickups.size() > PICKUP_MAX:
+		(_pickups.pop_back()["panel"] as Node).queue_free()
+	panel.modulate.a = 0.0
+	_place_pickups()
+	panel.position.x -= 30.0
+	var slide: Tween = panel.create_tween()
+	slide.set_parallel(true)
+	slide.tween_property(panel, "position:x", panel.position.x + 30.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	slide.tween_property(panel, "modulate:a", 1.0, 0.15)
+
+func _pickup_text(row: Dictionary) -> void:
+	var label: Label = row["label"]
+	var systems: Node = get_tree().current_scene.get_node("Systems")
+	var total: int = (systems.get_node("Inventory") as Inventory).count_of(str(row["item"]))
+	label.text = "+%d %s  (%d)" % [int(row["amount"]), Locale.item(str(row["item"])), total]
+	Locale.apply_control(label)
+	(row["panel"] as Control).reset_size()
+
+func _place_pickups() -> void:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var y: float = view.y - 62.0
+	for row: Dictionary in _pickups:
+		var panel: Control = row["panel"]
+		panel.reset_size()
+		y -= panel.size.y + 3.0
+		panel.position = Vector2(_side_margin(view) + _toolbar.size.x + 6.0, y)
+
+func _process(delta: float) -> void:
+	var gone: Array[Dictionary] = []
+	for row: Dictionary in _pickups:
+		row["left"] = float(row["left"]) - delta
+		var panel: Control = row["panel"]
+		if float(row["left"]) < 0.4:
+			panel.modulate.a = maxf(0.0, float(row["left"]) / 0.4)
+		if float(row["left"]) <= 0.0:
+			gone.append(row)
+	for row: Dictionary in gone:
+		_pickups.erase(row)
+		(row["panel"] as Node).queue_free()
+	if not gone.is_empty():
+		_place_pickups()
 
 func _side_margin(view: Vector2) -> float:
 	if not OS.has_feature("mobile"):
@@ -200,9 +285,17 @@ func refresh() -> void:
 	else:
 		_note.text = Locale.t("quest_turnip")
 	Locale.apply_control(_note)
+	# Only goods the boy has are listed; a row leaves the bag when its last one is used, sold, or stored.
+	_bag_shown.clear()
 	for row: Dictionary in _bag_rows:
 		var count_label: Label = row["count"]
-		count_label.text = str(inventory.count_of(str(row["item"])))
+		var have: int = inventory.count_of(str(row["item"]))
+		count_label.text = str(have)
+		var line: Control = row["button"]
+		line.visible = have > 0
+		if have > 0:
+			line.position.y = _bag_shown.size() * _bag_row_h
+			_bag_shown.append(row)
 		if row.has("name"):
 			var name_label: Label = row["name"]
 			name_label.text = Locale.item(str(row["item"]))
@@ -210,6 +303,10 @@ func refresh() -> void:
 		var slot: CanvasItem = row["slot"]
 		var chosen: bool = str(row["kind"]) == "seed" and str(row["crop_id"]) == inventory.selected_seed
 		slot.modulate = Color("d9a441") if chosen else Color.WHITE
+	_bag_body.custom_minimum_size.y = _bag_row_h * maxi(1, _bag_shown.size())
+	_bag_empty.visible = _bag_shown.is_empty()
+	_bag_empty.text = Locale.t("bag_empty")
+	Locale.apply_control(_bag_empty)
 	_list.visible = _tab == "bag"
 	_bar.visible = _tab == "bag"
 	_craft.visible = _tab == "bag"
@@ -234,8 +331,15 @@ func refresh() -> void:
 			_journal2.text = "\n".join(lines.slice(half))
 			Locale.apply_control(_journal)
 			Locale.apply_control(_journal2)
+	var tool_now: String = _player().tool
 	for i: int in _slots.size():
-		_slots[i].modulate = Color("d9a441") if _player().tool == TOOLS[i] else Color.WHITE
+		_slots[i].modulate = Color("d9a441") if tool_now == TOOLS[i] and i != SEED_SLOT else Color.WHITE
+	if tool_now != _picked_tool:
+		# The square of a newly chosen tool pops, also when the boy picks the tool himself.
+		if _picked_tool != "<none>" and TOOLS.find(tool_now) >= 0:
+			Juice.press(_slots[TOOLS.find(tool_now)])
+		_picked_tool = tool_now
+	_refresh_seed_slot(inventory)
 	for i: int in _hearts.size():
 		_hearts[i].visible = float(i) < inventory.max_hearts
 		_hearts[i].modulate.a = clampf(inventory.hearts - float(i), 0.3, 1.0)
@@ -359,7 +463,19 @@ func _build_tools() -> void:
 			slot.expand_icon = false
 		else:
 			slot.text = NAMES[i]
-		slot.pressed.connect(_pick_tool.bind(i))
+		if i == SEED_SLOT:
+			# The last square holds the seed that planting uses; a tap picks the next seed in the bag.
+			slot.pressed.connect(_next_seed)
+			_seed_count = _make_label(Vector2(0, squares[i].size.y - 11.0), UiStyle.CREAM)
+			_seed_count.size = Vector2(squares[i].size.x, 10)
+			_seed_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			_seed_count.add_theme_font_size_override("font_size", 8)
+			_seed_count.add_theme_constant_override("outline_size", 3)
+			_seed_count.add_theme_color_override("font_outline_color", UiStyle.DARK)
+			slot.add_child(_seed_count)
+		else:
+			slot.pressed.connect(_pick_tool.bind(i))
+		slot.button_down.connect(Juice.press.bind(slot))
 		bar.add_child(slot)
 		_slots.append(slot)
 
@@ -384,6 +500,7 @@ func _build_burger() -> void:
 	_burger.add_theme_stylebox_override("pressed", empty)
 	_burger.add_theme_stylebox_override("focus", empty)
 	_burger.pressed.connect(_toggle_menu)
+	_burger.button_down.connect(Juice.press.bind(_burger))
 	add_child(_burger)
 
 func _build_menu() -> void:
@@ -417,6 +534,7 @@ func _build_menu() -> void:
 	_world_map.position = Vector2(inner.position.x, 48)
 	_world_map.size = Vector2(inner.size.x, 142)
 	_world_map.visible = false
+	_world_map.place_chosen.connect(_travel_to)
 	page.add_child(_world_map)
 	for tab: Button in _tab_keys:
 		tab.size = Vector2(78, 24)
@@ -588,7 +706,41 @@ func _pick_tool(index: int) -> void:
 	var boy: Player = _player()
 	boy.tool = TOOLS[index]
 	boy.tool_locked = true
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	Juice.tap(get_tree())
 	refresh()
+
+var _shown_seed: String = ""
+
+func _refresh_seed_slot(inventory: Inventory) -> void:
+	var slot: Button = _slots[SEED_SLOT]
+	var crop: Dictionary = CropCatalog.get_crop(inventory.selected_seed)
+	var seed_item: String = str(crop.get("seed_item", "seeds"))
+	if _shown_seed != inventory.selected_seed:
+		_shown_seed = inventory.selected_seed
+		slot.icon = Juice.item_icon(seed_item)
+		slot.text = ""
+	_seed_count.text = str(inventory.count_of(seed_item))
+	slot.modulate = Color.WHITE if inventory.count_of(seed_item) > 0 else Color(1, 1, 1, 0.55)
+
+## Picks the next kind of seed, the ones in the bag first.
+func _next_seed() -> void:
+	var inventory: Inventory = get_tree().current_scene.get_node("Systems/Inventory") as Inventory
+	var ids: PackedStringArray = CropCatalog.ids()
+	var at: int = ids.find(inventory.selected_seed)
+	for step: int in range(1, ids.size() + 1):
+		var crop_id: String = ids[(at + step) % ids.size()]
+		if inventory.count_of(str(CropCatalog.get_crop(crop_id).get("seed_item", ""))) > 0 or step == ids.size():
+			inventory.selected_seed = crop_id
+			break
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	Juice.tap(get_tree())
+	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
+	activities_flash(Locale.item(str(CropCatalog.get_crop(inventory.selected_seed).get("seed_item", ""))))
+	refresh()
+
+func activities_flash(text: String) -> void:
+	(get_tree().current_scene.get_node("Systems/Activities") as Activities).flash(text)
 
 func _toggle_menu() -> void:
 	_menu.visible = not _menu.visible
@@ -600,6 +752,17 @@ func _toggle_menu() -> void:
 	if clock != null:
 		clock.set_process(not _menu.visible)
 	refresh()
+
+## Fast travel from the map: closes the menu and takes the boy to that place's arrival spot.
+func _travel_to(key: String) -> void:
+	var main: Node = get_tree().current_scene
+	var stead: Stead = main.get_node_or_null("Systems/Stead") as Stead
+	if _menu.visible:
+		_toggle_menu()
+	if stead == null or stead.place_name == key:
+		return
+	var destination: PackedScene = load(stead.scene_for(key)) as PackedScene
+	(main.get_node("Systems/LevelLoader") as LevelLoader).go_to(destination, "PlayerSpawn")
 
 func _show_tab(tab: String) -> void:
 	_tab = tab
@@ -626,6 +789,9 @@ func _journal_text(stead: Stead) -> String:
 	var kindness: Kindness = get_tree().current_scene.get_node_or_null("Systems/Kindness") as Kindness
 	if kindness != null:
 		lines.append(Locale.t("khair_line") % [kindness.points, Kindness.MAX_POINTS])
+	var clock: GameClock = get_tree().current_scene.get_node_or_null("Systems/Clock") as GameClock
+	if clock != null:
+		lines.append(clock.forecast_text())
 	return "\n".join(lines)
 
 func _toggle_language() -> void:
@@ -853,6 +1019,13 @@ func _build_bag_rows(list: Panel) -> void:
 	body.mouse_filter = Control.MOUSE_FILTER_STOP
 	body.gui_input.connect(_on_bag_drag)
 	scroll.add_child(body)
+	_bag_body = body
+	_bag_empty = _make_label(Vector2.ZERO, Color("3f2d27"))
+	_bag_empty.size = Vector2(body.custom_minimum_size.x, row_h * 2.0)
+	_bag_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_bag_empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_bag_empty.add_theme_font_size_override("font_size", 12)
+	body.add_child(_bag_empty)
 	for i: int in specs.size():
 		var spec: Dictionary = specs[i]
 		var button: Button = Button.new()
@@ -895,6 +1068,7 @@ func _build_bag_rows(list: Panel) -> void:
 		count.add_theme_font_size_override("font_size", 12)
 		button.add_child(count)
 		_bag_rows.append({
+			"button": button,
 			"slot": slot,
 			"count": count,
 			"item": str(spec["item"]),
@@ -947,9 +1121,9 @@ func _on_bag_drag(event: InputEvent) -> void:
 
 func _tap_bag_row(local_position: Vector2) -> void:
 	var index: int = int(local_position.y / _bag_row_h)
-	if index < 0 or index >= _bag_rows.size():
+	if index < 0 or index >= _bag_shown.size():
 		return
-	var row: Dictionary = _bag_rows[index]
+	var row: Dictionary = _bag_shown[index]
 	if str(row["kind"]) == "seed":
 		_select_seed(str(row["crop_id"]))
 

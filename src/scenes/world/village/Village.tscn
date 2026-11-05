@@ -102,6 +102,7 @@ person = ExtResource("4_market_stall")
 fit_pixels = 64
 stand_on_feet = true
 block_size = Vector2(56, 16)
+sign_key = "sign_market"
 
 [node name="StallProduce" type="Node2D" parent="."]
 position = Vector2(-90, -108)
@@ -157,6 +158,7 @@ person = ExtResource("9_house_tower")
 fit_pixels = 156
 stand_on_feet = true
 block_size = Vector2(125, 43)
+sign_key = "sign_elder_house"
 
 [node name="House1" type="Node2D" parent="."]
 position = Vector2(-470, 60)
@@ -246,6 +248,7 @@ fit_pixels = 168
 stand_on_feet = true
 role = "mosque"
 block_size = Vector2(140, 40)
+sign_key = "sign_mosque"
 
 [node name="Shop" type="Node2D" parent="."]
 position = Vector2(-170, -176)
@@ -254,6 +257,7 @@ person = ExtResource("14_shop")
 fit_pixels = 120
 stand_on_feet = true
 block_size = Vector2(103, 36)
+sign_key = "sign_merchant_house"
 
 [node name="Watchtower" type="Node2D" parent="."]
 position = Vector2(-620, -180)
@@ -452,6 +456,7 @@ script = ExtResource("3_spot_mark")
 person = ExtResource("24_table")
 stand_on_feet = true
 block_size = Vector2(24, 8)
+sign_key = "sign_workyard"
 
 [node name="Palm0" type="Node2D" parent="."]
 position = Vector2(-500, -130)
@@ -602,7 +607,7 @@ role = "merchant"
 
 [node name="Route" type="Node" parent="Merchant"]
 script = ExtResource("27_npc_route")
-spots = PackedVector2Array(10, -60, 170, -30, 10, -60, 230, -170)
+spots = PackedVector2Array(10, -60, 170, -30, 10, -60, -150, -150)
 hours = PackedFloat32Array(6, 12, 14, 20)
 
 [node name="Carpenter" type="Node2D" parent="."]

@@ -35,6 +35,8 @@ static func button(target: Button) -> void:
 	target.add_theme_color_override("font_hover_color", DARK)
 	target.add_theme_color_override("font_focus_color", DARK)
 	target.add_theme_color_override("font_pressed_color", CREAM)
+	if not target.button_down.is_connected(Juice.press):
+		target.button_down.connect(Juice.press.bind(target))
 
 static var _glow: Texture2D
 

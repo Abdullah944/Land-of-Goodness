@@ -5,16 +5,17 @@ class_name FarmField
 extends Node
 
 const DIRT_TILE: Vector2i = Vector2i(2, 4)
-const BED_TILE: Vector2i = Vector2i(1, 1)
-const SOIL_BED: Texture2D = preload("res://assets/farming/soil_bed.png")
 const SOIL_TILLED: Texture2D = preload("res://assets/farming/soil_tilled.png")
 const SOIL_WET: Texture2D = preload("res://assets/farming/soil_wet.png")
 
-## The fenced field beside the house. It starts here and grows right and down with each larger-field project.
-@export var farm_origin: Vector2i = Vector2i(-28, -1)
-@export var farm_size: Vector2i = Vector2i(12, 8)
-const LARGER_SIZE: Vector2i = Vector2i(16, 10)
-const LARGEST_SIZE: Vector2i = Vector2i(20, 12)
+## The fenced farm land below the house. The boy hoes any square inside it, so he lays out his own beds and paths.
+## It starts here and grows right and down with each larger-field project.
+@export var farm_origin: Vector2i = Vector2i(-29, -9)
+@export var farm_size: Vector2i = Vector2i(24, 14)
+const LARGER_SIZE: Vector2i = Vector2i(32, 18)
+const LARGEST_SIZE: Vector2i = Vector2i(40, 22)
+## The gate in the top fence, counted in fence rails from the left. It faces the house door.
+const GATE_RAIL: int = 2
 const FIELD_SOIL: Script = preload("res://src/scripts/farm/field_soil.gd")
 const FENCE_RAIL: String = "res://assets/props/fence/rail.png"
 const FENCE_POST: String = "res://assets/props/fence/post.png"
@@ -22,6 +23,8 @@ const FENCE_SIDE: String = "res://assets/props/fence/side.png"
 const FENCE_GATE: String = "res://assets/props/fence/gate.png"
 
 var plots: Dictionary = {}
+## The plant picture on each planted square, by square key, so one swing redraws only its own squares.
+var _sprouts: Dictionary = {}
 
 func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 	var activities: Activities = _activities()
@@ -41,18 +44,59 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 		watered_now = true
 	elif not bool(plot["tilled"]):
 		plot["tilled"] = true
+		_maybe_find(dirt, cell)
 	elif int(plot["stage"]) < 0:
 		_plant(plot)
 	elif _is_ready(plot):
-		_harvest(plot)
+		_harvest(plot, dirt.to_global(dirt.map_to_local(cell)))
 	elif not bool(plot["watered"]):
 		_water(plot)
 		watered_now = true
 	_store(cell, plot)
+	var changed: Array[Vector2i] = [cell]
 	if watered_now:
-		_spread_water(cell)
-	apply()
+		changed.append_array(_spread_water(cell))
+	_refresh_cells(changed)
+	_bounce(dirt, cell)
 	_save()
+
+## The pickaxe turns a tilled square with nothing planted back into grass, so a bed can be moved.
+func clear_soil(dirt: TileMapLayer, cell: Vector2i) -> bool:
+	if not _is_tilled(cell) or int(plots[_key(cell)]["stage"]) >= 0:
+		return false
+	plots.erase(_key(cell))
+	_refresh_cells([cell])
+	Juice.burst(dirt, dirt.map_to_local(cell), Juice.DUST_BROWN, 10, 34.0, 0.4, 2.2)
+	if _activities() != null:
+		_activities().note = Locale.t("soil_cleared")
+	_save()
+	return true
+
+## Fresh soil sometimes hides a few seeds that grow this season.
+const FIND_CHANCE: float = 0.05
+
+func _maybe_find(dirt: TileMapLayer, cell: Vector2i) -> void:
+	if randf() >= FIND_CHANCE or _inventory() == null or _activities() == null:
+		return
+	var seed_item: String = "seeds"
+	for crop_id: String in CropCatalog.ids():
+		var crop: Dictionary = CropCatalog.get_crop(crop_id)
+		if (crop.get("seasons", []) as Array).has(_season()):
+			seed_item = str(crop.get("seed_item", "seeds"))
+			break
+	_inventory().add_item(seed_item, 2)
+	_activities().pop_item(seed_item, 2, dirt.to_global(dirt.map_to_local(cell)))
+	_activities().flash(Locale.t("found_seeds"))
+
+## The plant on a square that was just worked gives a little bounce.
+func _bounce(dirt: TileMapLayer, cell: Vector2i) -> void:
+	var crops: Node = dirt.get_node_or_null("Crops")
+	if crops == null:
+		return
+	var middle: Vector2 = dirt.map_to_local(cell)
+	for child: Node in crops.get_children():
+		if child is Sprite2D and absf((child as Sprite2D).position.x - middle.x) < 1.0 and absf((child as Sprite2D).position.y - middle.y) < 12.0:
+			Juice.boing(child as Sprite2D)
 
 func advance_day(season: String, raining: bool) -> void:
 	for key: String in plots.keys():
@@ -87,24 +131,15 @@ func apply() -> void:
 	for cell: Vector2i in used:
 		if not _keeps_cell(cell):
 			dirt.erase_cell(cell)
-	for cell: Vector2i in _farm_cells():
-		if not _is_tilled(cell):
-			dirt.set_cell(cell, 0, BED_TILE)
 	var crops: Node2D = Node2D.new()
 	crops.name = "Crops"
 	dirt.add_child(crops)
 	_add_fence(dirt)
 	var soil: Node2D = FIELD_SOIL.new() as Node2D
 	soil.name = "Soil"
-	for cell: Vector2i in _farm_cells():
-		if not _is_tilled(cell):
-			soil.squares.append([dirt.map_to_local(cell), SOIL_BED])
-	for key: String in plots.keys():
-		var plot: Dictionary = plots[key]
-		var cell: Vector2i = _cell_from_key(key)
-		if bool(plot["tilled"]):
-			soil.squares.append([dirt.map_to_local(cell), SOIL_WET if bool(plot["watered"]) else SOIL_TILLED])
 	crops.add_child(soil)
+	_lay_soil(soil, dirt)
+	_sprouts.clear()
 	for key: String in plots.keys():
 		var plot: Dictionary = plots[key]
 		var cell: Vector2i = _cell_from_key(key)
@@ -112,7 +147,42 @@ func apply() -> void:
 			dirt.set_cell(cell, 0, DIRT_TILE)
 		var stage: int = int(plot["stage"])
 		if stage >= 0:
-			crops.add_child(_sprout(dirt, cell, plot))
+			var sprout: Sprite2D = _sprout(dirt, cell, plot)
+			crops.add_child(sprout)
+			_sprouts[key] = sprout
+
+## Redraws only the given squares: their soil, their tile, and their plant. The whole field is built by apply.
+func _refresh_cells(cells: Array[Vector2i]) -> void:
+	var dirt: TileMapLayer = _dirt()
+	var crops: Node = dirt.get_node_or_null("Crops") if dirt != null else null
+	if crops == null or crops.get_node_or_null("Soil") == null:
+		apply()
+		return
+	for cell: Vector2i in cells:
+		var key: String = _key(cell)
+		var old: Variant = _sprouts.get(key)
+		if old != null and is_instance_valid(old):
+			(old as Node).free()
+		_sprouts.erase(key)
+		if _is_tilled(cell):
+			dirt.set_cell(cell, 0, DIRT_TILE)
+		else:
+			dirt.erase_cell(cell)
+		if plots.has(key) and int(plots[key]["stage"]) >= 0:
+			var sprout: Sprite2D = _sprout(dirt, cell, plots[key])
+			crops.add_child(sprout)
+			_sprouts[key] = sprout
+	_lay_soil(crops.get_node("Soil") as Node2D, dirt)
+
+## The soil layer draws every tilled square in one pass, wet or dry.
+func _lay_soil(soil: Node2D, dirt: TileMapLayer) -> void:
+	var squares: Array = []
+	for key: String in plots.keys():
+		var plot: Dictionary = plots[key]
+		if bool(plot["tilled"]):
+			squares.append([dirt.map_to_local(_cell_from_key(key)), SOIL_WET if bool(plot["watered"]) else SOIL_TILLED])
+	soil.set("squares", squares)
+	soil.queue_redraw()
 
 func export_plots() -> Array:
 	var rows: Array = []
@@ -194,10 +264,12 @@ func _plant(plot: Dictionary) -> void:
 	if activities != null and not seasons.has(_season()):
 		activities.note = Locale.t("waits_season") % Locale.item(str(crop.get("harvest_item", "")))
 
-func _spread_water(cell: Vector2i) -> void:
+## Waters the squares around one with the better cans, and returns the squares it watered.
+func _spread_water(cell: Vector2i) -> Array[Vector2i]:
+	var watered: Array[Vector2i] = []
 	var stead: Node = get_parent().get_node_or_null("Stead")
 	if stead == null or int(stead.get("tool_level")) < 1:
-		return
+		return watered
 	var around: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]
 	if int(stead.get("tool_level")) >= 2:
 		around.append_array([Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)])
@@ -208,19 +280,23 @@ func _spread_water(cell: Vector2i) -> void:
 		var plot: Dictionary = plots[_key(next)]
 		_water(plot)
 		plots[_key(next)] = plot
+		watered.append(next)
+	return watered
 
 func _water(plot: Dictionary) -> void:
 	var stage: int = int(plot["stage"])
 	if stage >= 0 and stage < _mature_stage(plot):
 		plot["watered"] = true
 
-func _harvest(plot: Dictionary) -> void:
+func _harvest(plot: Dictionary, at: Vector2 = Vector2.INF) -> void:
 	var crop: Dictionary = _crop_of(plot)
 	var inventory: Inventory = _inventory()
 	if inventory != null:
 		_give_harvest(inventory, crop)
 	if _activities() != null:
-		_activities().pop_item(str(crop.get("harvest_item", "")), int(crop.get("harvest_amount", 1)))
+		_activities().pop_item(str(crop.get("harvest_item", "")), int(crop.get("harvest_amount", 1)), at)
+		if at != Vector2.INF:
+			Juice.burst(_activities().place_node(), at, Juice.LEAF_GREEN, 10, 40.0, 0.5)
 	var activities: Activities = _activities()
 	if activities != null:
 		activities.flash(_picked_line(crop))
@@ -263,16 +339,7 @@ func _in_farm(cell: Vector2i) -> bool:
 		and cell.x < farm_origin.x + farm_size.x \
 		and cell.y < farm_origin.y + farm_size.y
 
-func _farm_cells() -> Array[Vector2i]:
-	var cells: Array[Vector2i] = []
-	for y: int in farm_size.y:
-		for x: int in farm_size.x:
-			cells.append(farm_origin + Vector2i(x, y))
-	return cells
-
 func _keeps_cell(cell: Vector2i) -> bool:
-	if _in_farm(cell):
-		return true
 	return _is_tilled(cell)
 
 func _is_tilled(cell: Vector2i) -> bool:
@@ -290,7 +357,7 @@ func _crop_of(plot: Dictionary) -> Dictionary:
 		crop_id = CropCatalog.TURNIP
 	return CropCatalog.get_crop(crop_id)
 
-## A wooden fence around the field with a gate on the side that faces the house, so the field is easy to find.
+## A wooden fence around the farm land with a gate on the side that faces the house, so it is clear where hoeing works.
 ## It is built again only when the field changes size.
 func _add_fence(dirt: TileMapLayer) -> void:
 	if not ResourceLoader.exists(FENCE_RAIL):
@@ -311,7 +378,7 @@ func _add_fence(dirt: TileMapLayer) -> void:
 	var rails: int = int(box.size.x / 32.0)
 	for row: float in [box.position.y - 1.0, box.end.y + 5.0]:
 		for i: int in rails:
-			var gate: bool = row < box.position.y and i == rails - 2
+			var gate: bool = row < box.position.y and i == GATE_RAIL
 			var at: Vector2 = Vector2(box.position.x + i * 32.0, row)
 			if gate:
 				crops.add_child(_fence_piece(FENCE_POST, at + Vector2(2, 0)))

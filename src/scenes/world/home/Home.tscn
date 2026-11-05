@@ -574,20 +574,21 @@ tile_set = SubResource("TileSet_t01os")
 tile_set = SubResource("TileSet_rwkni")
 
 [node name="Buildings" type="TileMapLayer" parent="TileMaps" unique_id=1602315031]
-tile_map_data = PackedByteArray("AADx////AAAAAAAAAQA=")
+tile_map_data = PackedByteArray("AADh//L/AAAAAAAAAQA=")
 tile_set = SubResource("TileSet_ubrcs")
 
 [node name="PlayerSpawn" type="Marker2D" parent="." unique_id=778287540]
+position = Vector2(-340, -190)
 
 [node name="HouseDoor" type="Marker2D" parent="." unique_id=1692684332]
-position = Vector2(-136, -36)
+position = Vector2(-392, -244)
 
 [node name="Bounds" type="Node2D" parent="."]
 script = ExtResource("18_bounds")
 area = Rect2(-640, -520, 1280, 1040)
 
 [node name="Neighbor" type="Node2D" parent="."]
-position = Vector2(72, 40)
+position = Vector2(-200, -212)
 script = ExtResource("4_mark")
 person = ExtResource("7_jassim")
 person_scale = 0.029
@@ -601,7 +602,7 @@ position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_jassim")
 
 [node name="FishingSpot" type="Node2D" parent="."]
-position = Vector2(330, -170)
+position = Vector2(380, -150)
 script = ExtResource("4_mark")
 person = ExtResource("20_pond")
 fit_pixels = 130
@@ -609,10 +610,10 @@ block_size = Vector2(92, 56)
 z_index = 1
 
 [node name="CaveDoor" type="Marker2D" parent="."]
-position = Vector2(-380, -170)
+position = Vector2(400, -272)
 
 [node name="CaveEntrance" type="Area2D" parent="."]
-position = Vector2(-380, -240)
+position = Vector2(400, -340)
 script = ExtResource("5_door")
 next_scene = ExtResource("6_cave")
 spawn_name = "PlayerSpawn"
@@ -621,14 +622,14 @@ spawn_name = "PlayerSpawn"
 shape = SubResource("RectangleShape2D_cave")
 
 [node name="CaveMark" type="Node2D" parent="."]
-position = Vector2(-380, -240)
+position = Vector2(400, -340)
 script = ExtResource("4_mark")
 person = ExtResource("10_cave")
 fit_pixels = 96
 z_index = 1
 
 [node name="Tree" type="Node2D" parent="."]
-position = Vector2(90, -110)
+position = Vector2(-20, -250)
 script = ExtResource("4_mark")
 person = ExtResource("11_tree")
 fit_pixels = 84
@@ -637,7 +638,7 @@ group_name = "tree"
 z_index = 1
 
 [node name="Tree2" type="Node2D" parent="."]
-position = Vector2(210, -60)
+position = Vector2(120, -250)
 script = ExtResource("4_mark")
 person = ExtResource("11_tree")
 fit_pixels = 84
@@ -646,7 +647,7 @@ group_name = "tree"
 z_index = 1
 
 [node name="Rock" type="Node2D" parent="."]
-position = Vector2(150, -24)
+position = Vector2(90, -215)
 script = ExtResource("4_mark")
 person = ExtResource("8_rock")
 fit_pixels = 24
@@ -654,7 +655,7 @@ group_name = "rock"
 z_index = 1
 
 [node name="DatePalm" type="Node2D" parent="."]
-position = Vector2(-10, -220)
+position = Vector2(-110, -260)
 script = ExtResource("4_mark")
 person = ExtResource("12_palm")
 stand_on_feet = true
@@ -662,7 +663,7 @@ group_name = "date"
 z_index = 1
 
 [node name="Herb" type="Node2D" parent="."]
-position = Vector2(-40, 170)
+position = Vector2(120, 250)
 script = ExtResource("4_mark")
 person = ExtResource("13_herb")
 stand_on_feet = true
@@ -682,7 +683,7 @@ spawn_name = "PlayerSpawn"
 shape = SubResource("RectangleShape2D_cave")
 
 [node name="Workbench" type="Node2D" parent="."]
-position = Vector2(-16, 48)
+position = Vector2(-290, -236)
 script = ExtResource("4_mark")
 person = ExtResource("14_bench")
 fit_pixels = 44
@@ -691,7 +692,7 @@ z_index = 1
 
 [node name="Coop" type="Node2D" parent="."]
 visible = false
-position = Vector2(120, 230)
+position = Vector2(320, 220)
 script = ExtResource("4_mark")
 person = ExtResource("15_coop")
 stand_on_feet = true
@@ -701,7 +702,7 @@ z_index = 1
 
 [node name="Barn" type="Node2D" parent="."]
 visible = false
-position = Vector2(320, 260)
+position = Vector2(460, 330)
 script = ExtResource("4_mark")
 person = ExtResource("16_barn")
 stand_on_feet = true
@@ -711,6 +712,8 @@ z_index = 1
 
 [node name="Pen" type="Node2D" parent="."]
 script = ExtResource("17_pen")
+coop_area = Rect2(280, 236, 80, 40)
+barn_area = Rect2(390, 348, 110, 44)
 
 [node name="ForestReturn" type="Marker2D" parent="."]
 position = Vector2(0, 450)

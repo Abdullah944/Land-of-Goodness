@@ -133,10 +133,11 @@ func _clear_debris(group_name: String, dirt: TileMapLayer, cell: Vector2i, item:
 		_inventory().add_item(item, 1)
 		_stead().flags["cleared_" + str(mark.name)] = true
 		mark.remove_from_group(group_name)
+		Juice.break_away(mark as Node2D, "rock" if group_name == "debris_stone" else "")
+		pop_item(item, 1, (mark as Node2D).global_position)
 		mark.queue_free()
 		note = _gather_note(item)
 		_chime("gather")
-		pop_item(item)
 		_save()
 		_refresh()
 		return true
@@ -154,54 +155,24 @@ func _pond_at(place: Node, dirt: TileMapLayer, cell: Vector2i) -> Node2D:
 func _is_debris(mark: Node) -> bool:
 	return str(mark.get("group_name")).begins_with("debris")
 
-## A small "+1" rises over the boy's head and fades.
-func pop_item(item: String, amount: int = 1) -> void:
+## The item jumps out where it was found and flies into the boy, and a small note slides in at the side.
+func pop_item(item: String, amount: int = 1, from: Vector2 = Vector2.INF) -> void:
 	var scene: Node = get_tree().current_scene
 	var player: Node2D = scene.find_child("Player", true, false) as Node2D if scene != null else null
 	var place: Node = _place()
 	if player == null or place == null:
 		return
-	var label: Label = Label.new()
-	label.text = "+%d %s" % [amount, Locale.item(item)]
-	label.z_index = 3000
-	label.position = player.global_position + Vector2(-30, -48)
-	label.size = Vector2(60, 14)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 9)
-	label.add_theme_color_override("font_color", UiStyle.CREAM)
-	label.add_theme_color_override("font_outline_color", UiStyle.DARK)
-	label.add_theme_constant_override("outline_size", 3)
-	Locale.apply_control(label)
-	place.add_child(label)
-	var rise: Tween = label.create_tween()
-	rise.set_parallel(true)
-	rise.tween_property(label, "position:y", label.position.y - 16.0, 0.9)
-	rise.tween_property(label, "modulate:a", 0.0, 0.9).set_delay(0.35)
-	rise.chain().tween_callback(label.queue_free)
+	var start: Vector2 = player.global_position + Vector2(0, -20) if from == Vector2.INF else from
+	for i: int in mini(amount, 3):
+		Juice.fly_item(place, player, item, start + Vector2(i * 4.0, 0))
+	Juice.tap(get_tree())
+	var hud: Node = scene.get_node_or_null("UI/HUD")
+	if hud != null and hud.has_method("show_pickup"):
+		hud.call("show_pickup", item, amount)
 
 ## A quick puff of dust, water, or chips where a tool lands.
 func burst(at: Vector2, color: Color) -> void:
-	var place: Node = _place()
-	if place == null:
-		return
-	var puff: CPUParticles2D = CPUParticles2D.new()
-	puff.position = at
-	puff.z_index = 3000
-	puff.amount = 8
-	puff.one_shot = true
-	puff.explosiveness = 1.0
-	puff.lifetime = 0.4
-	puff.spread = 180.0
-	puff.direction = Vector2.UP
-	puff.gravity = Vector2(0, 70)
-	puff.initial_velocity_min = 14.0
-	puff.initial_velocity_max = 34.0
-	puff.scale_amount_min = 1.0
-	puff.scale_amount_max = 2.0
-	puff.color = color
-	puff.finished.connect(puff.queue_free)
-	place.add_child(puff)
-	puff.emitting = true
+	Juice.burst(_place(), at, color)
 
 func on_new_day() -> void:
 	fished_today = false
@@ -359,6 +330,7 @@ func _talk() -> void:
 		dialogue.picked.connect(_on_shop_choice)
 	_shop = "menu"
 	_gift_to = "jassim"
+	_greet("jassim")
 	dialogue.set_speaker("jassim")
 	var greeting: String = _line("greeting")
 	if not quest_done:
@@ -372,6 +344,7 @@ func talk_role(role: String) -> void:
 		return
 	_listen(dialogue)
 	_gift_to = role
+	_greet(role)
 	dialogue.set_speaker(role)
 	match role:
 		"mosque":
@@ -492,7 +465,10 @@ func _give_gift(choice: String) -> void:
 		note = Locale.t("gift_thanks") % Kindness.GIFT_POINTS
 		var friends: Friendship = _friends()
 		if friends != null:
-			note = "%s %s" % [Locale.t("gift_" + friends.gift(_gift_to, choice)), note]
+			var taste: String = friends.gift(_gift_to, choice)
+			note = "%s %s" % [Locale.t("gift_" + taste), note]
+			_emote(_gift_to, "sad" if taste == "dislike" else "heart")
+			Juice.tap(get_tree(), Juice.TAP_FIRM)
 		_chime("gather")
 		_save()
 	else:
@@ -517,6 +493,26 @@ func _give_fund() -> void:
 	_dialogue().open_lines(PackedStringArray([note]))
 	_refresh()
 
+## The villager being talked to, standing in the current place.
+func _person(person: String) -> Node:
+	var place: Node = _place()
+	if place == null:
+		return null
+	for mark: Node in place.get_children():
+		if mark.has_method("person_id") and bool(mark.call("is_villager")) and str(mark.call("person_id")) == person:
+			return mark
+	return null
+
+func _greet(person: String) -> void:
+	var mark: Node = _person(person)
+	if mark != null:
+		mark.call("greet")
+
+func _emote(person: String, kind: String) -> void:
+	var mark: Node = _person(person)
+	if mark != null:
+		mark.call("show_emote", kind, 2.5)
+
 func _say(line: String) -> void:
 	_shop = ""
 	note = line
@@ -533,6 +529,8 @@ func _give_help() -> void:
 		_say(Locale.t("request_short") % [int(wish.get("amount", 0)), Locale.item(str(wish.get("item", "")))])
 		return
 	note = Locale.t("request_done") % [pay, VillageWorks.REQUEST_POINTS]
+	_emote(str(wish.get("person", "")), "heart")
+	Juice.tap(get_tree(), Juice.TAP_FIRM)
 	_chime("coin")
 	_save()
 	_dialogue().open_lines(PackedStringArray([note]))
@@ -936,13 +934,27 @@ func _take_mark(group_name: String, dirt: TileMapLayer, cell: Vector2i, item: St
 		var inventory: Inventory = _inventory()
 		inventory.add_item(item, 1)
 		note = _gather_note(item)
-		pop_item(item)
+		Juice.break_away(spot, {"tree": "tree", "rock": "rock", "ore": "rock"}.get(group_name, ""))
+		pop_item(item, 1, spot.global_position + Vector2(0, -8))
+		_lucky_find(group_name, spot.global_position)
 		gathered[key] = _day()
 		_set_mark(spot, false)
 		_save()
 		_refresh()
 		return true
 	return false
+
+## Now and then a rock hides copper, or a felled tree drops a nest with an egg.
+const LUCKY: Dictionary = {"rock": ["copper", 0.1, "found_lucky_copper"], "tree": ["eggs", 0.06, "found_nest"]}
+
+func _lucky_find(group_name: String, at: Vector2) -> void:
+	if not LUCKY.has(group_name) or randf() >= float(LUCKY[group_name][1]):
+		return
+	var item: String = str(LUCKY[group_name][0])
+	_inventory().add_item(item, 1)
+	pop_item(item, 1, at + Vector2(6, -10))
+	note = Locale.t(str(LUCKY[group_name][2]))
+	_chime("level")
 
 func _gather_note(item: String) -> String:
 	match item:
@@ -998,6 +1010,9 @@ func _matches(place: Node, node_name: String, dirt: TileMapLayer, cell: Vector2i
 	if mark == null:
 		return false
 	return dirt.local_to_map(dirt.to_local(mark.global_position)) == cell
+
+func place_node() -> Node:
+	return _place()
 
 func _place() -> Node:
 	var world: Node = get_tree().current_scene.get_node_or_null("World")

@@ -13,6 +13,8 @@ extends Node2D
 @export var role: String = ""
 ## Solid footprint at the feet. Zero means the boy walks through.
 @export var block_size: Vector2 = Vector2.ZERO
+## A name board hung on a building, so the mosque, the shop and the people's houses can be told apart.
+@export var sign_key: String = ""
 
 const IDLE_SHEETS: Dictionary = {
 	"Neighbor": "res://assets/characters/village/idle/Jassim.png",
@@ -33,6 +35,24 @@ var _sways: bool = false
 var _breathes: bool = false
 var _player: Player
 var _show_talk: bool = false
+## A small bubble over a villager's head: "wish" (a request today), "gift" (birthday), "heart", "sad" or "note".
+var emote: String = ""
+var _emote_left: float = 0.0
+var _emote_pop: float = 1.0
+var _standing_emote: String = ""
+var _emote_check: float = 0.0
+## A little jump when the boy starts to talk.
+var hop: float = 0.0
+## Bushes and trees rustle when the boy brushes past them; this fades from 1 to 0.
+var _rustle: float = 0.0
+var _last_hero: Vector2 = Vector2.INF
+const PEOPLE_ROLES: Array[String] = ["elder", "merchant", "carpenter", "fisherman"]
+## How much of a building's height, from the ground up, is solid wall.
+const BUILDING_SOLID: float = 0.5
+const SIGN_WOOD: Color = Color("8a5a2b")
+const SIGN_EDGE: Color = Color("4a2c17")
+const SIGN_GREEN: Color = Color("2f6b4a")
+const SIGN_FONT: int = 10
 
 func _ready() -> void:
 	if group_name != "":
@@ -128,8 +148,28 @@ func _block_footprint() -> void:
 	shape.size = block_size
 	shape_node.shape = shape
 	shape_node.position = Vector2(0, -block_size.y * 0.5) if stand_on_feet else Vector2.ZERO
+	var walls: Rect2 = _building_walls()
+	if walls.size != Vector2.ZERO:
+		shape.size = walls.size
+		shape_node.position = walls.get_center()
 	body.add_child(shape_node)
 	add_child(body)
+
+## A building is solid across its painted walls, not just a strip at its base, so the boy cannot walk
+## into a house and vanish. The roof's upper part stays open: he can pass behind it and it fades.
+func _building_walls() -> Rect2:
+	if not is_building() or _picture == null:
+		return Rect2()
+	var image: Image = _picture.get_image()
+	if image == null:
+		return Rect2()
+	var used: Rect2i = image.get_used_rect()
+	var scale_by: Vector2 = _sprite_rect().size / Vector2(image.get_size())
+	var left: float = -_sprite_rect().size.x * 0.5 + used.position.x * scale_by.x
+	var width: float = used.size.x * scale_by.x
+	var bottom: float = -_sprite_rect().size.y + used.end.y * scale_by.y
+	var tall: float = maxf(block_size.y, used.size.y * scale_by.y * BUILDING_SOLID)
+	return Rect2(left + width * 0.04, bottom - tall, width * 0.92, tall - 2.0)
 
 func _block_tree() -> void:
 	if group_name != "tree" or _picture == null:
@@ -145,9 +185,13 @@ func _block_tree() -> void:
 	body.add_child(shape_node)
 	add_child(body)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _picture == null:
 		return
+	if is_villager():
+		_tick_emote(delta)
+	if _sways:
+		_check_rustle(delta)
 	z_index = 1 if name == "FishingSpot" or str(name).begins_with("Pond_") else 2000 + int(global_position.y)
 	if not _frames.is_empty():
 		var now: int = int(_clock() * IDLE_FPS) % _frames.size()
@@ -161,7 +205,7 @@ func _process(_delta: float) -> void:
 		if show_talk != _show_talk or show_talk:
 			_show_talk = show_talk
 			queue_redraw()
-	if group_name != "tree":
+	if group_name != "tree" and not is_building():
 		return
 	if _player == null or not is_instance_valid(_player):
 		var scene: Node = get_tree().current_scene
@@ -185,6 +229,116 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			activities.call("_talk")
 		get_viewport().set_input_as_handled()
+
+func _check_rustle(delta: float) -> void:
+	_rustle = maxf(0.0, _rustle - delta * 1.6)
+	var hero: Player = _hero()
+	if hero == null:
+		return
+	var feet: Vector2 = hero.global_position + Vector2(0, 20)
+	var moved: bool = _last_hero != Vector2.INF and _last_hero.distance_to(feet) > 0.2
+	_last_hero = feet
+	if moved and absf(feet.x - global_position.x) < 14.0 and absf(feet.y - global_position.y) < 10.0:
+		_rustle = 1.0
+
+func is_villager() -> bool:
+	return name == "Neighbor" or role in PEOPLE_ROLES
+
+## The name the friendship and request books use for this villager.
+func person_id() -> String:
+	return "jassim" if name == "Neighbor" else role
+
+## Shows a bubble for a while. A villager with a request or a birthday keeps theirs between bubbles.
+func show_emote(kind: String, seconds: float = 2.2) -> void:
+	emote = kind
+	_emote_left = seconds
+	_emote_pop = 0.0
+	queue_redraw()
+
+func greet() -> void:
+	var jump: Tween = create_tween()
+	jump.tween_property(self, "hop", 5.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	jump.tween_property(self, "hop", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	jump.tween_callback(queue_redraw)
+
+func _tick_emote(delta: float) -> void:
+	_emote_check -= delta
+	if _emote_check <= 0.0:
+		_emote_check = 1.0
+		_standing_emote = _standing()
+	if _emote_left > 0.0:
+		_emote_left -= delta
+		if _emote_left <= 0.0:
+			emote = ""
+	var wanted: String = emote if _emote_left > 0.0 else _standing_emote
+	if wanted != emote:
+		emote = wanted
+		_emote_pop = 0.0
+	if emote != "" and _emote_pop < 1.0:
+		_emote_pop = minf(1.0, _emote_pop + delta * 6.0)
+	if emote != "" or hop > 0.0:
+		queue_redraw()
+
+func _standing() -> String:
+	var scene: Node = get_tree().current_scene
+	if scene == null:
+		return ""
+	var friends: Node = scene.get_node_or_null("Systems/Friendship")
+	if friends != null and bool(friends.call("is_birthday", person_id())):
+		return "gift"
+	var works: Node = scene.get_node_or_null("Systems/VillageWorks")
+	if works != null and bool(works.call("can_help", person_id())):
+		return "wish"
+	return ""
+
+## The bubble pops up a little bigger, then settles.
+func _draw_emote(head: Vector2) -> void:
+	if emote == "":
+		return
+	var grow: float = 1.0 + sin(_emote_pop * PI) * 0.35 if _emote_pop < 1.0 else 1.0
+	var size: float = _emote_pop * grow
+	var bounce: float = sin(_clock() * 3.0) * 1.2
+	draw_set_transform(head + Vector2(0, -12.0 + bounce), 0.0, Vector2(size, size))
+	draw_circle(Vector2.ZERO, 7.5, UiStyle.CREAM)
+	draw_arc(Vector2.ZERO, 7.5, 0.0, TAU, 20, UiStyle.BROWN, 1.0)
+	draw_colored_polygon(PackedVector2Array([Vector2(-3, 6), Vector2(3, 6), Vector2(0, 11)]), UiStyle.CREAM)
+	match emote:
+		"wish":
+			draw_rect(Rect2(-1.2, -5.0, 2.4, 6.0), UiStyle.GOLD)
+			draw_circle(Vector2(0, 3.2), 1.3, UiStyle.GOLD)
+		"heart":
+			var red: Color = Color("d2453c")
+			draw_circle(Vector2(-2.0, -1.5), 2.4, red)
+			draw_circle(Vector2(2.0, -1.5), 2.4, red)
+			draw_colored_polygon(PackedVector2Array([Vector2(-4.3, -0.6), Vector2(4.3, -0.6), Vector2(0, 4.2)]), red)
+		"gift":
+			draw_rect(Rect2(-4.0, -2.5, 8.0, 6.0), Color("c4553f"))
+			draw_rect(Rect2(-0.8, -2.5, 1.6, 6.0), UiStyle.GOLD)
+			draw_rect(Rect2(-4.5, -4.0, 9.0, 2.0), Color("d76a52"))
+			draw_circle(Vector2(-1.6, -4.6), 1.2, UiStyle.GOLD)
+			draw_circle(Vector2(1.6, -4.6), 1.2, UiStyle.GOLD)
+		"sad":
+			for x: float in [-2.5, 2.5]:
+				draw_circle(Vector2(x, -1.5), 0.9, UiStyle.DARK)
+			draw_arc(Vector2(0, 3.5), 2.5, PI * 1.15, PI * 1.85, 8, UiStyle.DARK, 1.0)
+		_:
+			for x: float in [-3.0, 0.0, 3.0]:
+				draw_circle(Vector2(x, 0.0), 1.0, UiStyle.DARK)
+	draw_set_transform(Vector2.ZERO)
+
+## A loose copy of this picture with its feet at the copy's origin, so it can tip over or break away.
+func picture_copy() -> Sprite2D:
+	if _picture == null:
+		return null
+	var copy: Sprite2D = Sprite2D.new()
+	copy.texture = _frames[_frame] if not _frames.is_empty() else _picture
+	var box: Rect2 = _sprite_rect()
+	copy.scale = box.size / copy.texture.get_size()
+	copy.offset = Vector2(0, -copy.texture.get_size().y * 0.5) if stand_on_feet else Vector2.ZERO
+	copy.position = position
+	copy.z_index = z_index
+	copy.modulate = Color(modulate.r, modulate.g, modulate.b, 1.0)
+	return copy
 
 ## Houses, shops and the mosque: big solid pictures that stand on the ground.
 func is_building() -> bool:
@@ -235,23 +389,45 @@ func _draw() -> void:
 		var ground_y: float = origin.y + size.y
 		if not _frames.is_empty() or _breathes or _sways:
 			UiStyle.draw_shadow(self, Vector2(0, ground_y - 1.0), size.x * (0.3 if _sways else 0.42))
+		origin.y -= hop
 		if walking:
 			_draw_steps(shown, Rect2(origin, size))
 			_draw_talk_mark()
+			_draw_emote(Vector2(0, origin.y))
 			return
 		if _sways:
-			var lean: float = sin(_clock() * 1.1) * 0.03
+			var lean: float = sin(_clock() * 1.1) * 0.03 + sin(_clock() * 24.0) * 0.07 * _rustle
 			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(lean, 1), Vector2(-lean * ground_y, 0)))
 		elif _breathes:
 			var grow: float = 1.0 + sin(_clock() * 1.8) * 0.018
 			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(0, grow), Vector2(0, ground_y * (1.0 - grow))))
 		draw_texture_rect(shown, Rect2(origin + Vector2(0, -bob), size), false)
 		draw_set_transform(Vector2.ZERO)
+		_draw_name_board(origin, size)
 		_draw_talk_mark()
+		_draw_emote(Vector2(0, origin.y - bob))
 		return
 	draw_rect(Rect2(-8, -8, 16, 16), mark_color)
 	if title != "":
 		draw_string(ThemeDB.fallback_font, Vector2(-16, -12), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("3f2d27"))
+
+## The board hangs over the door, at the top of the solid wall; a small piece hangs over its top.
+func _draw_name_board(origin: Vector2, size: Vector2) -> void:
+	if sign_key == "":
+		return
+	var title: String = Locale.t(sign_key)
+	var font: Font = Locale.font() if Locale.font() != null else ThemeDB.fallback_font
+	var text: Vector2 = font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, SIGN_FONT)
+	var walls: Rect2 = _building_walls()
+	var top: float = walls.position.y + 2.0 if walls.size != Vector2.ZERO else origin.y - 4.0
+	var box: Rect2 = Rect2(Vector2(-text.x * 0.5 - 6.0, top - text.y - 2.0), Vector2(text.x + 12.0, text.y + 4.0))
+	var holy: bool = role == "mosque"
+	draw_rect(Rect2(box.position + Vector2(1, 2), box.size), Color(0, 0, 0, 0.25))
+	draw_rect(box, SIGN_GREEN if holy else SIGN_WOOD)
+	draw_rect(box, SIGN_EDGE, false, 1.0)
+	var at: Vector2 = Vector2(-text.x * 0.5, box.get_center().y + font.get_ascent(SIGN_FONT) * 0.35)
+	draw_string_outline(font, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, SIGN_FONT, 2, SIGN_EDGE)
+	draw_string(font, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, SIGN_FONT, UiStyle.CREAM)
 
 ## A walking step: the body bobs twice a stride while the left and right feet lift in turn under the robe.
 func _draw_steps(shown: Texture2D, box: Rect2) -> void:

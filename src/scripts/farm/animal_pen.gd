@@ -63,7 +63,7 @@ func sync(animals: Array) -> void:
 		var cell: Vector2 = sprite.texture.get_size() / Vector2(2.0, 1.0)
 		sprite.add_child(UiStyle.shadow_node(Vector2(0, cell.y * 0.5 - 2.0), cell.x * 0.8))
 		sprite.z_index = 2000 + int(global_position.y + sprite.position.y)
-		_walkers.append({"sprite": sprite, "area": area, "goal": sprite.position, "wait": 0.5 + 0.3 * i, "clock": 0.0})
+		_walkers.append({"sprite": sprite, "area": area, "goal": sprite.position, "wait": 0.5 + 0.3 * i, "clock": 0.0, "kind": kind, "peck": randf() * 1.5})
 
 func _process(delta: float) -> void:
 	for walker: Dictionary in _walkers:
@@ -73,7 +73,10 @@ func _process(delta: float) -> void:
 		if float(walker["wait"]) > 0.0:
 			walker["wait"] = float(walker["wait"]) - delta
 			sprite.frame = 0
+			_graze(walker, sprite, delta)
 			continue
+		sprite.rotation = 0.0
+		sprite.scale = Vector2.ONE
 		var goal: Vector2 = walker["goal"]
 		var gap: Vector2 = goal - sprite.position
 		if gap.length() < 1.0:
@@ -84,3 +87,23 @@ func _process(delta: float) -> void:
 		sprite.flip_h = gap.x < 0.0
 		sprite.frame = int(float(walker["clock"]) * 4.0) % 2
 		sprite.z_index = 2000 + int(global_position.y + sprite.position.y)
+
+## While standing, a hen pecks at the ground and the others chew, with now and then a small hop.
+func _graze(walker: Dictionary, sprite: Sprite2D, delta: float) -> void:
+	walker["peck"] = float(walker["peck"]) - delta
+	var lean: float = -1.0 if sprite.flip_h else 1.0
+	if str(walker["kind"]) == "chicken":
+		var left: float = float(walker["peck"])
+		# Two quick pecks, then a rest.
+		sprite.rotation = lean * 0.32 * maxf(0.0, sin(left * 18.0)) if left > 0.0 and left < 0.35 else 0.0
+		if left <= 0.0:
+			walker["peck"] = 0.8 + randf() * 1.6
+			if randf() < 0.15:
+				var hop: Tween = sprite.create_tween()
+				hop.tween_property(sprite, "offset:y", -3.0, 0.08)
+				hop.tween_property(sprite, "offset:y", 0.0, 0.1)
+	else:
+		sprite.scale = Vector2(1.0, 1.0 + sin(float(walker["clock"]) * 5.0) * 0.015)
+		if float(walker["peck"]) <= 0.0:
+			walker["peck"] = 2.0 + randf() * 3.0
+			sprite.flip_h = not sprite.flip_h if randf() < 0.3 else sprite.flip_h

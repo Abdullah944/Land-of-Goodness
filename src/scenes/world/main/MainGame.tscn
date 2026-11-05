@@ -22,6 +22,8 @@
 [ext_resource type="Script" path="res://src/scripts/farm/friendship.gd" id="18_friends"]
 [ext_resource type="Script" path="res://src/scripts/farm/festivals.gd" id="19_fairs"]
 [ext_resource type="Script" path="res://src/scripts/ui/fish_game.gd" id="20_fish"]
+[ext_resource type="Script" path="res://src/scripts/farm/letters.gd" id="21_letters"]
+[ext_resource type="Script" path="res://src/scripts/World/world_life.gd" id="22_life"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -35,8 +37,6 @@ script = ExtResource("2_ii484")
 
 [node name="FarmField" type="Node" parent="Systems"]
 script = ExtResource("3_farm")
-farm_origin = Vector2i(-28, -1)
-farm_size = Vector2i(12, 8)
 
 [node name="Inventory" type="Node" parent="Systems"]
 script = ExtResource("4_bag")
@@ -70,6 +70,12 @@ script = ExtResource("18_friends")
 
 [node name="Festivals" type="Node" parent="Systems"]
 script = ExtResource("19_fairs")
+
+[node name="Letters" type="Node" parent="Systems"]
+script = ExtResource("21_letters")
+
+[node name="WorldLife" type="Node" parent="Systems"]
+script = ExtResource("22_life")
 
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true

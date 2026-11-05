@@ -17,18 +17,20 @@ const PLANKS: int = 8
 ## bare: how much noise it takes for a patch of bare dirt to show through the grass (higher is fewer patches).
 ## half: the middle-to-edge size of the clearing. wooded: dark forest around it. sandy: sand in place of grass.
 ## roads: [from, to, half width]. water: [from, to, half width]. lakes: [middle, radius]. planks: bridges and docks.
-## exits: gaps cut through the forest. sea_from: below this height everything is sea.
+## lawn: boxes kept as grass with no bare patches. exits: gaps cut through the forest. sea_from: below this height everything is sea.
 const PLACES: Dictionary = {
 	"Home": {
 		"half": Vector2(620, 500), "wooded": true, "sandy": false, "seed": 12, "bare": 0.42,
 		"roads": [
-			[Vector2(-136, -62), Vector2(-70, -62), 11.0], [Vector2(-70, -62), Vector2(-40, 10), 11.0], [Vector2(-40, 10), Vector2(60, 76), 11.0],
-			[Vector2(60, 76), Vector2(260, 56), 11.0], [Vector2(260, 56), Vector2(720, 40), 11.0], [Vector2(-70, -62), Vector2(-200, -210), 9.0],
-			[Vector2(-200, -210), Vector2(-380, -210), 9.0], [Vector2(60, 76), Vector2(130, 180), 9.0], [Vector2(130, 180), Vector2(250, 200), 9.0],
-			[Vector2(60, 76), Vector2(0, 180), 11.0], [Vector2(0, 180), Vector2(0, 620), 11.0],
+			[Vector2(-392, -262), Vector2(-392, -150), 11.0], [Vector2(-392, -170), Vector2(220, -170), 11.0],
+			[Vector2(220, -170), Vector2(260, 40), 11.0], [Vector2(260, 40), Vector2(720, 40), 11.0],
+			[Vector2(220, -170), Vector2(400, -268), 9.0], [Vector2(260, 40), Vector2(240, 240), 10.0],
+			[Vector2(240, 240), Vector2(0, 330), 11.0], [Vector2(0, 330), Vector2(0, 620), 11.0],
 		],
 		"water": [], "lakes": [], "planks": [],
 		"dirt": [],
+		# The farm land is plain grass, so only the squares the boy hoes look like soil.
+		"lawn": [Rect2(-470, -150, 652, 366)],
 		"exits": [Rect2(380, 6, 400, 68), Rect2(-34, 320, 68, 320)],
 	},
 	"Road": {

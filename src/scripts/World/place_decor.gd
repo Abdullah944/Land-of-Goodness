@@ -38,23 +38,25 @@ const OBJECT_CUTS: Dictionary = {
 	TUFT: [Vector2i(1, 1), 15], FENCE: [Vector2i(2, 1), 26], HAY: [Vector2i(1, 2), 28], POT: [Vector2i(0, 3), 17],
 }
 
-## The fenced crop field next to the house at its largest. Nothing else grows or lies inside it.
-const FIELD_ROOM: Rect2 = Rect2(-470, -40, 364, 240)
+## The fenced farm land below the house at its largest. Nothing else grows or lies inside it.
+const FIELD_ROOM: Rect2 = Rect2(-484, -164, 680, 392)
 
 const LAYOUTS: Dictionary = {
 	"Home": {
 		"seed": 41,
 		"count": 300,
 		"picks": [TUFT, TUFT, TUFT, TUFT, TUFT, TUFT, YELLOW, PINK, WEEDS, STONES],
+		# The farm land, the house corner, the bench and neighbor, the cave and quarry corner, the ponds,
+		# the coop and barn, the wood lot, the herb patch, and the trees on the north lawn.
 		"avoid": [
-			FIELD_ROOM, Rect2(-230, -200, 190, 150), Rect2(-450, 260, 190, 150), Rect2(-220, -220, 170, 150), Rect2(-430, -300, 100, 90), Rect2(260, -230, 140, 110),
-			Rect2(240, 110, 160, 160), Rect2(68, 130, 104, 110), Rect2(50, -10, 46, 56), Rect2(-40, 20, 50, 40),
-			Rect2(50, -190, 80, 90), Rect2(170, -140, 80, 90), Rect2(-446, 66, 212, 210), Rect2(84, -296, 132, 132), Rect2(364, 192, 112, 108),
+			FIELD_ROOM, Rect2(-520, -460, 260, 260), Rect2(-330, -280, 180, 90), Rect2(220, -470, 340, 270), Rect2(300, -210, 170, 120),
+			Rect2(-450, 260, 190, 150), Rect2(250, 130, 150, 160), Rect2(370, 190, 190, 210), Rect2(-230, 220, 200, 100),
+			Rect2(270, -100, 110, 240), Rect2(-140, -300, 300, 110),
 		],
 		"fixed": [
-			[STUMP, Vector2(-30, -180)], [HAY, Vector2(236, 262)],
-			[HAY, Vector2(30, 228)], [POT, Vector2(-54, -90)], [STUMP, Vector2(420, -60)],
-			[LOG, Vector2(-220, -300)], [LOG, Vector2(430, 330)], [LOG, Vector2(-480, -60)], [LOG, Vector2(300, -380)], [LOG, Vector2(-120, 380)],
+			[STUMP, Vector2(-160, -215)], [HAY, Vector2(380, 270)],
+			[HAY, Vector2(212, 268)], [POT, Vector2(-318, -262)], [STUMP, Vector2(540, -60)],
+			[LOG, Vector2(-220, -300)], [LOG, Vector2(530, 250)], [LOG, Vector2(-540, -120)], [LOG, Vector2(200, -400)], [LOG, Vector2(-120, 380)],
 		],
 	},
 	"Road": {
@@ -104,13 +106,13 @@ const LAYOUTS: Dictionary = {
 
 ## Things to clear from the farm once. [picture, group, spot]
 const DEBRIS: Array = [
-	[TWIGS, "debris_wood", Vector2(-51, -51)], [TWIGS, "debris_wood", Vector2(17, -163)], [TWIGS, "debris_wood", Vector2(122, -176)],
-	[TWIGS, "debris_wood", Vector2(-360, -10)], [TWIGS, "debris_wood", Vector2(-377, 122)], [TWIGS, "debris_wood", Vector2(292, -102)],
-	[TWIGS, "debris_wood", Vector2(363, -30)],
-	[STONES, "debris_stone", Vector2(-105, -173)], [STONES, "debris_stone", Vector2(-346, -190)], [STONES, "debris_stone", Vector2(57, -30)],
-	[STONES, "debris_stone", Vector2(-176, 156)], [STONES, "debris_stone", Vector2(-323, 190)], [STONES, "debris_stone", Vector2(394, 37)],
-	[WEEDS, "debris_weed", Vector2(-68, -122)], [WEEDS, "debris_weed", Vector2(-360, 54)], [WEEDS, "debris_weed", Vector2(241, -173)],
-	[WEEDS, "debris_weed", Vector2(0, 176)], [WEEDS, "debris_weed", Vector2(-255, 207)],
+	[TWIGS, "debris_wood", Vector2(-150, -240)], [TWIGS, "debris_wood", Vector2(30, -270)], [TWIGS, "debris_wood", Vector2(150, -215)],
+	[TWIGS, "debris_wood", Vector2(-530, 250)], [TWIGS, "debris_wood", Vector2(-250, 420)], [TWIGS, "debris_wood", Vector2(540, 180)],
+	[TWIGS, "debris_wood", Vector2(420, -60)],
+	[STONES, "debris_stone", Vector2(150, -280)], [STONES, "debris_stone", Vector2(470, -200)], [STONES, "debris_stone", Vector2(60, 250)],
+	[STONES, "debris_stone", Vector2(-176, 380)], [STONES, "debris_stone", Vector2(300, 420)], [STONES, "debris_stone", Vector2(380, 100)],
+	[WEEDS, "debris_weed", Vector2(-240, -290)], [WEEDS, "debris_weed", Vector2(-530, -200)], [WEEDS, "debris_weed", Vector2(520, -190)],
+	[WEEDS, "debris_weed", Vector2(150, 420)], [WEEDS, "debris_weed", Vector2(-555, 0)],
 ]
 const TREE_PICTURE: String = "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png"
 const PLANT: String = "res://assets/nature/plants/%s.png"
@@ -126,7 +128,7 @@ const BUSHES_GREEN: Array[String] = ["bush", "bush_pink", "bush_white", "bush", 
 const BUSHES_DRY: Array[String] = ["bush_dry", "dune_grass", "outcrop", "bush_dry", "dune_grass"]
 ## Sandstone walls that give the quarry and the shores some height. [place, spots]
 const CLIFFS: Dictionary = {
-	"Home": [Vector2(-560, -330), Vector2(-500, -390), Vector2(-430, -420), Vector2(-360, -440), Vector2(-290, -440), Vector2(-220, -450), Vector2(-540, -250)],
+	"Home": [Vector2(560, -330), Vector2(500, -390), Vector2(430, -420), Vector2(360, -440), Vector2(290, -440), Vector2(220, -450), Vector2(540, -250)],
 	"Forest": [Vector2(-620, 480), Vector2(-560, 530), Vector2(-490, 570), Vector2(-420, 590), Vector2(600, 460), Vector2(540, 520)],
 	"Village": [Vector2(-700, -430), Vector2(-640, -480), Vector2(-570, -500), Vector2(-500, -520), Vector2(690, 470), Vector2(640, 520)],
 	"Harbor": [Vector2(-700, -330), Vector2(-640, -350), Vector2(650, -340), Vector2(700, -300)],
@@ -134,11 +136,11 @@ const CLIFFS: Dictionary = {
 const PALM_PICTURE: String = "res://assets/nature/Date palm.png"
 ## Tree groups inside the farm clearing. They are scenery and cannot be chopped.
 const FARM_TREES: Array[Vector2] = [
-	Vector2(-280, -280), Vector2(-70, 320), Vector2(70, 330), Vector2(200, 320), Vector2(430, 130), Vector2(450, -120),
-	Vector2(420, -40), Vector2(-20, -290), Vector2(60, -300), Vector2(250, -300),
+	Vector2(-200, -340), Vector2(-70, 320), Vector2(90, 380), Vector2(200, 330), Vector2(430, 130), Vector2(500, -120),
+	Vector2(480, -30), Vector2(-40, -330), Vector2(60, -320), Vector2(170, -330),
 ]
-## Palms stand in a row along the field's far side, and one by the house.
-const FARM_PALMS: Array[Vector2] = [Vector2(-500, -40), Vector2(-500, 70), Vector2(-500, 180), Vector2(400, 200), Vector2(-40, -150)]
+## Palms stand in a row along the farm land's left side, and two on the north lawn.
+const FARM_PALMS: Array[Vector2] = [Vector2(-510, -40), Vector2(-510, 70), Vector2(-510, 180), Vector2(560, 120), Vector2(-60, -215)]
 ## Extra ponds, as in a real clearing. [spot, width, solid footprint]
 const FARM_PONDS: Array = [
 	[Vector2(-360, 330), 170, Vector2(144, 120)],
@@ -148,21 +150,25 @@ const ROCK_PICTURE: String = "res://assets/nature/Chunky desert rock sprite.png"
 const COPPER_PICTURE: String = "res://assets/props/ore_copper.png"
 const HERB_PICTURE: String = "res://assets/nature/Wild herb.png"
 ## Each corner of the farm has its own daily job. These come back every morning.
-const QUARRY: Array[Vector2] = [Vector2(-320, -170), Vector2(-280, -240), Vector2(-430, -190)]
-const QUARRY_ORE: Vector2 = Vector2(-340, -290)
+## The house has the north-west corner; the quarry is by the cave in the north-east.
+const QUARRY: Array[Vector2] = [Vector2(300, -290), Vector2(480, -270), Vector2(260, -235)]
+const QUARRY_ORE: Vector2 = Vector2(340, -360)
 const WOODLOT: Array[Vector2] = [Vector2(-200, 280), Vector2(-120, 250), Vector2(-60, 290)]
-const HERB_PATCH: Array[Vector2] = [Vector2(250, -30), Vector2(340, -60), Vector2(280, 100)]
+const HERB_PATCH: Array[Vector2] = [Vector2(300, -60), Vector2(350, -10), Vector2(310, 110)]
 
 const MORE_DEBRIS: int = 30
 const ROOM: String = "res://assets/building/house/room/%s.png"
 const ROOM_AREA: Rect2 = Rect2(-120, 6, 288, 154)
 const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_window", "wall", "wall_shelf", "wall_window"]
 ## Furniture that is always in the house. [picture, spot, solid footprint]
+## The room has corners with one use each: the shelf and pot on the back wall, a sitting rug on the left,
+## the bed on the right, and baskets and a bench along the front wall. The walk from the door stays open.
 const FURNITURE: Array = [
-	["shelf", Vector2(-78, 18), Vector2(52, 8)], ["pot", Vector2(-110, 24), Vector2(22, 8)], ["lamp_table", Vector2(112, 26), Vector2(24, 8)],
-	["plant_vase", Vector2(152, 22), Vector2(20, 8)], ["table", Vector2(-58, 84), Vector2(44, 12)], ["dates_bowl", Vector2(-58, 66), Vector2.ZERO],
-	["cushion_red", Vector2(-92, 94), Vector2.ZERO], ["cushion_green", Vector2(-24, 94), Vector2.ZERO], ["basket", Vector2(-104, 140), Vector2(22, 8)],
-	["jar", Vector2(152, 140), Vector2(16, 8)], ["bench", Vector2(116, 148), Vector2(44, 8)], ["lantern", Vector2(-18, 10), Vector2.ZERO],
+	["pot", Vector2(-104, 30), Vector2(22, 8)], ["shelf", Vector2(-58, 22), Vector2(52, 8)], ["lantern", Vector2(-14, 14), Vector2.ZERO],
+	["lamp_table", Vector2(72, 30), Vector2(24, 8)], ["plant_vase", Vector2(160, 30), Vector2(20, 8)],
+	["table", Vector2(-62, 104), Vector2(44, 12)], ["dates_bowl", Vector2(-62, 86), Vector2.ZERO],
+	["cushion_red", Vector2(-100, 106), Vector2.ZERO], ["cushion_green", Vector2(-24, 106), Vector2.ZERO],
+	["basket", Vector2(-104, 152), Vector2(22, 8)], ["jar", Vector2(-82, 150), Vector2(16, 8)], ["bench", Vector2(128, 152), Vector2(44, 8)],
 ]
 
 static var _cuts: Array[Texture2D] = []
@@ -205,7 +211,7 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 		_add_cliffs(place, place_name)
 	if place.name == "Home":
 		_add_debris(place, cleared)
-		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-50, -66)})
+		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-306, -274)})
 		for i: int in FARM_TREES.size():
 			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": _tree("Home", i), "at": FARM_TREES[i], "block": Vector2(14, 8)})
 		for i: int in FARM_PALMS.size():
@@ -348,7 +354,7 @@ static func _add_debris(place: Node, cleared: Dictionary) -> void:
 		var mark_name: String = "Debris%d" % i
 		if bool(cleared.get("cleared_" + mark_name, false)):
 			continue
-		if FIELD_ROOM.has_point(row[2]):
+		if FIELD_ROOM.has_point(row[2]) or WorldShapes.keep_clear("Home", row[2]):
 			continue
 		PropPiece.add_to(place, {"name": mark_name, "texture": _cuts[int(row[0])], "at": row[2], "group": str(row[1])})
 	var roll: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -387,7 +393,7 @@ static func _dress_room(place: Node) -> void:
 	decor.add_child(_room_edge(Rect2(ROOM_AREA.position.x - 6.0, ROOM_AREA.end.y, 110.0, 6.0), edge))
 	decor.add_child(_room_edge(Rect2(32.0, ROOM_AREA.end.y, ROOM_AREA.end.x - 26.0, 6.0), edge))
 	place.add_child(decor)
-	PropPiece.add_to(place, {"name": "RoomRug", "path": ROOM % "rug", "at": Vector2(10, 104), "flat": true})
+	PropPiece.add_to(place, {"name": "RoomRug", "path": ROOM % "rug", "at": Vector2(-62, 98), "flat": true})
 	PropPiece.add_to(place, {"name": "RoomMat", "path": ROOM % "mat", "at": Vector2(8, 142), "flat": true})
 	for row: Array in FURNITURE:
 		PropPiece.add_to(place, {"name": "Room_" + str(row[0]), "path": ROOM % str(row[0]), "at": row[1], "block": row[2]})

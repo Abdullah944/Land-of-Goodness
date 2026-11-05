@@ -12,6 +12,10 @@ var day: int = 1
 var minute: float = 6.0 * 60.0
 var season: String = "Spring"
 var weather: String = "Clear"
+## Tomorrow's weather is known a day ahead, so the morning can tell it.
+var next_weather: String = "Clear"
+## The low sun turns the light warm before dusk.
+const EVENING_COLOR: Color = Color(1.0, 0.72, 0.48)
 
 func _process(delta: float) -> void:
 	if not held_by_ui():
@@ -46,7 +50,8 @@ func _begin_morning(stayed_up: bool = false) -> void:
 	minute = 6.0 * 60.0
 	day += 1
 	season = SEASONS[int(float(day) / 7.0) % SEASONS.size()]
-	weather = "Rain" if randf() < 0.25 else "Clear"
+	weather = next_weather
+	next_weather = "Rain" if randf() < 0.25 else "Clear"
 	var farm: FarmField = get_parent().get_node("FarmField") as FarmField
 	farm.advance_day(season, weather == "Rain")
 	var activities: Activities = get_parent().get_node("Activities") as Activities
@@ -57,6 +62,9 @@ func _begin_morning(stayed_up: bool = false) -> void:
 	var friends: Friendship = get_parent().get_node_or_null("Friendship") as Friendship
 	if friends != null:
 		friends.on_new_day()
+	var letters: Letters = get_parent().get_node_or_null("Letters") as Letters
+	if letters != null:
+		letters.on_new_day()
 	var stead: Stead = get_parent().get_node_or_null("Stead") as Stead
 	if stead != null:
 		var morning: String = stead.on_new_day()
@@ -94,7 +102,7 @@ func hour_text() -> String:
 	return "\u2066%d:%02d\u2069 %s" % [shown_hour, mins, suffix]
 
 func to_data() -> Dictionary:
-	return {"day": day, "minute": minute, "season": season, "weather": weather}
+	return {"day": day, "minute": minute, "season": season, "weather": weather, "next_weather": next_weather}
 
 func from_data(data: Dictionary) -> void:
 	day = maxi(1, int(data.get("day", 1)))
@@ -103,6 +111,11 @@ func from_data(data: Dictionary) -> void:
 	if not season in SEASONS:
 		season = SEASONS[int(float(day) / 7.0) % SEASONS.size()]
 	weather = "Rain" if str(data.get("weather", "Clear")) == "Rain" else "Clear"
+	next_weather = "Rain" if str(data.get("next_weather", "Clear")) == "Rain" else "Clear"
+
+## "Tomorrow: rain" for the morning note and the quests page.
+func forecast_text() -> String:
+	return Locale.t("forecast") % Locale.t("weather_" + next_weather.to_lower())
 
 func _paint_sky() -> void:
 	var hud: Node = get_tree().current_scene.get_node_or_null("UI/HUD")
@@ -117,9 +130,18 @@ func _paint_sky() -> void:
 		darkness = 1.0
 	elif hour < 7.0:
 		darkness = lerpf(0.35, 0.0, hour - 6.0)
+	# From four in the afternoon the light warms, and the warm light then fades into the night blue.
+	var warm: float = 0.0
+	if hour >= 16.0 and hour < 18.0:
+		warm = (hour - 16.0) / 2.0
+	elif hour >= 18.0 and hour < 20.0:
+		warm = 1.0 - (hour - 18.0) / 2.0
+	elif hour >= 6.0 and hour < 7.0:
+		warm = 0.5 * (7.0 - hour)
+	var day_light: Color = SEASON_LIGHT.get(season, Color.WHITE).lerp(EVENING_COLOR, warm * (0.4 if weather == "Rain" else 1.0))
 	var tint: CanvasModulate = get_tree().current_scene.get_node_or_null("NightTint") as CanvasModulate
 	if tint != null:
-		tint.color = SEASON_LIGHT.get(season, Color.WHITE).lerp(NIGHT_COLOR, darkness)
+		tint.color = day_light.lerp(NIGHT_COLOR, darkness)
 	var lamps_on: bool = darkness > 0.25
 	for light: Node in get_tree().get_nodes_in_group("night_light"):
 		if bool(light.get("enabled")) != lamps_on:

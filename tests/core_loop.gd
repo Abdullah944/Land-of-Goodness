@@ -27,6 +27,7 @@ func _run() -> void:
 	var stead: Stead = systems.get_node("Stead") as Stead
 	var activities: Activities = systems.get_node("Activities") as Activities
 	activities.quick_fish = true
+	systems.get_node("Letters").set_process(false)
 	var farm: FarmField = systems.get_node("FarmField") as FarmField
 	var chest: ChestStore = systems.get_node("ChestStore") as ChestStore
 	var old_file: FileAccess = FileAccess.open(save.path, FileAccess.WRITE)
@@ -90,7 +91,7 @@ func _run() -> void:
 	inventory.stone = 8
 	inventory.dinars = 100
 	var old_size: Vector2i = farm.farm_size
-	check(stead.build("expand") and farm.farm_size == FarmField.LARGER_SIZE and old_size == Vector2i(12, 8), "the field grows larger")
+	check(stead.build("expand") and farm.farm_size == FarmField.LARGER_SIZE and old_size == Vector2i(24, 14), "the field grows larger")
 	inventory.add_item("copper", 3)
 	inventory.dinars = 120
 	check(stead.build("tools") and stead.tool_level == 1, "copper upgrades the watering can")
@@ -99,6 +100,10 @@ func _run() -> void:
 	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
 	farm.work(dirt, Vector2i(-11, -4), true)
 	check(bool(farm.plots["-11,-4"]["watered"]) and bool(farm.plots["-10,-4"]["watered"]), "the upgrade waters a neighbor")
+	var far: Vector2i = farm.farm_origin + farm.farm_size - Vector2i.ONE
+	check(farm.tool_for_plot(far) == "hoe" and farm.tool_for_plot(farm.farm_origin - Vector2i.ONE) == "", "any square of the farm land can be hoed, and none outside it")
+	farm.work(dirt, far, false)
+	check(farm.state_of(far) == "tilled" and farm.clear_soil(dirt, far) and farm.state_of(far) == "empty", "the pickaxe turns an empty bed back to grass")
 	var loader: LevelLoader = systems.get_node("LevelLoader") as LevelLoader
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
@@ -106,6 +111,10 @@ func _run() -> void:
 	await process_frame
 	check(_place_name(main) == "Village" and stead.place_name == "Village", "the village opens")
 	check(_buildings_vary(main) and _pictures_fit(main, "Village"), "town buildings are not one house copied")
+	var mosque: Node2D = _place(main).get_node("Mosque") as Node2D
+	var walls: CollisionShape2D = mosque.get_node("Block").get_child(0) as CollisionShape2D
+	check((walls.shape as RectangleShape2D).size.y > 60.0, "a building is solid across its walls, not just its base")
+	check(str(mosque.get("sign_key")) == "sign_mosque" and str(_place(main).get_node("Stall").get("sign_key")) == "sign_market", "the mosque and the market carry name boards")
 	_check_friends(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
@@ -398,7 +407,7 @@ func _check_walks(main: Node, clock: GameClock) -> void:
 	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
 	player.global_position = Vector2(0, 20)
 	player.busy = false
-	player.set_walk_target(Vector2(-136, -85))
+	player.set_walk_target(Vector2(-392, -293))
 	for i: int in 900:
 		await physics_frame
 		if _place_name(main) == "HouseInside":
@@ -474,6 +483,7 @@ func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activit
 		await process_frame
 	await _check_debris(main, loader, activities)
 	await _check_world(main, loader, activities)
+	await _check_juice(main)
 	var pond: Node = _place(main).get_node("FishingSpot")
 	check(pond.get_node_or_null("Block") != null, "the pond cannot be walked through")
 	check((main.find_child("Player", true, false).get_node("Camera2D") as Camera2D).zoom.x <= 1.0, "the camera shows a wide view of the world")
@@ -483,8 +493,8 @@ func _check_look(main: Node, loader: LevelLoader, dialogue: DialogueBox, activit
 	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
 	player.busy = false
 	var fished: bool = bool(activities.fish_spots.has("Home/FishingSpot"))
-	player.global_position = Vector2(200, -160)
-	player.set_walk_target(Vector2(330, -170))
+	player.global_position = Vector2(230, -170)
+	player.set_walk_target(Vector2(380, -150))
 	for i: int in 400:
 		await physics_frame
 		if activities.fish_spots.has("Home/FishingSpot"):
@@ -719,11 +729,65 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	hud._toggle_menu()
 	hud._show_tab("map")
 	check(hud._world_map.visible and hud._world_map.current_spot() != Vector2.ZERO, "the map shows where the boy is")
+	var map: WorldMap = hud._world_map
+	var stead: Stead = main.get_node("Systems/Stead") as Stead
+	var saw_cave: bool = bool(stead.visited.get("Cave", false))
+	stead.visited.erase("Cave")
+	map.tap_at(map._screen(WorldMap.PLACES["Cave"][0]))
+	check(map._note == Locale.t("map_walk_first") and hud._menu.visible and _place_name(main) != "Cave", "the map won't take the boy somewhere he hasn't walked to")
+	if saw_cave:
+		stead.visited["Cave"] = true
+	map.tap_at(map._screen(WorldMap.PLACES["Home"][0]))
+	for i: int in 3:
+		await process_frame
+	check(_place_name(main) == "Home" and not hud._menu.visible, "tapping a visited place on the map takes the boy there")
 	hud._show_tab("bag")
-	hud._toggle_menu()
 	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
 	for i: int in 3:
 		await process_frame
+
+## Letters, the forecast, pickup notes, the seed square, and life outdoors.
+func _check_juice(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var letters: Letters = systems.get_node("Letters") as Letters
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	var wood: int = bag.count_of("wood")
+	letters.pending = {"person": "carpenter", "line": "letter_wood", "item": "wood", "amount": 5}
+	letters.read()
+	check(bag.count_of("wood") == wood + 5 and dialogue.visible and letters.pending.is_empty(), "a letter is read once and its gift goes in the bag")
+	while dialogue.visible:
+		dialogue._advance()
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	clock.next_weather = "Rain"
+	check(clock.forecast_text() == Locale.t("forecast") % Locale.t("weather_rain"), "the morning can tell tomorrow's weather")
+	check(clock.to_data()["next_weather"] == "Rain", "tomorrow's weather is saved")
+	var hud: Node = main.get_node("UI/HUD")
+	hud.show_pickup("pearl", 1)
+	hud.show_pickup("pearl", 2)
+	var pearl_rows: Array = hud._pickups.filter(func(row: Dictionary) -> bool: return row["item"] == "pearl")
+	check(pearl_rows.size() == 1 and int(pearl_rows[0]["amount"]) == 3, "picking the same item again adds to its note")
+	bag.add_item("tomato_seeds", 2)
+	bag.selected_seed = "turnip"
+	hud._next_seed()
+	check(bag.selected_seed == "tomato", "the seed square picks the next seed in the bag")
+	bag.watermelon_seeds = 0
+	bag.add_item("eggs", 1)
+	hud.refresh()
+	var listed: Array = hud._bag_shown.map(func(row: Dictionary) -> String: return str(row["item"]))
+	check(not listed.has("watermelon_seeds") and listed.has("eggs") and listed.has("tomato_seeds"), "the bag lists only what the boy has")
+	var map: WorldMap = hud._world_map
+	map.zoom_at(2.0)
+	var zoomed: float = map.zoom
+	map.zoom_at(100.0)
+	check(zoomed == 2.0 and map.zoom == WorldMap.MAX_ZOOM and map.offset.x <= 0.0, "the map zooms in, up to a limit")
+	map.zoom_at(0.01)
+	check(map.zoom == WorldMap.MIN_ZOOM and map.offset == Vector2.ZERO, "the map zooms back out to the whole land")
+	for i: int in 3:
+		await process_frame
+	var place: Node = _place(main)
+	check(place.get_node_or_null("Life") != null and place.get_node("Life").get_child_count() > 0, "birds and butterflies live outdoors")
+	check(Juice.item_icon("wood") != null and Juice.item_icon("tomatoes") != null and Juice.item_icon("tomato_seeds") != null, "every item has a picture to fly")
 
 func _bag_total(main: Node) -> int:
 	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory

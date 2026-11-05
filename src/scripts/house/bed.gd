@@ -105,7 +105,7 @@ func _on_answer(yes: bool) -> void:
 	clock.sleep_now()
 	hud.call("uncover_sleep")
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-	activities.note = Locale.t("slept")
+	activities.note = "%s %s" % [Locale.t("slept"), clock.forecast_text()]
 	if player != null:
 		player.busy = false
 

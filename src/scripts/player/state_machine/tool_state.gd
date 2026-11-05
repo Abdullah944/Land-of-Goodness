@@ -54,10 +54,22 @@ func _chime() -> void:
 	if bank != null:
 		bank.call("play", {"water_": "water", "hoe_": "hoe", "axe_": "chop", "pick_": "mine"}.get(animation_prefix, "hoe"))
 	var dirt: TileMapLayer = player.find_dirt()
-	if dirt != null:
-		var puff_color: Color = {"water_": Color("7fc7dc"), "hoe_": Color("8a6238"), "axe_": Color("c79a5e"), "pick_": Color("a8a39a")}.get(animation_prefix, Color.WHITE)
-		var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-		activities.burst(dirt.to_global(dirt.map_to_local(player.get_action_cell(dirt))), puff_color)
+	if dirt == null:
+		return
+	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
+	var place: Node = activities.place_node()
+	var cell: Vector2i = player.get_action_cell(dirt) if animation_prefix == "water_" or animation_prefix == "hoe_" else player.tapped_cell
+	var at: Vector2 = dirt.to_global(dirt.map_to_local(cell))
+	match animation_prefix:
+		"water_":
+			Juice.splash(place, at)
+		"hoe_":
+			Juice.burst(place, at, Juice.DUST_BROWN, 12, 38.0, 0.45, 2.4)
+		"axe_":
+			Juice.burst(place, at + Vector2(0, -10), Juice.WOOD_CHIP, 8, 45.0, 0.45)
+		"pick_":
+			Juice.burst(place, at + Vector2(0, -4), Juice.STONE_GREY, 8, 45.0, 0.4)
+	Juice.tap(get_tree())
 
 func _use_cell(watering_only: bool) -> void:
 	var dirt: TileMapLayer = player.find_dirt()
@@ -78,5 +90,7 @@ func _swing(kind: String) -> void:
 		return
 	var cut: bool = activities.chop_at(dirt, cell) if kind == "wood" else activities.mine_at(dirt, cell)
 	if cut:
+		return
+	if kind == "stone" and (get_tree().current_scene.get_node("Systems/FarmField") as FarmField).clear_soil(dirt, cell):
 		return
 	activities.note = Locale.t("nothing_cut") if kind == "wood" else Locale.t("nothing_mine")

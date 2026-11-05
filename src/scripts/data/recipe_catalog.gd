@@ -46,13 +46,13 @@ const BUILD_ORDER: Array[String] = [
 
 ## Pictures that a bought decoration adds inside the house.
 const DECOR: Dictionary = {
-	"decor_rug": {"place": "HouseInside", "name": "DecorRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(70, 120), "flat": true},
-	"decor_table": {"place": "HouseInside", "name": "DecorTable", "path": "res://assets/props/table.png", "at": Vector2(70, 128), "block": Vector2(24, 8)},
-	"decor_plant": {"place": "HouseInside", "name": "DecorPlant", "path": "res://assets/props/plant.png", "at": Vector2(150, 118)},
-	"decor_lantern": {"place": "HouseInside", "name": "DecorLantern", "path": "res://assets/props/lantern.png", "at": Vector2(150, 96)},
-	"decor_cushions": {"place": "HouseInside", "name": "DecorCushions", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(-70, 130)},
-	"decor_green_rug": {"place": "HouseInside", "name": "DecorGreenRug", "path": "res://assets/building/house/room/rug_green.png", "at": Vector2(-64, 40), "flat": true},
-	"decor_tree": {"place": "HouseInside", "name": "DecorTree", "path": "res://assets/building/house/room/plant.png", "at": Vector2(-108, 70)},
+	"decor_rug": {"place": "HouseInside", "name": "DecorRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(78, 128), "flat": true},
+	"decor_table": {"place": "HouseInside", "name": "DecorTable", "path": "res://assets/props/table.png", "at": Vector2(78, 136), "block": Vector2(24, 8)},
+	"decor_plant": {"place": "HouseInside", "name": "DecorPlant", "path": "res://assets/props/plant.png", "at": Vector2(160, 152)},
+	"decor_lantern": {"place": "HouseInside", "name": "DecorLantern", "path": "res://assets/props/lantern.png", "at": Vector2(162, 76)},
+	"decor_cushions": {"place": "HouseInside", "name": "DecorCushions", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(-56, 152)},
+	"decor_green_rug": {"place": "HouseInside", "name": "DecorGreenRug", "path": "res://assets/building/house/room/rug_green.png", "at": Vector2(108, 78), "flat": true},
+	"decor_tree": {"place": "HouseInside", "name": "DecorTree", "path": "res://assets/building/house/room/plant.png", "at": Vector2(-108, 72)},
 }
 
 const BUNDLE_PRICE: int = 70
