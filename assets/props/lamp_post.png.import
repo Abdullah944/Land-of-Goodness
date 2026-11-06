@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://7fg1wplwj0eq"
+path="res://.godot/imported/lamp_post.png-d52cad9ac73eaceff0dbd2f1913c9ab0.res"
+
+[deps]
+
+source_file="res://assets/props/lamp_post.png"
+dest_files=["res://.godot/imported/lamp_post.png-d52cad9ac73eaceff0dbd2f1913c9ab0.res"]
+
+[params]
+
+game_size=Vector2(26, 64)

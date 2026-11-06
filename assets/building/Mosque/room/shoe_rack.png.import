@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://b5fdpg5jwkkno"
+path="res://.godot/imported/shoe_rack.png-5bb471361a2340562e345d341de8a915.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/shoe_rack.png"
+dest_files=["res://.godot/imported/shoe_rack.png-5bb471361a2340562e345d341de8a915.res"]
+
+[params]
+
+game_size=Vector2(40, 47)

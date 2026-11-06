@@ -110,7 +110,20 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	check(_place_name(main) == "Village" and stead.place_name == "Village", "the village opens")
-	check(_buildings_vary(main) and _pictures_fit(main, "Village"), "town buildings are not one house copied")
+	check(_buildings_open(main) and _pictures_fit(main, "Village"), "every village building has a way inside")
+	var well: Vector2 = Vector2(10, -40)
+	var ring: Array[float] = []
+	for stall: String in ["Stall", "StallProduce", "StallPots", "StallFar", "StallFar2", "Counter", "ShelfSeeds"]:
+		ring.append((_place(main).get_node(stall) as Node2D).position.distance_to(well))
+	check(ring.max() - ring.min() < 2.0 and WorldShapes.on_cobble("Village", well + Vector2(0, 140)), "the market stalls stand in a ring around the well, on a round stone square")
+	var shop_box: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	activities.talk_role("merchant")
+	activities._on_shop_choice("buy_seeds")
+	var pictured: bool = not shop_box._offer_buttons.is_empty()
+	for button: Button in shop_box._offer_buttons:
+		pictured = pictured and button.icon != null
+	check(shop_box._panel.size.x <= 330.0 and shop_box._panel.size.y < 150.0 and pictured and shop_box._close.visible, "the seller's window is small, each seed has a picture, and X closes it")
+	shop_box._pick("cancel")
 	var mosque: Node2D = _place(main).get_node("Mosque") as Node2D
 	var walls: CollisionShape2D = mosque.get_node("Block").get_child(0) as CollisionShape2D
 	check((walls.shape as RectangleShape2D).size.y > 60.0, "a building is solid across its walls, not just its base")
@@ -121,7 +134,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	check(_place_name(main) == "Harbor" and bool(stead.visited.get("Harbor", false)), "the harbor opens")
-	check(_buildings_vary(main) and _pictures_fit(main, "Harbor"), "harbor homes are huts and coral houses")
+	check(_pictures_fit(main, "Harbor") and _place(main).find_children("Hut*", "", false).is_empty(), "the harbor keeps no empty houses, only boats and the fish stall")
 	loader.go_to(load("res://src/scenes/world/orchard/Orchard.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -175,7 +188,7 @@ func _run() -> void:
 
 func _check_places(main: Node, loader: LevelLoader, clock: GameClock) -> void:
 	var places: Dictionary = {
-		"Village": ["Elder", "Merchant", "Carpenter"],
+		"Village": ["Elder", "Merchant"],
 		"Harbor": ["Fisherman"],
 		"Orchard": [],
 		"Cave": [],
@@ -262,11 +275,9 @@ func _check_kindness(main: Node, systems: Node, inventory: Inventory, clock: Gam
 	var cancel_always: bool = true
 	for page: int in 6:
 		fits = fits and dialogue._panel.position.y >= 0.0 and dialogue._offer_buttons.size() <= DialogueBox.MAX_ROWS
-		var has_cancel: bool = false
 		for button: Button in dialogue._offer_buttons:
 			seen[button.text] = true
-			has_cancel = has_cancel or button.text == "Cancel"
-		cancel_always = cancel_always and has_cancel
+		cancel_always = cancel_always and dialogue._close.visible
 		dialogue._next_offer_page()
 	check(fits, "a long menu page fits on the screen")
 	check(cancel_always, "Cancel stays on every page")
@@ -623,19 +634,21 @@ func _check_fish_game(main: Node, activities: Activities) -> void:
 	activities.quick_fish = true
 
 ## No one building picture fills more than half of a place's buildings.
-func _buildings_vary(main: Node) -> bool:
-	var counts: Dictionary = {}
+## Each building in the place has a door that leads inside it; none stand there only for show.
+func _buildings_open(main: Node) -> bool:
+	var doors: Array[Vector2] = []
+	for node: Node in _place(main).get_children():
+		if node is Area2D and str(node.get("next_scene_path")).contains("_inside"):
+			doors.append((node.get_child(0) as Node2D).position)
 	var total: int = 0
 	for mark: Node in _place(main).get_children():
 		var picture: Variant = mark.get("person")
-		if picture is Texture2D and ((picture as Texture2D).resource_path.contains("/building/town/") or (picture as Texture2D).resource_path.contains("Rooftop House")):
-			counts[(picture as Texture2D).resource_path] = int(counts.get((picture as Texture2D).resource_path, 0)) + 1
+		if picture is Texture2D and ((picture as Texture2D).resource_path.contains("/building/town/") or (picture as Texture2D).resource_path.ends_with("mosque.png")):
 			total += 1
-	for path: String in counts:
-		if int(counts[path]) * 2 > total + 1:
-			print("TOO SAME: %s %d of %d" % [path, counts[path], total])
-			return false
-	return total >= 4 and counts.size() >= 2
+			if not doors.any(func(door: Vector2) -> bool: return door.distance_to((mark as Node2D).position) < 30.0):
+				print("NO WAY IN: %s" % mark.name)
+				return false
+	return total >= 2
 
 func _frames_empty(mark: Node) -> bool:
 	return (mark.get("_frames") as Array).is_empty()
@@ -742,6 +755,57 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 		await process_frame
 	check(_place_name(main) == "Home" and not hud._menu.visible, "tapping a visited place on the map takes the boy there")
 	hud._show_tab("bag")
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
+	for i: int in 3:
+		await process_frame
+	var posts: Array = _place(main).get_children().filter(func(mark: Node) -> bool: return mark.get("person") != null and str((mark.get("person") as Texture2D).resource_path).ends_with("lamp_post.png"))
+	check(posts.size() >= 6 and posts[0].get_tree().get_nodes_in_group("night_light").size() > 0, "the village lamps stand on posts and light up at night")
+	var walker: Player = main.find_child("Player", true, false) as Player
+	walker.set_walk_target(walker.global_position + Vector2(0, 120))
+	activities.talk_role("mosque")
+	for i: int in 40:
+		await physics_frame
+	check(_place_name(main) == "MosqueInside" and not walker.has_tapped_cell, "stepping inside stops the old walk, so the boy doesn't bounce back out")
+	var mosque: Node = _place(main)
+	check(_place_name(main) == "MosqueInside" and mosque.get_node_or_null("Decor") != null and mosque.get_node_or_null("Room_minbar_2") != null and mosque.get_node_or_null("Room_shoe_rack_10") != null and mosque.find_children("*fountain*", "", false).is_empty(), "the mosque has an open prayer hall with a carpet, a minbar, and shoe racks by the door")
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	activities.talk_role("mosque")
+	check(dialogue.visible and activities._shop == "mosque", "by the mihrab inside, the boy can sit quietly")
+	dialogue._pick("cancel")
+	check(map.current_key() == "Village", "the map shows the mosque inside the village")
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
+	for i: int in 3:
+		await process_frame
+	check(_place_name(main) == "Village", "the mosque door leads back out to the village")
+	check(_place(main).get_node_or_null("Carpenter") == null, "the carpenter works indoors, not out in the village")
+	loader.go_to(load("res://src/scenes/world/workshop/Workshop_inside.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	var shop: Node = _place(main)
+	var carpenter: Node = shop.get_node_or_null("Carpenter")
+	check(_place_name(main) == "WorkshopInside" and shop.get_node_or_null("Decor") != null and carpenter != null and str(carpenter.get("role")) == "carpenter" and shop.get_node_or_null("Room_Workbench_0") != null, "the carpenter stands at his bench inside his workshop")
+	var buyer: Player = main.find_child("Player", true, false) as Player
+	buyer.set_walk_target((carpenter as Node2D).global_position)
+	var front: Vector2 = buyer.tapped_point
+	check(front.y > (shop.get_node("Room_counter_1") as Node2D).position.y, "tapping the carpenter walks the boy to the front of the counter")
+	buyer.global_position = front - Vector2(0, 20)
+	buyer.arrive_indoors()
+	check(dialogue.visible and activities._shop == "work", "the carpenter still builds and sells wood, across his counter")
+	dialogue._pick("cancel")
+	buyer.cancel_tap()
+	check(shop.get_node("Decor").get_children().any(func(n: Node) -> bool: return n is RoomFrame), "the room has a thick wooden frame")
+	check(map.current_key() == "Village", "the map shows the workshop inside the village")
+	var works: VillageWorks = main.get_node("Systems/VillageWorks") as VillageWorks
+	var wish: Dictionary = works.request_today()
+	if not wish.is_empty():
+		wish["done"] = false
+		check(map.task_places().has(WorldMap.PERSON_PLACES[str(wish["person"])]), "the map marks where a neighbor has a request today")
+		wish["done"] = true
+		check(not map.task_places().has(WorldMap.PERSON_PLACES[str(wish["person"])]) or str(wish["person"]) == "jassim", "the mark goes once the request is done")
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "WorkshopDoor")
+	for i: int in 3:
+		await process_frame
+	check(_place_name(main) == "Village", "the workshop door leads back out to the village")
 	loader.go_to(load("res://src/scenes/world/home/Home.tscn") as PackedScene, "HouseDoor")
 	for i: int in 3:
 		await process_frame

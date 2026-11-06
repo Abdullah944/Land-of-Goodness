@@ -19,10 +19,10 @@ const FLAG_COLORS: Array[Color] = [Color("c0483a"), Color("e9c46a"), Color("3f7a
 const PROP: String = "res://assets/props/%s.png"
 const DECOR: Array[Dictionary] = [
 	{"name": "FairRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(10, -20), "flat": true},
-	{"name": "FairLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-150, -40)},
-	{"name": "FairLampB", "path": "res://assets/props/lantern.png", "at": Vector2(170, -40)},
-	{"name": "FairLampC", "path": "res://assets/props/lantern.png", "at": Vector2(-150, 70)},
-	{"name": "FairLampD", "path": "res://assets/props/lantern.png", "at": Vector2(170, 70)},
+	{"name": "FairLampA", "path": "res://assets/props/lamp_post.png", "at": Vector2(-150, -40)},
+	{"name": "FairLampB", "path": "res://assets/props/lamp_post.png", "at": Vector2(170, -40)},
+	{"name": "FairLampC", "path": "res://assets/props/lamp_post.png", "at": Vector2(-150, 70)},
+	{"name": "FairLampD", "path": "res://assets/props/lamp_post.png", "at": Vector2(170, 70)},
 	{"name": "FairCushions", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(-40, 20)},
 	{"name": "FairCushions2", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(60, 20)},
 ]

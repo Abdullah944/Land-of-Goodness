@@ -36,7 +36,7 @@ const PLACES: Dictionary = {
 	"Cave": [Vector2(28, 28), "res://assets/building/Cave/Sandstone Cave Entrance.png", "to_cave"],
 	"Road": [Vector2(176, 56), "res://assets/props/stall_produce.png", "to_road"],
 	"Forest": [Vector2(112, 114), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
-	"Village": [Vector2(276, 66), "res://assets/building/town/house_tower.png", "to_village"],
+	"Village": [Vector2(276, 66), "res://assets/building/Mosque/mosque.png", "to_village"],
 	"Orchard": [Vector2(250, 18), "res://assets/nature/Date palm.png", "to_orchard"],
 	"Harbor": [Vector2(296, 108), "res://assets/building/harbor/Dhow.png", "to_harbor"],
 }
@@ -48,7 +48,9 @@ const LINKS: Array = [
 const DETAILS: Array = [
 	[Vector2(256, 82), "sign_mosque"], [Vector2(300, 52), "sign_market"], [Vector2(318, 124), "map_dock"],
 ]
-const SPOTS: Dictionary = {"HouseInside": "Home"}
+## Where each neighbor can be found, so a "!" on the map shows where someone needs the boy.
+const PERSON_PLACES: Dictionary = {"jassim": "Home", "elder": "Village", "merchant": "Village", "carpenter": "Village", "fisherman": "Harbor"}
+const SPOTS: Dictionary = {"HouseInside": "Home", "MosqueInside": "Village", "WorkshopInside": "Village"}
 const LAND: PackedVector2Array = [
 	Vector2(0, 0), Vector2(429, 0), Vector2(429, 84), Vector2(372, 96), Vector2(330, 106), Vector2(280, 104),
 	Vector2(226, 124), Vector2(190, 142), Vector2(0, 142),
@@ -130,6 +132,28 @@ func can_travel(key: String) -> bool:
 		return true
 	var stead: Node = get_tree().current_scene.get_node_or_null("Systems/Stead")
 	return stead != null and bool((stead.get("visited") as Dictionary).get(key, false))
+
+## Places with something waiting today: a neighbor's request, Jassim's first task, or a birthday.
+func task_places() -> Dictionary:
+	var marks: Dictionary = {}
+	var systems: Node = get_tree().current_scene.get_node_or_null("Systems") if is_inside_tree() else null
+	if systems == null:
+		return marks
+	var works: Node = systems.get_node_or_null("VillageWorks")
+	if works != null:
+		var wish: Dictionary = works.call("request_today")
+		if not wish.is_empty() and not bool(wish.get("done", false)):
+			marks[PERSON_PLACES.get(str(wish.get("person", "")), "")] = true
+	var activities: Node = systems.get_node_or_null("Activities")
+	if activities != null and not bool(activities.get("quest_done")):
+		marks["Home"] = true
+	var friends: Node = systems.get_node_or_null("Friendship")
+	if friends != null:
+		var person: String = str(friends.call("birthday_today"))
+		if person != "":
+			marks[PERSON_PLACES.get(person, "")] = true
+	marks.erase("")
+	return marks
 
 ## Acts on a tap at a point on the map: travels to the place there, or says why it can't.
 func tap_at(screen_point: Vector2) -> void:
@@ -233,8 +257,11 @@ func _draw() -> void:
 			if not _near_place(_screen(detail[0])):
 				_draw_detail(_screen(detail[0]), Locale.t(str(detail[1])))
 	var here: String = current_key()
+	var tasks: Dictionary = task_places()
 	for key: String in PLACES:
 		_draw_place(key, key == here)
+		if tasks.has(key):
+			_draw_task_mark(key)
 	_draw_you()
 	_draw_compass(Vector2(size.x - 20.0, 20.0))
 	_draw_here_tag(here)
@@ -303,6 +330,18 @@ func _draw_place(key: String, here: bool) -> void:
 		var shade: Color = Color.WHITE if can_travel(key) else Color(1, 1, 1, 0.4)
 		draw_texture_rect(icon, Rect2(at - drawn * 0.5, drawn), false, shade)
 	_draw_tag(at + Vector2(0, radius + 8.0), Locale.t(str(row[2])), here)
+
+## A gold "!" on the top corner of a place's badge: someone there needs the boy today.
+func _draw_task_mark(key: String) -> void:
+	var at: Vector2 = _screen(PLACES[key][0])
+	var radius: float = 13.0 * clampf(1.0 + (zoom - 1.0) * 0.35, 1.0, 1.7)
+	var mark: Vector2 = at + Vector2(radius * 0.8, -radius * 0.8)
+	var beat: float = 1.0 + 0.12 * sin(float(Time.get_ticks_msec()) * 0.006)
+	draw_circle(mark + Vector2(0.6, 1.0), 6.5 * beat, Color(0, 0, 0, 0.3))
+	draw_circle(mark, 6.5 * beat, UiStyle.GOLD)
+	draw_arc(mark, 6.5 * beat, 0.0, TAU, 20, UiStyle.WOOD_DARK, 1.2)
+	draw_rect(Rect2(mark + Vector2(-1.0, -4.0), Vector2(2.0, 5.0)), UiStyle.DARK)
+	draw_rect(Rect2(mark + Vector2(-1.0, 2.0), Vector2(2.0, 2.0)), UiStyle.DARK)
 
 ## A name on a little wooden tag, kept inside the window.
 func _draw_tag(middle: Vector2, title: String, gold: bool) -> void:

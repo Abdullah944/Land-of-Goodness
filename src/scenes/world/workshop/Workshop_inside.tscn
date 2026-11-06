@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/scripts/World/place_bounds.gd" id="1_bounds"]
+[ext_resource type="Script" path="res://src/scripts/house/door.gd" id="2_door"]
+[ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="3_mark"]
+[ext_resource type="Texture2D" path="res://assets/characters/village/Carpenter.png" id="4_carpenter"]
+
+[sub_resource type="RectangleShape2D" id="Rect_exit"]
+size = Vector2(48, 17)
+
+[node name="WorkshopInside" type="Node2D"]
+y_sort_enabled = true
+
+[node name="Bounds" type="Node2D" parent="."]
+script = ExtResource("1_bounds")
+area = Rect2(-120, 6, 288, 154)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(8, 112)
+
+[node name="Exit" type="Area2D" parent="."]
+script = ExtResource("2_door")
+next_scene_path = "res://src/scenes/world/village/Village.tscn"
+spawn_name = "WorkshopDoor"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+position = Vector2(8, 151.5)
+shape = SubResource("Rect_exit")
+
+[node name="Carpenter" type="Node2D" parent="."]
+position = Vector2(24, 64)
+script = ExtResource("3_mark")
+person = ExtResource("4_carpenter")
+fit_pixels = 36
+stand_on_feet = true
+role = "carpenter"
+talk_from = Vector2(0, 46)

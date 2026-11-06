@@ -127,7 +127,7 @@ const _EN: Dictionary = {
 	"sign_market": "Market",
 	"sign_merchant_house": "Merchant's House",
 	"sign_elder_house": "Elder's House",
-	"sign_workyard": "Carpenter's Yard",
+	"sign_workyard": "Carpenter's Workshop",
 	"bag_empty": "Your bag is empty.",
 	"soil_cleared": "The square is grass again.",
 	"map_here": "You are in: %s",

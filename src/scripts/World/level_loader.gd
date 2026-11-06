@@ -4,7 +4,11 @@
 class_name LevelLoader
 extends Node
 
+## A door does nothing this long after the boy arrives, so he can't bounce straight back out.
+const SETTLE_MS: int = 700
+
 var _busy: bool = false
+var _arrived_at: int = -SETTLE_MS
 
 func go_to(next_scene: PackedScene, spawn_name: String = "PlayerSpawn") -> void:
 	if _busy or next_scene == null:
@@ -34,6 +38,10 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	var spawn: Node = next_place.get_node_or_null(spawn_name)
 	if spawn is Marker2D:
 		player.global_position = spawn.global_position
+	# A walk the boy started in the last place ends at the door; it must not carry on in the new one.
+	player.cancel_tap()
+	player.velocity = Vector2.ZERO
+	_arrived_at = Time.get_ticks_msec()
 	player.fit_camera()
 	var farm: FarmField = main.get_node_or_null("Systems/FarmField") as FarmField
 	if farm != null:
@@ -49,3 +57,18 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 	if save != null:
 		save.write_now()
 	_busy = false
+	_warm_rooms(next_place)
+
+## True for a moment after each arrival, while doors wait.
+func settling() -> bool:
+	return Time.get_ticks_msec() - _arrived_at < SETTLE_MS
+
+func settle_left() -> float:
+	return maxf(0.0, float(SETTLE_MS - (Time.get_ticks_msec() - _arrived_at)) / 1000.0)
+
+## Rooms behind this place's doors load in the background, so stepping inside doesn't stall.
+func _warm_rooms(place: Node) -> void:
+	for child: Node in place.get_children():
+		var path: Variant = child.get("next_scene_path")
+		if path != null and str(path).contains("_inside") and not ResourceLoader.has_cached(str(path)):
+			ResourceLoader.load_threaded_request(str(path))

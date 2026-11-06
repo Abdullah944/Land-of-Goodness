@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/props/sack.png" id="8_sack"]
 [ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="9_barrel"]
 [ext_resource type="Texture2D" path="res://assets/props/basket.png" id="10_basket"]
-[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="11_lantern"]
+[ext_resource type="Texture2D" path="res://assets/props/lamp_post.png" id="11_lantern"]
 [ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="12_date_palm"]
 [ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="13_wild_herb"]
 

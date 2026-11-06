@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://2ashtb3jkik3"
+path="res://.godot/imported/wall_window.png-9267db3a6dbd8ed69fae91c8947495ca.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/wall_window.png"
+dest_files=["res://.godot/imported/wall_window.png-9267db3a6dbd8ed69fae91c8947495ca.res"]
+
+[params]
+
+game_size=Vector2(32, 44)

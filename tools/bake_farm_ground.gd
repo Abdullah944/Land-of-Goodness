@@ -92,9 +92,8 @@ func _kind(place: String, shape: Dictionary, world: Vector2, patches: FastNoiseL
 		return WorldShapes.WATER
 	if depth > -14.0:
 		return WorldShapes.SHORE
-	for box: Rect2 in shape.get("cobble", []):
-		if box.has_point(world):
-			return WorldShapes.COBBLE
+	if WorldShapes.on_cobble(place, world):
+		return WorldShapes.COBBLE
 	if WorldShapes.on_road(place, world):
 		return WorldShapes.ROAD
 	var wooded: bool = bool(shape["wooded"])

@@ -17,7 +17,7 @@ const PLANKS: int = 8
 ## bare: how much noise it takes for a patch of bare dirt to show through the grass (higher is fewer patches).
 ## half: the middle-to-edge size of the clearing. wooded: dark forest around it. sandy: sand in place of grass.
 ## roads: [from, to, half width]. water: [from, to, half width]. lakes: [middle, radius]. planks: bridges and docks.
-## lawn: boxes kept as grass with no bare patches. exits: gaps cut through the forest. sea_from: below this height everything is sea.
+## plazas: round stone squares [middle, radius]. lawn: boxes kept as grass with no bare patches. exits: gaps cut through the forest. sea_from: below this height everything is sea.
 const PLACES: Dictionary = {
 	"Home": {
 		"half": Vector2(620, 500), "wooded": true, "sandy": false, "seed": 12, "bare": 0.42,
@@ -43,8 +43,12 @@ const PLACES: Dictionary = {
 		"roads": [
 			[Vector2(-900, -120), Vector2(-220, -60), 18.0], [Vector2(-180, -760), Vector2(-140, -160), 18.0], [Vector2(180, 760), Vector2(120, 100), 18.0],
 			[Vector2(-600, 760), Vector2(-400, 300), 16.0], [Vector2(-400, 300), Vector2(-160, 100), 16.0], [Vector2(240, -40), Vector2(900, -40), 16.0],
-			[Vector2(140, 60), Vector2(420, 300), 12.0], [Vector2(420, 300), Vector2(720, 300), 12.0], [Vector2(-340, -170), Vector2(-200, -100), 12.0],
-			[Vector2(-300, 330), Vector2(-60, 450), 12.0], [Vector2(-40, -280), Vector2(-40, -160), 12.0], [Vector2(230, -280), Vector2(190, -160), 12.0],
+			[Vector2(140, 60), Vector2(420, 300), 12.0], [Vector2(420, 300), Vector2(720, 300), 12.0],
+			# Paths from the roads into the round market square, and one to the carpenter's workshop door.
+			[Vector2(-220, -60), Vector2(10, -40), 14.0], [Vector2(-140, -160), Vector2(10, -40), 14.0], [Vector2(120, 100), Vector2(10, -40), 14.0],
+			[Vector2(-160, 100), Vector2(10, -40), 14.0], [Vector2(240, -40), Vector2(10, -40), 14.0], [Vector2(150, -20), Vector2(300, 84), 12.0],
+			# The path from the south road to the mosque door.
+			[Vector2(154, 448), Vector2(320, 450), 12.0], [Vector2(320, 450), Vector2(320, 418), 14.0],
 		],
 		"water": [
 			[Vector2(590, -760), Vector2(500, -320), 42.0], [Vector2(500, -320), Vector2(540, 40), 42.0], [Vector2(540, 40), Vector2(470, 330), 42.0],
@@ -52,7 +56,8 @@ const PLACES: Dictionary = {
 		],
 		"lakes": [],
 		"planks": [Rect2(462, -62, 150, 44), Rect2(432, 280, 120, 40)],
-		"cobble": [Rect2(-230, -180, 480, 290)],
+		# The market is a round square of stone, its stalls in a ring around the well.
+		"plazas": [[Vector2(10, -40), 158.0]],
 		"dirt": [],
 		"exits": [Rect2(-900, -170, 300, 100), Rect2(-230, -760, 110, 260), Rect2(120, 400, 120, 360), Rect2(-660, 420, 120, 340)],
 	},
@@ -157,8 +162,15 @@ static func on_road(place: String, world: Vector2, margin: float = 0.0) -> bool:
 	for road: Array in PLACES[place]["roads"]:
 		if to_segment(world, road[0], road[1]) < float(road[2]) + margin:
 			return true
+	return on_cobble(place, world)
+
+## Stone squares, square or round.
+static func on_cobble(place: String, world: Vector2) -> bool:
 	for box: Rect2 in PLACES[place].get("cobble", []):
 		if box.has_point(world):
+			return true
+	for plaza: Array in PLACES[place].get("plazas", []):
+		if world.distance_to(plaza[0]) < float(plaza[1]):
 			return true
 	return false
 

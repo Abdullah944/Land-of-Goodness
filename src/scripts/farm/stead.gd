@@ -28,6 +28,8 @@ const SCENES: Dictionary = {
 	"Road": "res://src/scenes/world/road/Road.tscn",
 	"Forest": "res://src/scenes/world/forest/Forest.tscn",
 	"HouseInside": "res://src/scenes/world/house/House_inside.tscn",
+	"MosqueInside": "res://src/scenes/world/mosque/Mosque_inside.tscn",
+	"WorkshopInside": "res://src/scenes/world/workshop/Workshop_inside.tscn",
 }
 
 func scene_for(place: String) -> String:

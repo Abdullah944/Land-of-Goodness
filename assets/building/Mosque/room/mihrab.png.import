@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://catmgxj7nu7mj"
+path="res://.godot/imported/mihrab.png-95726a63f88bec521ba2c6a20591c243.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/mihrab.png"
+dest_files=["res://.godot/imported/mihrab.png-95726a63f88bec521ba2c6a20591c243.res"]
+
+[params]
+
+game_size=Vector2(56, 72)

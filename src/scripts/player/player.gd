@@ -158,9 +158,9 @@ func _arrive_role(place: Node, feet: Vector2) -> void:
 		if not child is Node2D:
 			continue
 		var spot: Node2D = child as Node2D
-		if feet.distance_to(spot.global_position) > 22.0:
+		if feet.distance_to(spot.global_position) > 22.0 and feet.distance_to(spot.global_position + _talk_from(spot)) > 6.0:
 			continue
-		if tapped_point.distance_to(spot.global_position) > 30.0:
+		if tapped_point.distance_to(spot.global_position) > 30.0 and tapped_point.distance_to(spot.global_position + _talk_from(spot)) > 4.0:
 			continue
 		var role: String = Activities.role_of(spot)
 		if role != "":
@@ -173,6 +173,11 @@ func _arrive_role(place: Node, feet: Vector2) -> void:
 		if spot.name == "FishingSpot":
 			activities.cast(place.name)
 			return
+
+## Where the boy stands to talk to someone or use something, from its feet.
+func _talk_from(spot: Node2D) -> Vector2:
+	var offset: Variant = spot.get("talk_from")
+	return offset if offset is Vector2 else Vector2(0, 18)
 
 func reached_indoor_point() -> bool:
 	var feet: Vector2 = global_position + Vector2(0, 20)
@@ -212,7 +217,7 @@ func _lowest_zoom() -> float:
 
 func _camera_area() -> Rect2:
 	var place: Node = _current_place()
-	if place == null or place.name == "HouseInside":
+	if place == null or str(place.name).ends_with("Inside"):
 		return Rect2()
 	var bounds: Node = place.get_node_or_null("Bounds")
 	if bounds != null:
@@ -270,7 +275,7 @@ func _snap_indoor(world_position: Vector2) -> Vector2:
 		var kind: String = str(spot.get("group_name"))
 		var interesting: bool = Activities.role_of(spot) != "" or spot.name == "FishingSpot" or kind == "date" or kind == "forage" or kind == "ore" or kind == "tree" or kind == "rock" or kind == "shore"
 		if interesting and world_position.distance_to(spot.global_position) <= 28.0:
-			return spot.global_position + Vector2(0, 18)
+			return spot.global_position + _talk_from(spot)
 	for child: Node in place.get_children():
 		if not str(child.name).begins_with("Exit") and child.name != "Rock":
 			continue

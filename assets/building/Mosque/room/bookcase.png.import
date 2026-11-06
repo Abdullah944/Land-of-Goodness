@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://d1hksdfgm5p5p"
+path="res://.godot/imported/bookcase.png-3924647c3f4ffe397659654e96cca991.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/bookcase.png"
+dest_files=["res://.godot/imported/bookcase.png-3924647c3f4ffe397659654e96cca991.res"]
+
+[params]
+
+game_size=Vector2(50, 51)

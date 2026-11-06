@@ -110,4 +110,9 @@ func _on_body_entered(body: Node2D) -> void:
 	if destination == null:
 		return
 	var loader: LevelLoader = get_tree().current_scene.get_node("Systems/LevelLoader") as LevelLoader
+	if loader.settling():
+		# Just arrived: wait out the moment, then go only if the boy is still standing in the doorway.
+		await get_tree().create_timer(loader.settle_left()).timeout
+		if not is_instance_valid(self) or not is_inside_tree() or not overlaps_body(body):
+			return
 	loader.go_to(destination, spawn_name)

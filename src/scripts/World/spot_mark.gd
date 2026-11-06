@@ -15,6 +15,8 @@ extends Node2D
 @export var block_size: Vector2 = Vector2.ZERO
 ## A name board hung on a building, so the mosque, the shop and the people's houses can be told apart.
 @export var sign_key: String = ""
+## Where the boy stands to talk, measured from this spot's feet. Behind a counter it is in front of the counter.
+@export var talk_from: Vector2 = Vector2(0, 18)
 
 const IDLE_SHEETS: Dictionary = {
 	"Neighbor": "res://assets/characters/village/idle/Jassim.png",
@@ -123,17 +125,19 @@ func _load_idle(path: String) -> void:
 		_frames.append(ImageTexture.create_from_image(UiStyle.crisp_sprite(cut)))
 	_picture = _frames[0]
 
-## Lanterns and torches glow after dark. The clock turns them on.
+## Lanterns, lamp posts and torches glow after dark. The clock turns them on.
 func _add_night_light() -> void:
 	var path: String = person.resource_path.to_lower()
-	if name != "HouseLamp" and not (path.contains("lantern") or path.contains("torch")):
+	var post: bool = path.contains("lamp_post")
+	if name != "HouseLamp" and not (path.contains("lantern") or path.contains("torch") or post):
 		return
 	var light: PointLight2D = PointLight2D.new()
 	light.texture = UiStyle.glow_texture()
 	light.color = Color("ffc56b")
 	light.energy = 0.95
 	light.texture_scale = 0.8
-	light.position = Vector2(0, -_picture.get_size().y * 0.6) if stand_on_feet else Vector2.ZERO
+	# A lamp post's light sits up in the lamp at the top of the post.
+	light.position = Vector2(4 if post else 0, -_picture.get_size().y * (0.72 if post else 0.6)) if stand_on_feet else Vector2.ZERO
 	light.enabled = false
 	light.add_to_group("night_light")
 	add_child(light)

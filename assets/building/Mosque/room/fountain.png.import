@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://c4l25pf7qtjyw"
+path="res://.godot/imported/fountain.png-ab7b4cb8be1d3d11d5f7eea1027725a1.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/fountain.png"
+dest_files=["res://.godot/imported/fountain.png-ab7b4cb8be1d3d11d5f7eea1027725a1.res"]
+
+[params]
+
+game_size=Vector2(40, 37)

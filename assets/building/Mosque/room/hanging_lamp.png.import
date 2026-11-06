@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://b5fs521xj7tbm"
+path="res://.godot/imported/hanging_lamp.png-827e9ae7d9716003c83d2c2ba21f4577.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/hanging_lamp.png"
+dest_files=["res://.godot/imported/hanging_lamp.png-827e9ae7d9716003c83d2c2ba21f4577.res"]
+
+[params]
+
+game_size=Vector2(15, 45)

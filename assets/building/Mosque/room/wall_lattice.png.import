@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://dd3wdhvxncwhm"
+path="res://.godot/imported/wall_lattice.png-0b3ce320288ffff74716c054361ddb6c.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/wall_lattice.png"
+dest_files=["res://.godot/imported/wall_lattice.png-0b3ce320288ffff74716c054361ddb6c.res"]
+
+[params]
+
+game_size=Vector2(22, 50)

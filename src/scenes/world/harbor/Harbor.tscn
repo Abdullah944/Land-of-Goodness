@@ -6,13 +6,11 @@
 [ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="4_spot_mark"]
 [ext_resource type="Texture2D" path="res://assets/building/harbor/Dhow.png" id="5_dhow"]
 [ext_resource type="Texture2D" path="res://assets/props/crate_fish.png" id="6_crate_fish"]
-[ext_resource type="Texture2D" path="res://assets/building/town/barasti.png" id="7_barasti"]
-[ext_resource type="Texture2D" path="res://assets/building/town/house_coral.png" id="8_house_coral"]
 [ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="9_barrel"]
 [ext_resource type="Texture2D" path="res://assets/props/crate.png" id="10_crate"]
 [ext_resource type="Texture2D" path="res://assets/props/sack.png" id="11_sack"]
 [ext_resource type="Texture2D" path="res://assets/props/basket.png" id="12_basket"]
-[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="13_lantern"]
+[ext_resource type="Texture2D" path="res://assets/props/lamp_post.png" id="13_lantern"]
 [ext_resource type="Texture2D" path="res://assets/props/pot_big.png" id="14_pot_big"]
 [ext_resource type="Texture2D" path="res://assets/props/plant.png" id="15_plant"]
 [ext_resource type="Texture2D" path="res://assets/props/stall_produce.png" id="16_stall_produc"]
@@ -73,46 +71,6 @@ script = ExtResource("4_spot_mark")
 person = ExtResource("6_crate_fish")
 stand_on_feet = true
 group_name = "shore"
-
-[node name="Hut0" type="Node2D" parent="."]
-position = Vector2(-440, -120)
-script = ExtResource("4_spot_mark")
-person = ExtResource("7_barasti")
-fit_pixels = 124
-stand_on_feet = true
-block_size = Vector2(106, 37)
-
-[node name="Hut1" type="Node2D" parent="."]
-position = Vector2(-140, -200)
-script = ExtResource("4_spot_mark")
-person = ExtResource("8_house_coral")
-fit_pixels = 147
-stand_on_feet = true
-block_size = Vector2(116, 40)
-
-[node name="Hut2" type="Node2D" parent="."]
-position = Vector2(470, -160)
-script = ExtResource("4_spot_mark")
-person = ExtResource("7_barasti")
-fit_pixels = 124
-stand_on_feet = true
-block_size = Vector2(106, 37)
-
-[node name="Hut3" type="Node2D" parent="."]
-position = Vector2(-600, 40)
-script = ExtResource("4_spot_mark")
-person = ExtResource("7_barasti")
-fit_pixels = 110
-stand_on_feet = true
-block_size = Vector2(94, 33)
-
-[node name="Hut4" type="Node2D" parent="."]
-position = Vector2(610, 20)
-script = ExtResource("4_spot_mark")
-person = ExtResource("8_house_coral")
-fit_pixels = 137
-stand_on_feet = true
-block_size = Vector2(108, 37)
 
 [node name="Prop0" type="Node2D" parent="."]
 position = Vector2(130, 70)

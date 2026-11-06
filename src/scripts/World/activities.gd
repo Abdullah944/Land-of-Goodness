@@ -348,6 +348,13 @@ func talk_role(role: String) -> void:
 	dialogue.set_speaker(role)
 	match role:
 		"mosque":
+			# Outside, the mosque's door takes the boy in; inside, by the mihrab, he can sit quietly.
+			var place: Node = _place()
+			if place != null and place.name != "MosqueInside":
+				_shop = ""
+				_gift_to = ""
+				_enter_mosque()
+				return
 			_shop = "mosque"
 			dialogue.offer(Locale.t("mosque_line"), _labeled(["pray", "cancel"]))
 		"workbench":
@@ -900,6 +907,10 @@ func _refresh() -> void:
 func _fish() -> void:
 	var place: Node = _place()
 	fish_at(place.name if place != null else "Home")
+
+func _enter_mosque() -> void:
+	var loader: LevelLoader = get_parent().get_node("LevelLoader") as LevelLoader
+	loader.go_to(load("res://src/scenes/world/mosque/Mosque_inside.tscn") as PackedScene, "PlayerSpawn")
 
 func _enter_cave() -> void:
 	var loader: LevelLoader = get_parent().get_node("LevelLoader") as LevelLoader

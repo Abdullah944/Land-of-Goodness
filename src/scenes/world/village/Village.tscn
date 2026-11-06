@@ -8,14 +8,8 @@
 [ext_resource type="Texture2D" path="res://assets/props/stall_pots.png" id="6_stall_pots"]
 [ext_resource type="Texture2D" path="res://assets/props/counter.png" id="7_counter"]
 [ext_resource type="Texture2D" path="res://assets/props/shelf_seeds.png" id="8_shelf_seeds"]
-[ext_resource type="Texture2D" path="res://assets/building/town/house_tower.png" id="9_house_tower"]
-[ext_resource type="Texture2D" path="res://assets/building/town/house_blue.png" id="10_house_blue"]
-[ext_resource type="Texture2D" path="res://assets/building/house/Desert Adobe Rooftop House Sprite.png" id="11_desert_adobe"]
 [ext_resource type="Texture2D" path="res://assets/building/town/house_green.png" id="12_house_green"]
-[ext_resource type="Texture2D" path="res://assets/building/town/house_coral.png" id="13_house_coral"]
-[ext_resource type="Texture2D" path="res://assets/building/town/shop.png" id="14_shop"]
-[ext_resource type="Texture2D" path="res://assets/building/town/burj.png" id="15_burj"]
-[ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="16_lantern"]
+[ext_resource type="Texture2D" path="res://assets/props/lamp_post.png" id="16_lantern"]
 [ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="17_barrel"]
 [ext_resource type="Texture2D" path="res://assets/props/crate.png" id="18_crate"]
 [ext_resource type="Texture2D" path="res://assets/props/basket.png" id="19_basket"]
@@ -23,13 +17,17 @@
 [ext_resource type="Texture2D" path="res://assets/props/pot_big.png" id="21_pot_big"]
 [ext_resource type="Texture2D" path="res://assets/props/pot_green.png" id="22_pot_green"]
 [ext_resource type="Texture2D" path="res://assets/props/plant.png" id="23_plant"]
-[ext_resource type="Texture2D" path="res://assets/props/table.png" id="24_table"]
 [ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="25_date_palm"]
 [ext_resource type="Texture2D" path="res://assets/characters/village/Elder.png" id="26_elder"]
 [ext_resource type="Script" path="res://src/scripts/World/npc_route.gd" id="27_npc_route"]
 [ext_resource type="Texture2D" path="res://assets/characters/village/Merchant.png" id="28_merchant"]
-[ext_resource type="Texture2D" path="res://assets/characters/village/Carpenter.png" id="29_carpenter"]
 [ext_resource type="Texture2D" path="res://assets/building/Mosque/mosque.png" id="30_mosque"]
+[ext_resource type="Texture2D" path="res://assets/building/Mosque/room/fountain.png" id="31_fountain"]
+[sub_resource type="RectangleShape2D" id="Rect_workshop_door"]
+size = Vector2(30, 10)
+
+[sub_resource type="RectangleShape2D" id="Rect_mosque_door"]
+size = Vector2(36, 10)
 
 [sub_resource type="RectangleShape2D" id="Rect_24x90"]
 size = Vector2(24, 90)
@@ -96,7 +94,7 @@ spawn_name = "PlayerSpawn"
 shape = SubResource("Rect_90x24")
 
 [node name="Stall" type="Node2D" parent="."]
-position = Vector2(10, -110)
+position = Vector2(10, -152)
 script = ExtResource("3_spot_mark")
 person = ExtResource("4_market_stall")
 fit_pixels = 64
@@ -105,7 +103,7 @@ block_size = Vector2(56, 16)
 sign_key = "sign_market"
 
 [node name="StallProduce" type="Node2D" parent="."]
-position = Vector2(-90, -108)
+position = Vector2(-78, -110)
 script = ExtResource("3_spot_mark")
 person = ExtResource("5_stall_produc")
 fit_pixels = 64
@@ -113,7 +111,7 @@ stand_on_feet = true
 block_size = Vector2(56, 16)
 
 [node name="StallPots" type="Node2D" parent="."]
-position = Vector2(110, -108)
+position = Vector2(98, -110)
 script = ExtResource("3_spot_mark")
 person = ExtResource("6_stall_pots")
 fit_pixels = 64
@@ -121,7 +119,7 @@ stand_on_feet = true
 block_size = Vector2(56, 16)
 
 [node name="StallFar" type="Node2D" parent="."]
-position = Vector2(-90, 40)
+position = Vector2(-39, 61)
 script = ExtResource("3_spot_mark")
 person = ExtResource("5_stall_produc")
 fit_pixels = 64
@@ -129,7 +127,7 @@ stand_on_feet = true
 block_size = Vector2(56, 16)
 
 [node name="StallFar2" type="Node2D" parent="."]
-position = Vector2(110, 40)
+position = Vector2(59, 61)
 script = ExtResource("3_spot_mark")
 person = ExtResource("6_stall_pots")
 fit_pixels = 64
@@ -137,7 +135,7 @@ stand_on_feet = true
 block_size = Vector2(56, 16)
 
 [node name="Counter" type="Node2D" parent="."]
-position = Vector2(200, -20)
+position = Vector2(119, -15)
 script = ExtResource("3_spot_mark")
 person = ExtResource("7_counter")
 fit_pixels = 70
@@ -145,103 +143,34 @@ stand_on_feet = true
 block_size = Vector2(62, 12)
 
 [node name="ShelfSeeds" type="Node2D" parent="."]
-position = Vector2(214, -90)
+position = Vector2(-99, -15)
 script = ExtResource("3_spot_mark")
 person = ExtResource("8_shelf_seeds")
 stand_on_feet = true
 block_size = Vector2(36, 10)
 
-[node name="House0" type="Node2D" parent="."]
-position = Vector2(-340, -220)
+[node name="Workshop" type="Node2D" parent="."]
+position = Vector2(300, 60)
 script = ExtResource("3_spot_mark")
-person = ExtResource("9_house_tower")
-fit_pixels = 156
-stand_on_feet = true
-block_size = Vector2(125, 43)
-sign_key = "sign_elder_house"
-
-[node name="House1" type="Node2D" parent="."]
-position = Vector2(-470, 60)
-script = ExtResource("3_spot_mark")
-person = ExtResource("10_house_blue")
-fit_pixels = 158
-stand_on_feet = true
-block_size = Vector2(125, 43)
-
-[node name="House2" type="Node2D" parent="."]
-position = Vector2(-40, -300)
-script = ExtResource("3_spot_mark")
-person = ExtResource("11_desert_adobe")
+person = ExtResource("12_house_green")
 fit_pixels = 140
 stand_on_feet = true
 block_size = Vector2(116, 40)
+sign_key = "sign_workyard"
 
-[node name="House3" type="Node2D" parent="."]
-position = Vector2(230, -300)
-script = ExtResource("3_spot_mark")
-person = ExtResource("12_house_green")
-fit_pixels = 158
-stand_on_feet = true
-block_size = Vector2(125, 43)
+[node name="WorkshopEntrance" type="Area2D" parent="."]
+script = ExtResource("2_door")
+next_scene_path = "res://src/scenes/world/workshop/Workshop_inside.tscn"
 
-[node name="House4" type="Node2D" parent="."]
-position = Vector2(-310, 340)
-script = ExtResource("3_spot_mark")
-person = ExtResource("10_house_blue")
-fit_pixels = 158
-stand_on_feet = true
-block_size = Vector2(125, 43)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorkshopEntrance"]
+position = Vector2(300, 66)
+shape = SubResource("Rect_workshop_door")
 
-[node name="House5" type="Node2D" parent="."]
-position = Vector2(-60, 470)
-script = ExtResource("3_spot_mark")
-person = ExtResource("9_house_tower")
-fit_pixels = 146
-stand_on_feet = true
-block_size = Vector2(116, 40)
-
-[node name="House6" type="Node2D" parent="."]
-position = Vector2(310, 240)
-script = ExtResource("3_spot_mark")
-person = ExtResource("11_desert_adobe")
-fit_pixels = 150
-stand_on_feet = true
-block_size = Vector2(125, 43)
-
-[node name="House7" type="Node2D" parent="."]
-position = Vector2(690, -290)
-script = ExtResource("3_spot_mark")
-person = ExtResource("13_house_coral")
-fit_pixels = 158
-stand_on_feet = true
-block_size = Vector2(125, 43)
-
-[node name="House8" type="Node2D" parent="."]
-position = Vector2(690, 230)
-script = ExtResource("3_spot_mark")
-person = ExtResource("12_house_green")
-fit_pixels = 147
-stand_on_feet = true
-block_size = Vector2(116, 40)
-
-[node name="House9" type="Node2D" parent="."]
-position = Vector2(-600, -330)
-script = ExtResource("3_spot_mark")
-person = ExtResource("11_desert_adobe")
-fit_pixels = 140
-stand_on_feet = true
-block_size = Vector2(116, 40)
-
-[node name="House10" type="Node2D" parent="."]
-position = Vector2(-560, 260)
-script = ExtResource("3_spot_mark")
-person = ExtResource("10_house_blue")
-fit_pixels = 137
-stand_on_feet = true
-block_size = Vector2(108, 37)
+[node name="WorkshopDoor" type="Marker2D" parent="."]
+position = Vector2(300, 88)
 
 [node name="Mosque" type="Node2D" parent="."]
-position = Vector2(320, 460)
+position = Vector2(320, 430)
 script = ExtResource("3_spot_mark")
 person = ExtResource("30_mosque")
 fit_pixels = 168
@@ -250,22 +179,23 @@ role = "mosque"
 block_size = Vector2(140, 40)
 sign_key = "sign_mosque"
 
-[node name="Shop" type="Node2D" parent="."]
-position = Vector2(-170, -176)
-script = ExtResource("3_spot_mark")
-person = ExtResource("14_shop")
-fit_pixels = 120
-stand_on_feet = true
-block_size = Vector2(103, 36)
-sign_key = "sign_merchant_house"
+[node name="MosqueEntrance" type="Area2D" parent="."]
+script = ExtResource("2_door")
+next_scene_path = "res://src/scenes/world/mosque/Mosque_inside.tscn"
 
-[node name="Watchtower" type="Node2D" parent="."]
-position = Vector2(-620, -180)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MosqueEntrance"]
+position = Vector2(320, 436)
+shape = SubResource("Rect_mosque_door")
+
+[node name="MosqueFountain" type="Node2D" parent="."]
+position = Vector2(418, 440)
 script = ExtResource("3_spot_mark")
-person = ExtResource("15_burj")
-fit_pixels = 50
+person = ExtResource("31_fountain")
 stand_on_feet = true
-block_size = Vector2(43, 15)
+block_size = Vector2(34, 10)
+
+[node name="MosqueDoor" type="Marker2D" parent="."]
+position = Vector2(320, 458)
 
 [node name="Prop0" type="Node2D" parent="."]
 position = Vector2(-240, -60)
@@ -450,14 +380,6 @@ person = ExtResource("19_basket")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
-[node name="Workyard" type="Node2D" parent="."]
-position = Vector2(300, 100)
-script = ExtResource("3_spot_mark")
-person = ExtResource("24_table")
-stand_on_feet = true
-block_size = Vector2(24, 8)
-sign_key = "sign_workyard"
-
 [node name="Palm0" type="Node2D" parent="."]
 position = Vector2(-500, -130)
 script = ExtResource("3_spot_mark")
@@ -487,7 +409,7 @@ stand_on_feet = true
 block_size = Vector2(10, 6)
 
 [node name="Palm4" type="Node2D" parent="."]
-position = Vector2(250, 400)
+position = Vector2(206, 404)
 script = ExtResource("3_spot_mark")
 person = ExtResource("25_date_palm")
 stand_on_feet = true
@@ -598,7 +520,7 @@ spots = PackedVector2Array(-300, -140, -160, -30, 60, 110, -320, -160)
 hours = PackedFloat32Array(6, 11, 15, 19)
 
 [node name="Merchant" type="Node2D" parent="."]
-position = Vector2(10, -60)
+position = Vector2(10, -6)
 script = ExtResource("3_spot_mark")
 person = ExtResource("28_merchant")
 fit_pixels = 36
@@ -607,18 +529,6 @@ role = "merchant"
 
 [node name="Route" type="Node" parent="Merchant"]
 script = ExtResource("27_npc_route")
-spots = PackedVector2Array(10, -60, 170, -30, 10, -60, -150, -150)
+spots = PackedVector2Array(10, -6, 54, -30, 10, -6, -34, -30)
 hours = PackedFloat32Array(6, 12, 14, 20)
 
-[node name="Carpenter" type="Node2D" parent="."]
-position = Vector2(340, 80)
-script = ExtResource("3_spot_mark")
-person = ExtResource("29_carpenter")
-fit_pixels = 36
-stand_on_feet = true
-role = "carpenter"
-
-[node name="Route" type="Node" parent="Carpenter"]
-script = ExtResource("27_npc_route")
-spots = PackedVector2Array(340, 80, 130, 90, 340, 80, 260, -170)
-hours = PackedFloat32Array(6, 12, 13, 18)

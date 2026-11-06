@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://cipsf54dttrsa"
+path="res://.godot/imported/pillar.png-17dfbb87a6542354de5db158cfd6df5a.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/pillar.png"
+dest_files=["res://.godot/imported/pillar.png-17dfbb87a6542354de5db158cfd6df5a.res"]
+
+[params]
+
+game_size=Vector2(18, 43)

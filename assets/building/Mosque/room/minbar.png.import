@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://igg37phv5ylx"
+path="res://.godot/imported/minbar.png-b14d9149649a82d0569b24284d5ff17e.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/minbar.png"
+dest_files=["res://.godot/imported/minbar.png-b14d9149649a82d0569b24284d5ff17e.res"]
+
+[params]
+
+game_size=Vector2(46, 59)

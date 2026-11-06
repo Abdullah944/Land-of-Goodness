@@ -73,7 +73,7 @@ position = Vector2(8, 151.5)
 shape = SubResource("RectangleShape2D_ubrcs")
 
 [node name="Bed" type="Node2D" parent="."]
-position = Vector2(118, 48)
+position = Vector2(-84, 48)
 script = ExtResource("3_bed")
 
 [node name="Chest" type="Node2D" parent="."]

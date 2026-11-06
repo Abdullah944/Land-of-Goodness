@@ -159,23 +159,69 @@ const HERB_PATCH: Array[Vector2] = [Vector2(300, -60), Vector2(350, -10), Vector
 const MORE_DEBRIS: int = 30
 const ROOM: String = "res://assets/building/house/room/%s.png"
 const ROOM_AREA: Rect2 = Rect2(-120, 6, 288, 154)
-const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_window", "wall", "wall_shelf", "wall_window"]
+const WALL_ROW: Array[String] = ["wall", "wall_window", "wall", "wall_pattern", "wall", "wall_pattern", "wall", "wall_window", "wall"]
 ## Furniture that is always in the house. [picture, spot, solid footprint]
-## The room has corners with one use each: the shelf and pot on the back wall, a sitting rug on the left,
-## the bed on the right, and baskets and a bench along the front wall. The walk from the door stays open.
+## Big things stand against the walls and the middle stays open: the bed in the back-left corner with a
+## small table beside it, the shelf and lantern in the middle of the back wall, jars in the back-right corner,
+## and a cooking corner of baskets and jars at the front-left. The low table and its cushions sit on a rug
+## in the middle of the floor, and a mat lies inside the door.
 const FURNITURE: Array = [
-	["pot", Vector2(-104, 30), Vector2(22, 8)], ["shelf", Vector2(-58, 22), Vector2(52, 8)], ["lantern", Vector2(-14, 14), Vector2.ZERO],
-	["lamp_table", Vector2(72, 30), Vector2(24, 8)], ["plant_vase", Vector2(160, 30), Vector2(20, 8)],
-	["table", Vector2(-62, 104), Vector2(44, 12)], ["dates_bowl", Vector2(-62, 86), Vector2.ZERO],
-	["cushion_red", Vector2(-100, 106), Vector2.ZERO], ["cushion_green", Vector2(-24, 106), Vector2.ZERO],
-	["basket", Vector2(-104, 152), Vector2(22, 8)], ["jar", Vector2(-82, 150), Vector2(16, 8)], ["bench", Vector2(128, 152), Vector2(44, 8)],
+	["lamp_table", Vector2(-38, 30), Vector2(24, 8)], ["shelf", Vector2(24, 22), Vector2(52, 8)], ["lantern", Vector2(64, 14), Vector2.ZERO],
+	["pot", Vector2(118, 30), Vector2(22, 8)], ["plant_vase", Vector2(156, 30), Vector2(20, 8)],
+	["table", Vector2(24, 104), Vector2(44, 12)], ["dates_bowl", Vector2(24, 86), Vector2.ZERO],
+	["cushion_red", Vector2(-16, 106), Vector2.ZERO], ["cushion_green", Vector2(64, 106), Vector2.ZERO],
+	["basket", Vector2(-104, 152), Vector2(22, 8)], ["jar", Vector2(-82, 150), Vector2(16, 8)], ["bench", Vector2(132, 152), Vector2(44, 8)],
 ]
+const MOSQUE_ROOM: String = "res://assets/building/Mosque/room/%s.png"
+const MOSQUE_AREA: Rect2 = Rect2(-160, 6, 352, 170)
+const MOSQUE_WALL: Array[String] = ["wall", "wall_window", "wall", "wall_window", "wall", "wall", "wall", "wall_window", "wall", "wall_window", "wall"]
+## The prayer hall is kept open, since people move as they pray: one carpet wall to wall, its rows
+## along the qibla wall. The carpet stops before the door, where shoes come off onto the stone floor.
+const MOSQUE_CARPET: Rect2 = Rect2(-158, 10, 348, 142)
+## The qibla wall carries the decoration: the mihrab in the middle (it is in the scene, so it can be tapped),
+## carved screens on each side, the minbar to its right, and lamps hung evenly along it.
+## Shelves of the Quran stand in the two back corners, two columns hold the roof, and shoe racks wait by the door.
+## Washing for prayer happens outside, at the fountain beside the mosque.
+const MOSQUE_FURNITURE: Array = [
+	["wall_lattice", Vector2(-23, 10), Vector2.ZERO], ["wall_lattice", Vector2(55, 10), Vector2.ZERO],
+	["minbar", Vector2(92, 30), Vector2(38, 10)],
+	["hanging_lamp", Vector2(-120, 4), Vector2.ZERO], ["hanging_lamp", Vector2(-56, 4), Vector2.ZERO],
+	["hanging_lamp", Vector2(136, 4), Vector2.ZERO], ["hanging_lamp", Vector2(172, 4), Vector2.ZERO],
+	["bookcase", Vector2(-132, 28), Vector2(46, 8)],
+	["pillar", Vector2(-92, 104), Vector2(14, 6)], ["pillar", Vector2(124, 104), Vector2(14, 6)],
+	["shoe_rack", Vector2(-44, 174), Vector2(36, 8)], ["shoe_rack", Vector2(76, 174), Vector2(36, 8)],
+]
+## The carpenter's workshop is laid out like a shop: a long counter across the back half, with the carpenter
+## behind it and his bench against the wall behind him. Timber is stacked in the back-left corner, barrels
+## in the back-right. The front half is open floor with a rug, a crate corner, and a mat inside the door.
+## A picture given as a full path is used as it is; a fourth number makes it that many pixels across.
+const WORKSHOP_WALL: Array[String] = ["wall", "wall_window", "wall", "wall_shelf", "wall_shelf", "wall_shelf", "wall", "wall_window", "wall"]
+const WORKSHOP_COUNTER_Y: float = 94.0
+const WORKSHOP_FURNITURE: Array = [
+	["res://assets/building/Farm/Workbench.png", Vector2(24, 40), Vector2(48, 10), 54],
+	["res://assets/props/counter.png", Vector2(-4, WORKSHOP_COUNTER_Y), Vector2(56, 10), 56],
+	["res://assets/props/counter.png", Vector2(52, WORKSHOP_COUNTER_Y), Vector2(56, 10), 56],
+	["res://assets/items/goods/wood.png", Vector2(-100, 38), Vector2(20, 8), 24], ["res://assets/items/goods/wood.png", Vector2(-76, 42), Vector2(20, 8), 24],
+	["res://assets/items/goods/wood.png", Vector2(-100, 62), Vector2(20, 8), 24],
+	["lantern", Vector2(-20, 14), Vector2.ZERO], ["lantern", Vector2(68, 14), Vector2.ZERO],
+	["res://assets/props/barrel.png", Vector2(132, 40), Vector2(14, 6)], ["res://assets/props/barrel.png", Vector2(152, 46), Vector2(14, 6)],
+	["res://assets/props/barrel.png", Vector2(152, 70), Vector2(14, 6)],
+	["res://assets/props/crate.png", Vector2(-102, 150), Vector2(18, 8)], ["res://assets/props/crate.png", Vector2(-80, 152), Vector2(18, 8)],
+	["res://assets/props/sack.png", Vector2(-102, 128), Vector2(14, 6)],
+	["plant_vase", Vector2(156, 150), Vector2(18, 8)],
+]
+## Everything that makes a room: its pictures, floor, back wall, door gap, and furniture.
+const ROOMS: Dictionary = {
+	"HouseInside": {"pictures": ROOM, "area": ROOM_AREA, "wall": WALL_ROW, "wall_tall": 40.0, "door": Vector2(-16, 32), "furniture": FURNITURE},
+	"WorkshopInside": {"pictures": ROOM, "area": ROOM_AREA, "wall": WORKSHOP_WALL, "wall_tall": 40.0, "door": Vector2(-16, 32), "furniture": WORKSHOP_FURNITURE},
+	"MosqueInside": {"pictures": MOSQUE_ROOM, "area": MOSQUE_AREA, "wall": MOSQUE_WALL, "wall_tall": 44.0, "door": Vector2(-8, 40), "furniture": MOSQUE_FURNITURE},
+}
 
 static var _cuts: Array[Texture2D] = []
 
 static func dress(place: Node, cleared: Dictionary = {}) -> void:
-	if place.name == "HouseInside":
-		_dress_room(place)
+	if ROOMS.has(str(place.name)):
+		_dress_room(place, ROOMS[str(place.name)])
 		return
 	var layout: Dictionary = LAYOUTS.get(str(place.name), {})
 	if layout.is_empty() or place.get_node_or_null("Decor") != null:
@@ -211,7 +257,7 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 		_add_cliffs(place, place_name)
 	if place.name == "Home":
 		_add_debris(place, cleared)
-		PropPiece.add_to(place, {"name": "HouseLamp", "path": ROOM % "lantern", "at": Vector2(-306, -274)})
+		PropPiece.add_to(place, {"name": "HouseLamp", "path": "res://assets/props/lamp_post.png", "at": Vector2(-306, -274)})
 		for i: int in FARM_TREES.size():
 			PropPiece.add_to(place, {"name": "Palm_tree%d" % i, "path": _tree("Home", i), "at": FARM_TREES[i], "block": Vector2(14, 8)})
 		for i: int in FARM_PALMS.size():
@@ -370,33 +416,60 @@ static func _add_debris(place: Node, cleared: Dictionary) -> void:
 		PropPiece.add_to(place, {"name": extra_name, "texture": _cuts[int(kind[0])], "at": spot, "group": str(kind[1])})
 
 ## Lays the floor and walls, then the furniture. The old tile floor stays hidden for its grid.
-static func _dress_room(place: Node) -> void:
+static func _dress_room(place: Node, room: Dictionary) -> void:
 	if place.get_node_or_null("Decor") != null:
 		return
+	var pictures: String = str(room["pictures"])
+	var area: Rect2 = room["area"]
+	var tall: float = float(room["wall_tall"])
+	var door: Vector2 = room["door"]
 	var decor: Node2D = Node2D.new()
 	decor.name = "Decor"
-	var floor_picture: Texture2D = load(ROOM % "floor") as Texture2D
+	var floor_picture: Texture2D = load(pictures % "floor") as Texture2D
 	var step: float = 32.0
-	var y: float = ROOM_AREA.position.y - 6.0
-	while y < ROOM_AREA.end.y:
-		var x: float = ROOM_AREA.position.x
-		while x < ROOM_AREA.end.x:
-			decor.add_child(_room_tile(floor_picture, Vector2(x, y), Vector2(step, step)))
+	var y: float = area.position.y - 6.0
+	while y < area.end.y:
+		var x: float = area.position.x
+		while x < area.end.x:
+			# The last row is cut to the room's edge, so no floor shows past the front wall.
+			var cut: float = minf(step, area.end.y - y)
+			var tile: Sprite2D = _room_tile(floor_picture, Vector2(x, y), Vector2(step, step))
+			tile.region_enabled = true
+			tile.region_rect = Rect2(Vector2.ZERO, floor_picture.get_size() * Vector2(1.0, cut / step))
+			decor.add_child(tile)
 			x += step
 		y += step
-	for i: int in WALL_ROW.size():
-		var wall: Texture2D = load(ROOM % WALL_ROW[i]) as Texture2D
-		decor.add_child(_room_tile(wall, Vector2(ROOM_AREA.position.x + i * step, ROOM_AREA.position.y - 38.0), Vector2(step, 40.0)))
-	var edge: Color = Color("6b4426")
-	decor.add_child(_room_edge(Rect2(ROOM_AREA.position.x - 6.0, ROOM_AREA.position.y - 38.0, 6.0, ROOM_AREA.size.y + 44.0), edge))
-	decor.add_child(_room_edge(Rect2(ROOM_AREA.end.x, ROOM_AREA.position.y - 38.0, 6.0, ROOM_AREA.size.y + 44.0), edge))
-	decor.add_child(_room_edge(Rect2(ROOM_AREA.position.x - 6.0, ROOM_AREA.end.y, 110.0, 6.0), edge))
-	decor.add_child(_room_edge(Rect2(32.0, ROOM_AREA.end.y, ROOM_AREA.end.x - 26.0, 6.0), edge))
+	var walls: Array = room["wall"]
+	for i: int in walls.size():
+		var wall: Texture2D = load(pictures % str(walls[i])) as Texture2D
+		decor.add_child(_room_tile(wall, Vector2(area.position.x + i * step, area.position.y + 2.0 - tall), Vector2(step, tall)))
+	if str(place.name) == "MosqueInside":
+		# The carpet lies in the floor's layer, so the boy always walks over it.
+		var carpet: MosqueCarpet = MosqueCarpet.new()
+		carpet.area = MOSQUE_CARPET
+		decor.add_child(carpet)
+	# A thick wooden frame holds the room, with a step in the doorway.
+	var frame: RoomFrame = RoomFrame.new()
+	frame.inside = Rect2(area.position.x, area.position.y + 2.0 - tall, area.size.x, area.size.y + tall - 2.0)
+	frame.door = door
+	decor.add_child(frame)
 	place.add_child(decor)
-	PropPiece.add_to(place, {"name": "RoomRug", "path": ROOM % "rug", "at": Vector2(-62, 98), "flat": true})
-	PropPiece.add_to(place, {"name": "RoomMat", "path": ROOM % "mat", "at": Vector2(8, 142), "flat": true})
-	for row: Array in FURNITURE:
-		PropPiece.add_to(place, {"name": "Room_" + str(row[0]), "path": ROOM % str(row[0]), "at": row[1], "block": row[2]})
+	var door_middle: float = (door.x + door.y) * 0.5
+	if str(place.name) == "HouseInside":
+		PropPiece.add_to(place, {"name": "RoomRug", "path": ROOM % "rug", "at": Vector2(24, 98), "flat": true})
+		PropPiece.add_to(place, {"name": "RoomMat", "path": ROOM % "mat", "at": Vector2(door_middle, 146), "flat": true})
+	elif str(place.name) == "WorkshopInside":
+		PropPiece.add_to(place, {"name": "RoomRug", "path": ROOM % "rug_green", "at": Vector2(60, 124), "flat": true})
+		PropPiece.add_to(place, {"name": "RoomMat", "path": ROOM % "mat", "at": Vector2(door_middle, 146), "flat": true})
+	var furniture: Array = room["furniture"]
+	for i: int in furniture.size():
+		var row: Array = furniture[i]
+		var picture: String = str(row[0])
+		var piece_name: String = "Room_" + picture.get_file().get_basename() + ("" if str(place.name) == "HouseInside" else "_%d" % i)
+		var piece: Dictionary = {"name": piece_name, "path": picture if picture.begins_with("res://") else pictures % picture, "at": row[1], "block": row[2]}
+		if row.size() > 3:
+			piece["fit"] = int(row[3])
+		PropPiece.add_to(place, piece)
 
 static func _room_tile(picture: Texture2D, at: Vector2, size: Vector2) -> Sprite2D:
 	var tile: Sprite2D = Sprite2D.new()
@@ -405,12 +478,6 @@ static func _room_tile(picture: Texture2D, at: Vector2, size: Vector2) -> Sprite
 	tile.position = at
 	tile.scale = size / picture.get_size()
 	return tile
-
-static func _room_edge(box: Rect2, color: Color) -> Polygon2D:
-	var strip: Polygon2D = Polygon2D.new()
-	strip.color = color
-	strip.polygon = PackedVector2Array([box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)])
-	return strip
 
 static func _cut_objects() -> void:
 	var sheet: Texture2D = load(OBJECTS) as Texture2D

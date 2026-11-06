@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://co13exm4x7mr0"
+path="res://.godot/imported/floor.png-a66045bcec51744594ebe893f75a7be1.res"
+
+[deps]
+
+source_file="res://assets/building/Mosque/room/floor.png"
+dest_files=["res://.godot/imported/floor.png-a66045bcec51744594ebe893f75a7be1.res"]
+
+[params]
+
+game_size=Vector2(32, 32)

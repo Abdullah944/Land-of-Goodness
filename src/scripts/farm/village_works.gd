@@ -16,7 +16,8 @@ const PROJECTS: Array[Dictionary] = [
 ## Pictures each finished project adds to a place. "flat" pieces lie on the ground.
 const PIECES: Dictionary = {
 	"well": [
-		{"place": "Village", "name": "WorkWell", "path": "res://assets/props/well.png", "at": Vector2(-150, 200), "fit": 58, "block": Vector2(38, 14)},
+		# The well fills the middle of the market ring.
+		{"place": "Village", "name": "WorkWell", "path": "res://assets/props/well.png", "at": Vector2(10, -40), "fit": 50, "block": Vector2(34, 12)},
 	],
 	"grove": [
 		{"place": "Orchard", "name": "GrovePalm1", "path": "res://assets/nature/Date palm.png", "at": Vector2(-260, 60), "group": "date"},
@@ -24,21 +25,22 @@ const PIECES: Dictionary = {
 		{"place": "Orchard", "name": "GrovePalm3", "path": "res://assets/nature/Date palm.png", "at": Vector2(200, 180), "group": "date"},
 	],
 	"market": [
-		{"place": "Village", "name": "WorkStallA", "path": "res://assets/props/stall_produce.png", "at": Vector2(-20, 130), "fit": 64, "block": Vector2(56, 16)},
-		{"place": "Village", "name": "WorkStallB", "path": "res://assets/props/stall_pots.png", "at": Vector2(60, 130), "fit": 64, "block": Vector2(56, 16)},
-		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-70, 130)},
-		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(110, 130)},
+		# Two more stalls and lamps on each side of the path into the market ring from the south.
+		{"place": "Village", "name": "WorkStallA", "path": "res://assets/props/stall_produce.png", "at": Vector2(-40, 140), "fit": 64, "block": Vector2(56, 16)},
+		{"place": "Village", "name": "WorkStallB", "path": "res://assets/props/stall_pots.png", "at": Vector2(60, 140), "fit": 64, "block": Vector2(56, 16)},
+		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lamp_post.png", "at": Vector2(-88, 140)},
+		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lamp_post.png", "at": Vector2(108, 140)},
 	],
 	"dock": [
 		{"place": "Harbor", "name": "WorkDhow", "path": "res://assets/building/harbor/Dhow.png", "at": Vector2(-470, 240), "fit": 130},
-		{"place": "Harbor", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(6, 120)},
-		{"place": "Harbor", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(114, 120)},
+		{"place": "Harbor", "name": "WorkLampA", "path": "res://assets/props/lamp_post.png", "at": Vector2(6, 120)},
+		{"place": "Harbor", "name": "WorkLampB", "path": "res://assets/props/lamp_post.png", "at": Vector2(114, 120)},
 	],
 	"diwaniya": [
 		{"place": "Village", "name": "WorkDiwaniya", "path": "res://assets/building/town/majlis.png", "at": Vector2(-120, 300), "fit": 190, "block": Vector2(163, 56)},
 		{"place": "Village", "name": "WorkRug", "path": "res://assets/props/rug_sadu.png", "at": Vector2(30, 280), "flat": true},
-		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lantern.png", "at": Vector2(-20, 250)},
-		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lantern.png", "at": Vector2(80, 250)},
+		{"place": "Village", "name": "WorkLampA", "path": "res://assets/props/lamp_post.png", "at": Vector2(-20, 250)},
+		{"place": "Village", "name": "WorkLampB", "path": "res://assets/props/lamp_post.png", "at": Vector2(80, 250)},
 	],
 }
 
