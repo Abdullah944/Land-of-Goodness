@@ -15,6 +15,11 @@ const RECIPES: Dictionary = {
 		"costs": {"forage": 2},
 		"outputs": {"feed": 2},
 	},
+	"sprinkler": {
+		"name_key": "craft_sprinkler",
+		"costs": {"copper": 2, "stone": 4},
+		"outputs": {"sprinkler": 1},
+	},
 }
 
 const FEED_PRICE: int = 10

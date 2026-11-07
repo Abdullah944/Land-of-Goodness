@@ -195,7 +195,7 @@ func from_data(data: Dictionary) -> void:
 	watermelon_seeds = int(data.get("watermelon_seeds", 2))
 	watermelons = int(data.get("watermelons", 0))
 	selected_seed = str(data.get("selected_seed", CropCatalog.TURNIP))
-	if not CropCatalog.has_crop(selected_seed):
+	if not CropCatalog.has_crop(selected_seed) and selected_seed != FarmField.SPRINKLER:
 		selected_seed = CropCatalog.TURNIP
 	fish = int(data.get("fish", 0))
 	stone = int(data.get("stone", 0))

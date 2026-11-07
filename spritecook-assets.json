@@ -129,6 +129,11 @@
       "asset_id": "8a046f82-c434-40fe-9370-85c39b4a7f34",
       "sha12": "6db19c77cd6b",
       "label": "assets/props/world_plants.png"
+    },
+    {
+      "asset_id": "758ba1ac-f55b-4c7b-83ab-06ca5d1d00fa",
+      "sha12": "c19f0baacdae",
+      "label": "assets/farming/sprinkler.png"
     }
   ]
 }

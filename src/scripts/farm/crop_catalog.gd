@@ -39,6 +39,8 @@ const _CROPS: Dictionary = {
 		"harvest_item": "tomatoes",
 		"harvest_amount": 1,
 		"mature_stage": 3,
+		## After a harvest the plant stays and fruits again from this stage.
+		"regrow_to": 1,
 		"seed_price": 20,
 		"sell_price": 40,
 		"seasons": ["Spring", "Summer"],

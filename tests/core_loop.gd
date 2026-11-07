@@ -104,6 +104,7 @@ func _run() -> void:
 	check(farm.tool_for_plot(far) == "hoe" and farm.tool_for_plot(farm.farm_origin - Vector2i.ONE) == "", "any square of the farm land can be hoed, and none outside it")
 	farm.work(dirt, far, false)
 	check(farm.state_of(far) == "tilled" and farm.clear_soil(dirt, far) and farm.state_of(far) == "empty", "the pickaxe turns an empty bed back to grass")
+	_check_sprinkler(farm, dirt, inventory, stead)
 	var loader: LevelLoader = systems.get_node("LevelLoader") as LevelLoader
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
@@ -185,6 +186,72 @@ func _run() -> void:
 	_remove_side_files(save)
 	print("CORE_TEST passed=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
+
+## A crafted sprinkler is set on a hoed square, waters the eight around it each morning, and comes back with the pickaxe.
+## Tomatoes fruit again after a harvest.
+func _check_sprinkler(farm: FarmField, dirt: TileMapLayer, inventory: Inventory, stead: Stead) -> void:
+	inventory.add_item("copper", 2)
+	inventory.add_item("stone", 4)
+	check(stead.craft("sprinkler") and inventory.count_of("sprinkler") == 1, "copper and stone make a sprinkler")
+	var middle: Vector2i = farm.farm_origin + Vector2i(4, 4)
+	var keep_seed: String = inventory.selected_seed
+	farm.plots[farm._key(middle)] = {"tilled": true, "stage": -1, "watered": false, "crop": "", "sprinkler": false}
+	inventory.selected_seed = FarmField.SPRINKLER
+	farm.work(dirt, middle, false)
+	check(farm.state_of(middle) == FarmField.SPRINKLER and inventory.count_of("sprinkler") == 0, "the sprinkler is set on a hoed square")
+	var corner: Vector2i = middle + Vector2i(1, 1)
+	var outside: Vector2i = middle + Vector2i(2, 0)
+	farm.plots[farm._key(corner)] = {"tilled": true, "stage": 0, "watered": false, "crop": "turnip", "sprinkler": false}
+	farm.plots[farm._key(outside)] = {"tilled": true, "stage": 0, "watered": false, "crop": "turnip", "sprinkler": false}
+	farm.advance_day("Spring", false)
+	check(bool(farm.plots[farm._key(corner)]["watered"]) and not bool(farm.plots[farm._key(outside)]["watered"]), "each morning the sprinkler waters the eight squares around it only")
+	var rows: Array = farm.export_plots()
+	farm.import_plots(rows)
+	check(farm.state_of(middle) == FarmField.SPRINKLER, "a sprinkler stays after save and load")
+	check(farm.tool_for_plot(middle) == "pick" and farm.clear_soil(dirt, middle) and inventory.count_of("sprinkler") == 1 and farm.state_of(middle) == "tilled", "the pickaxe lifts the sprinkler back into the bag")
+	inventory.selected_seed = keep_seed
+	var tomato: Dictionary = {"tilled": true, "stage": 3, "watered": false, "crop": "tomato", "sprinkler": false}
+	farm.plots[farm._key(corner)] = tomato
+	var before: int = inventory.count_of("tomatoes")
+	farm.work(dirt, corner, false)
+	check(inventory.count_of("tomatoes") == before + 1 and farm.state_of(corner) != "tilled" and str(farm.plots[farm._key(corner)]["crop"]) == "tomato", "a tomato plant stays after its harvest and fruits again")
+	farm.plots[farm._key(outside)] = {"tilled": true, "stage": 2, "watered": true, "crop": "turnip", "sprinkler": false}
+	check(int(farm.ripe_tomorrow("Spring", false).get("turnips", 0)) == 1 and farm.ripe_tomorrow("Winter", false).is_empty(), "bedtime knows which crops ripen tomorrow")
+	var line: String = Tomorrow.line(farm.get_parent())
+	check(line != "", "bedtime always has a line about tomorrow")
+	farm.plots[farm._key(outside)] = {"tilled": true, "stage": 3, "watered": false, "crop": "turnip", "sprinkler": false}
+	check(farm.has_ripe(), "the farm knows when something is ready to pick")
+	_check_notices(farm.get_parent())
+	for key: Vector2i in [middle, corner, outside]:
+		farm.plots.erase(farm._key(key))
+	farm.apply()
+	var systems: Node = farm.get_parent()
+	var count: int = Journal.found(systems)
+	var read: PackedStringArray = Journal.read_lines(systems)
+	check(read.size() == count + (1 if count < Journal.PAGE_COUNT else 0), "the journal lists each found page and who has the next")
+	check(Journal.chapter_lines("well").size() == 3 and Journal.chapter_lines("diwaniya").size() == 2 and Journal.chapter_lines("well")[1] == Locale.t("page_2"), "each finished project gives a page and starts the next chapter")
+	check(_locale_is_whole(), "every page and chapter line has English and Arabic")
+
+## The phone note: only when something is true, never sooner than the overnight wait, only from 8 AM to 9 PM, and one a day.
+func _check_notices(systems: Node) -> void:
+	var now: float = Time.get_unix_time_from_system()
+	var plan: Dictionary = PhoneNotices.plan_for(systems, now, 0.0)
+	check(not plan.is_empty() and str(plan["text"]) == Locale.t("notice_ripe") % Locale.item("turnips"), "a ripe crop makes the phone note")
+	var due: float = now + float(plan.get("delay", 0))
+	var hour: int = int(Time.get_datetime_dict_from_unix_time(int(due + PhoneNotices._zone_seconds()))["hour"])
+	check(float(plan.get("delay", 0)) >= SaveGame.AWAY_NIGHT - 1.0 and hour >= 8 and hour < 21, "the phone note waits for the night away and comes only in the day")
+	var again: Dictionary = PhoneNotices.plan_for(systems, now, due)
+	check(PhoneNotices._day_of(now + float(again["delay"])) != PhoneNotices._day_of(due), "never two phone notes on the same day")
+	var farm: FarmField = systems.get_node("FarmField") as FarmField
+	var keep: Dictionary = farm.plots.duplicate(true)
+	farm.plots.clear()
+	var fairs: Festivals = systems.get_node("Festivals") as Festivals
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var quiet: bool = fairs.tomorrow().is_empty() and friends.birthday_on(clock.day + 1, GameClock.SEASONS[int(float(clock.day + 1) / 7.0) % 4]) == ""
+	check(not quiet or PhoneNotices.plan_for(systems, now, 0.0).is_empty(), "no phone note when there is nothing true to say")
+	farm.plots = keep
+	check(systems.get_node_or_null("PhoneNotices") != null and systems.get_node("PhoneNotices")._scheduler == null, "on a computer the phone notes stay quiet")
 
 func _check_places(main: Node, loader: LevelLoader, clock: GameClock) -> void:
 	var places: Dictionary = {
@@ -802,6 +869,14 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 		check(map.task_places().has(WorldMap.PERSON_PLACES[str(wish["person"])]), "the map marks where a neighbor has a request today")
 		wish["done"] = true
 		check(not map.task_places().has(WorldMap.PERSON_PLACES[str(wish["person"])]) or str(wish["person"]) == "jassim", "the mark goes once the request is done")
+	var field: FarmField = main.get_node("Systems/FarmField") as FarmField
+	var quest_was: bool = (main.get_node("Systems/Activities") as Activities).quest_done
+	(main.get_node("Systems/Activities") as Activities).quest_done = true
+	field.plots["900,900"] = {"tilled": true, "stage": 3, "watered": false, "crop": "turnip", "sprinkler": false}
+	check(str(map.task_places().get("Home", "")) == "ripe", "the map shows a leaf on the farm when a crop is ripe")
+	field.plots.erase("900,900")
+	check(not map.task_places().has("Home") or str(map.task_places()["Home"]) != "ripe", "the leaf goes when nothing is ripe")
+	(main.get_node("Systems/Activities") as Activities).quest_done = quest_was
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "WorkshopDoor")
 	for i: int in 3:
 		await process_frame
@@ -884,6 +959,13 @@ func _locale_is_whole() -> bool:
 	return whole
 
 func _check_save_safety(save: SaveGame, inventory: Inventory) -> void:
+	var clock: GameClock = save.get_parent().get_node("Clock") as GameClock
+	var day: int = clock.day
+	save.away_seconds = 2.0 * 3600.0
+	check(not save.catch_up() and clock.day == day, "a short break changes nothing on the farm")
+	save.away_seconds = 30.0 * 3600.0
+	check(save.catch_up() and clock.day == day + 1, "after a long time away, exactly one night passes, never more")
+	check(save.away_seconds == 0.0 and not save.catch_up() and clock.day == day + 1, "the night away is counted only once")
 	inventory.dinars = 77
 	save.write_now()
 	save.write_now()

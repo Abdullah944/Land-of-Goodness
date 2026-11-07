@@ -18,6 +18,8 @@ var music_level: int = 2
 var sfx_level: int = 2
 ## Shows the next real prayer time in the menu and a gentle note when one comes.
 var prayer_reminder: bool = true
+## One gentle phone notification a day while the game is closed, such as ripe crops.
+var phone_notices: bool = true
 
 const SCENES: Dictionary = {
 	"Home": "res://src/scenes/world/home/Home.tscn",
@@ -338,6 +340,7 @@ func to_data() -> Dictionary:
 		"music_level": music_level,
 		"sfx_level": sfx_level,
 		"prayer_reminder": prayer_reminder,
+		"phone_notices": phone_notices,
 	}
 
 func from_data(data: Dictionary) -> void:
@@ -373,6 +376,7 @@ func from_data(data: Dictionary) -> void:
 	music_level = clampi(int(data.get("music_level", 2)), 0, 2)
 	sfx_level = clampi(int(data.get("sfx_level", 2 if bool(data.get("sfx", true)) else 0)), 0, 2)
 	prayer_reminder = bool(data.get("prayer_reminder", true))
+	phone_notices = bool(data.get("phone_notices", true))
 	Locale.language = language
 	apply_buildings()
 

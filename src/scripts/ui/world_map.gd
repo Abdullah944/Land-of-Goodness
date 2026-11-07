@@ -152,6 +152,10 @@ func task_places() -> Dictionary:
 		var person: String = str(friends.call("birthday_today"))
 		if person != "":
 			marks[PERSON_PLACES.get(person, "")] = true
+	# A leaf over the farm when something there is ready to pick, unless someone already needs you there.
+	var farm: Node = systems.get_node_or_null("FarmField")
+	if farm != null and bool(farm.call("has_ripe")) and not marks.has("Home"):
+		marks["Home"] = "ripe"
 	marks.erase("")
 	return marks
 
@@ -261,7 +265,7 @@ func _draw() -> void:
 	for key: String in PLACES:
 		_draw_place(key, key == here)
 		if tasks.has(key):
-			_draw_task_mark(key)
+			_draw_task_mark(key, str(tasks[key]) == "ripe")
 	_draw_you()
 	_draw_compass(Vector2(size.x - 20.0, 20.0))
 	_draw_here_tag(here)
@@ -332,14 +336,20 @@ func _draw_place(key: String, here: bool) -> void:
 	_draw_tag(at + Vector2(0, radius + 8.0), Locale.t(str(row[2])), here)
 
 ## A gold "!" on the top corner of a place's badge: someone there needs the boy today.
-func _draw_task_mark(key: String) -> void:
+func _draw_task_mark(key: String, ripe: bool = false) -> void:
 	var at: Vector2 = _screen(PLACES[key][0])
 	var radius: float = 13.0 * clampf(1.0 + (zoom - 1.0) * 0.35, 1.0, 1.7)
 	var mark: Vector2 = at + Vector2(radius * 0.8, -radius * 0.8)
 	var beat: float = 1.0 + 0.12 * sin(float(Time.get_ticks_msec()) * 0.006)
 	draw_circle(mark + Vector2(0.6, 1.0), 6.5 * beat, Color(0, 0, 0, 0.3))
-	draw_circle(mark, 6.5 * beat, UiStyle.GOLD)
+	draw_circle(mark, 6.5 * beat, Color("5e9b62") if ripe else UiStyle.GOLD)
 	draw_arc(mark, 6.5 * beat, 0.0, TAU, 20, UiStyle.WOOD_DARK, 1.2)
+	if ripe:
+		# A small leaf: two arcs that meet at the tips, and a stem.
+		var leaf: PackedVector2Array = PackedVector2Array([mark + Vector2(-3, 3), mark + Vector2(-2.5, -1), mark + Vector2(0, -3.5), mark + Vector2(3, -3.5), mark + Vector2(2.5, 0.5), mark + Vector2(-0.5, 3)])
+		draw_colored_polygon(leaf, Color("fff3dc"))
+		draw_line(mark + Vector2(-3.5, 3.5), mark + Vector2(1.5, -1.5), Color("3e6b40"), 1.0)
+		return
 	draw_rect(Rect2(mark + Vector2(-1.0, -4.0), Vector2(2.0, 5.0)), UiStyle.DARK)
 	draw_rect(Rect2(mark + Vector2(-1.0, 2.0), Vector2(2.0, 2.0)), UiStyle.DARK)
 

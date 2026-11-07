@@ -12,6 +12,11 @@ var saved_position: Vector2 = Vector2.ZERO
 var has_position: bool = false
 ## Set when the main file could not be read and the backup was used instead.
 var recovered: bool = false
+## Gentle overnight: after this long away from the game, the farm moves forward one night. Never more than one.
+const AWAY_NIGHT: float = 8.0 * 3600.0
+## Seconds between the last save and this load.
+var away_seconds: float = 0.0
+var _paused_at: float = 0.0
 
 func _ready() -> void:
 	var override_path: String = OS.get_environment("KHAIR_SAVE")
@@ -20,13 +25,35 @@ func _ready() -> void:
 
 ## A phone can close the game at any moment, so save when it goes to the background.
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_RESUMED:
+		if _paused_at > 0.0:
+			away_seconds = Time.get_unix_time_from_system() - _paused_at
+			_paused_at = 0.0
+			catch_up()
+		return
 	if what != NOTIFICATION_APPLICATION_PAUSED and what != NOTIFICATION_WM_CLOSE_REQUEST:
 		return
+	_paused_at = Time.get_unix_time_from_system()
 	var scene: Node = get_tree().current_scene if is_inside_tree() else null
 	var title: Node = scene.get_node_or_null("UI/TitleMenu") if scene != null else null
 	if title == null or bool(title.call("is_open")):
 		return
 	write_now()
+
+## After a long time away, one night passes on the farm: crops grow a step and animals give their goods.
+## Nothing is lost for staying away. Returns true when a night passed.
+func catch_up() -> bool:
+	if away_seconds < AWAY_NIGHT:
+		return false
+	away_seconds = 0.0
+	var clock: GameClock = get_parent().get_node_or_null("Clock") as GameClock
+	if clock == null:
+		return false
+	clock.sleep_now()
+	var activities: Activities = get_parent().get_node_or_null("Activities") as Activities
+	if activities != null:
+		activities.note = Locale.t("away_night")
+	return true
 
 func backup_path() -> String:
 	return path.get_basename() + ".backup.json"
@@ -55,6 +82,7 @@ func write_now() -> void:
 		"x": saved_position.x,
 		"y": saved_position.y,
 		"has_position": has_position,
+		"saved_at": Time.get_unix_time_from_system(),
 	}
 	if stead != null:
 		data["stead"] = stead.to_data()
@@ -130,6 +158,7 @@ func _apply(data: Dictionary) -> void:
 		if part != null:
 			part.call("from_data", _section(data, system.to_lower()))
 	has_position = bool(data.get("has_position", false))
+	away_seconds = maxf(0.0, Time.get_unix_time_from_system() - float(data.get("saved_at", Time.get_unix_time_from_system())))
 	saved_position = Vector2(float(data.get("x", 0.0)), float(data.get("y", 0.0)))
 
 func _section(data: Dictionary, key: String) -> Dictionary:

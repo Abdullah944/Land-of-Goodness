@@ -12,8 +12,13 @@ func _ready() -> void:
 	var tint: CanvasModulate = CanvasModulate.new()
 	tint.name = "NightTint"
 	add_child(tint)
+	var notices: PhoneNotices = PhoneNotices.new()
+	notices.name = "PhoneNotices"
+	get_node("Systems").add_child(notices)
 	var save: SaveGame = get_node("Systems/SaveGame") as SaveGame
 	var loaded: bool = save.load_game()
+	if loaded:
+		save.catch_up()
 	var farm: FarmField = get_node("Systems/FarmField") as FarmField
 	var stead: Stead = get_node_or_null("Systems/Stead") as Stead
 	if stead != null:

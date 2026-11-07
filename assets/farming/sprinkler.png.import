@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://cxs6afncmw54l"
+path="res://.godot/imported/sprinkler.png-7f99002757ae56c168e3f21a31afc7d7.res"
+
+[deps]
+
+source_file="res://assets/farming/sprinkler.png"
+dest_files=["res://.godot/imported/sprinkler.png-7f99002757ae56c168e3f21a31afc7d7.res"]
+
+[params]
+
+game_size=Vector2(24, 24)

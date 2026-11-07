@@ -21,6 +21,10 @@ const FENCE_RAIL: String = "res://assets/props/fence/rail.png"
 const FENCE_POST: String = "res://assets/props/fence/post.png"
 const FENCE_SIDE: String = "res://assets/props/fence/side.png"
 const FENCE_GATE: String = "res://assets/props/fence/gate.png"
+## A sprinkler stands on a tilled square and waters the eight squares around it every morning.
+const SPRINKLER: String = "sprinkler"
+const SPRINKLER_PICTURE: String = "res://assets/farming/sprinkler.png"
+const AROUND: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
 
 var plots: Dictionary = {}
 ## The plant picture on each planted square, by square key, so one swing redraws only its own squares.
@@ -45,8 +49,13 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 	elif not bool(plot["tilled"]):
 		plot["tilled"] = true
 		_maybe_find(dirt, cell)
+	elif bool(plot.get("sprinkler", false)):
+		pass
 	elif int(plot["stage"]) < 0:
-		_plant(plot)
+		if _inventory() != null and _inventory().selected_seed == SPRINKLER:
+			_place_sprinkler(plot)
+		else:
+			_plant(plot)
 	elif _is_ready(plot):
 		_harvest(plot, dirt.to_global(dirt.map_to_local(cell)))
 	elif not bool(plot["watered"]):
@@ -64,6 +73,8 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 func clear_soil(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	if not _is_tilled(cell) or int(plots[_key(cell)]["stage"]) >= 0:
 		return false
+	if bool(plots[_key(cell)].get("sprinkler", false)):
+		return _take_sprinkler(dirt, cell)
 	plots.erase(_key(cell))
 	_refresh_cells([cell])
 	Juice.burst(dirt, dirt.map_to_local(cell), Juice.DUST_BROWN, 10, 34.0, 0.4, 2.2)
@@ -115,6 +126,7 @@ func advance_day(season: String, raining: bool) -> void:
 			if stage >= 0 and stage < _mature_stage(plot):
 				plot["watered"] = true
 				plots[key] = plot
+	_run_sprinklers()
 	apply()
 
 func apply() -> void:
@@ -146,7 +158,7 @@ func apply() -> void:
 		if bool(plot["tilled"]):
 			dirt.set_cell(cell, 0, DIRT_TILE)
 		var stage: int = int(plot["stage"])
-		if stage >= 0:
+		if stage >= 0 or bool(plot.get("sprinkler", false)):
 			var sprout: Sprite2D = _sprout(dirt, cell, plot)
 			crops.add_child(sprout)
 			_sprouts[key] = sprout
@@ -168,7 +180,7 @@ func _refresh_cells(cells: Array[Vector2i]) -> void:
 			dirt.set_cell(cell, 0, DIRT_TILE)
 		else:
 			dirt.erase_cell(cell)
-		if plots.has(key) and int(plots[key]["stage"]) >= 0:
+		if plots.has(key) and (int(plots[key]["stage"]) >= 0 or bool(plots[key].get("sprinkler", false))):
 			var sprout: Sprite2D = _sprout(dirt, cell, plots[key])
 			crops.add_child(sprout)
 			_sprouts[key] = sprout
@@ -197,6 +209,8 @@ func export_plots() -> Array:
 		}
 		if int(plot["stage"]) >= 0:
 			row["crop"] = str(plot.get("crop", CropCatalog.TURNIP))
+		if bool(plot.get("sprinkler", false)):
+			row["sprinkler"] = true
 		rows.append(row)
 	return rows
 
@@ -216,6 +230,7 @@ func import_plots(rows: Array) -> void:
 				"stage": stage,
 				"watered": bool(row.get("watered", false)),
 				"crop": crop_id,
+				"sprinkler": stage < 0 and bool(row.get("sprinkler", false)),
 			}
 
 func tool_for_plot(cell: Vector2i) -> String:
@@ -226,12 +241,16 @@ func tool_for_plot(cell: Vector2i) -> String:
 		return "hoe"
 	if state == "planted" or state == "growing":
 		return "water"
+	if state == SPRINKLER:
+		return "pick"
 	return ""
 
 func state_of(cell: Vector2i) -> String:
 	var plot: Dictionary = _plot(cell)
 	if not bool(plot["tilled"]):
 		return "empty"
+	if bool(plot.get("sprinkler", false)):
+		return SPRINKLER
 	var stage: int = int(plot["stage"])
 	if stage < 0:
 		return "tilled"
@@ -263,6 +282,87 @@ func _plant(plot: Dictionary) -> void:
 	var seasons: Array = crop.get("seasons", [])
 	if activities != null and not seasons.has(_season()):
 		activities.note = Locale.t("waits_season") % Locale.item(str(crop.get("harvest_item", "")))
+
+## Puts a sprinkler from the bag on an empty tilled square.
+func _place_sprinkler(plot: Dictionary) -> void:
+	var inventory: Inventory = _inventory()
+	if inventory == null or not inventory.take_item(SPRINKLER, 1):
+		if _activities() != null:
+			_activities().note = Locale.t("need_sprinkler")
+		return
+	plot["sprinkler"] = true
+	plot["watered"] = false
+	if _activities() != null:
+		_activities().flash(Locale.t("sprinkler_placed"))
+
+## The pickaxe lifts a sprinkler back into the bag and leaves the soil tilled.
+func _take_sprinkler(dirt: TileMapLayer, cell: Vector2i) -> bool:
+	var plot: Dictionary = plots[_key(cell)]
+	plot["sprinkler"] = false
+	plots[_key(cell)] = plot
+	if _inventory() != null:
+		_inventory().add_item(SPRINKLER, 1)
+	if _activities() != null:
+		_activities().pop_item(SPRINKLER, 1, dirt.to_global(dirt.map_to_local(cell)))
+	_refresh_cells([cell])
+	_save()
+	return true
+
+## Every sprinkler waters the planted squares around it, so the morning starts with them wet.
+func _run_sprinklers() -> void:
+	for key: String in plots.keys():
+		if not bool(plots[key].get("sprinkler", false)):
+			continue
+		var cell: Vector2i = _cell_from_key(key)
+		for offset: Vector2i in AROUND:
+			var next: String = _key(cell + offset)
+			if plots.has(next):
+				var plot: Dictionary = plots[next]
+				_water(plot)
+				plots[next] = plot
+
+## How many of each harvest will be ripe tomorrow morning that are not ripe now.
+func ripe_tomorrow(season: String, raining: bool) -> Dictionary:
+	var wet: Dictionary = {}
+	for key: String in plots.keys():
+		if bool(plots[key].get("sprinkler", false)):
+			var cell: Vector2i = _cell_from_key(key)
+			for offset: Vector2i in AROUND:
+				wet[_key(cell + offset)] = true
+	var ripe: Dictionary = {}
+	for key: String in plots.keys():
+		var plot: Dictionary = plots[key]
+		var crop: Dictionary = _crop_of(plot)
+		if int(plot["stage"]) != _mature_stage(plot) - 1 or not (crop.get("seasons", []) as Array).has(season):
+			continue
+		if bool(plot["watered"]) or raining or wet.has(key):
+			var item: String = str(crop.get("harvest_item", ""))
+			ripe[item] = int(ripe.get(item, 0)) + 1
+	return ripe
+
+## How many of each harvest are ready to pick right now.
+func ripe_now() -> Dictionary:
+	var ripe: Dictionary = {}
+	for key: String in plots.keys():
+		var plot: Dictionary = plots[key]
+		if int(plot["stage"]) >= 0 and _is_ready(plot):
+			var item: String = str(_crop_of(plot).get("harvest_item", ""))
+			ripe[item] = int(ripe.get(item, 0)) + 1
+	return ripe
+
+## True when at least one square is ready to pick.
+func has_ripe() -> bool:
+	for key: String in plots.keys():
+		if int(plots[key]["stage"]) >= 0 and _is_ready(plots[key]):
+			return true
+	return false
+
+func sprinkler_count() -> int:
+	var count: int = 0
+	for key: String in plots.keys():
+		if bool(plots[key].get("sprinkler", false)):
+			count += 1
+	return count
 
 ## Waters the squares around one with the better cans, and returns the squares it watered.
 func _spread_water(cell: Vector2i) -> Array[Vector2i]:
@@ -303,8 +403,12 @@ func _harvest(plot: Dictionary, at: Vector2 = Vector2.INF) -> void:
 	var bank: Node = get_parent().get_node_or_null("SoundBank")
 	if bank != null:
 		bank.call("play", "harvest")
-	plot["stage"] = -1
 	plot["watered"] = false
+	# Some plants, like tomatoes, keep their roots and fruit again a few days later.
+	if crop.has("regrow_to"):
+		plot["stage"] = int(crop["regrow_to"])
+		return
+	plot["stage"] = -1
 	plot["crop"] = ""
 
 func _picked_line(crop: Dictionary) -> String:
@@ -320,7 +424,7 @@ func _plot(cell: Vector2i) -> Dictionary:
 	var key: String = _key(cell)
 	if plots.has(key):
 		return plots[key]
-	return {"tilled": false, "stage": -1, "watered": false, "crop": ""}
+	return {"tilled": false, "stage": -1, "watered": false, "crop": "", "sprinkler": false}
 
 func _store(cell: Vector2i, plot: Dictionary) -> void:
 	if not bool(plot["tilled"]):
@@ -404,6 +508,12 @@ func _fence_piece(path: String, feet: Vector2) -> Sprite2D:
 	return piece
 
 func _sprout(dirt: TileMapLayer, cell: Vector2i, plot: Dictionary) -> Sprite2D:
+	if bool(plot.get("sprinkler", false)):
+		var stand: Sprite2D = Sprite2D.new()
+		stand.texture = load(SPRINKLER_PICTURE) as Texture2D
+		stand.centered = true
+		stand.position = dirt.map_to_local(cell) + Vector2(0, -5)
+		return stand
 	var crop: Dictionary = _crop_of(plot)
 	var sprout: Sprite2D = Sprite2D.new()
 	sprout.texture = crop.get("texture", CropCatalog.PLANTS)

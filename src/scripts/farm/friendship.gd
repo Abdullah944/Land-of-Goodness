@@ -77,6 +77,13 @@ func birthday_today() -> String:
 			return person
 	return ""
 
+## Whose birthday falls on the given day and season, or "".
+func birthday_on(day: int, season: String) -> String:
+	for person: String in PEOPLE:
+		if BIRTHDAYS.has(person) and str(BIRTHDAYS[person][0]) == season and day_of_season(day) == int(BIRTHDAYS[person][1]):
+			return person
+	return ""
+
 static func day_of_season(day: int) -> int:
 	return day % 7
 

@@ -99,13 +99,16 @@ func _on_answer(yes: bool) -> void:
 		player.busy = true
 		player.cancel_tap()
 	var hud: Node = get_tree().current_scene.get_node("UI/HUD")
-	hud.call("cover_for_sleep")
+	hud.call("cover_for_sleep", Tomorrow.line(get_tree().current_scene.get_node("Systems")))
 	await get_tree().create_timer(3.0).timeout
 	var clock: GameClock = get_tree().current_scene.get_node("Systems/Clock") as GameClock
 	clock.sleep_now()
 	hud.call("uncover_sleep")
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
-	activities.note = "%s %s" % [Locale.t("slept"), clock.forecast_text()]
+	activities.note = Locale.t("slept")
+	var notices: PhoneNotices = get_tree().current_scene.get_node_or_null("Systems/PhoneNotices") as PhoneNotices
+	if notices != null:
+		notices.ask_once()
 	if player != null:
 		player.busy = false
 

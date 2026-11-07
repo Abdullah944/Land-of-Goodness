@@ -41,6 +41,8 @@ var _sound: Button
 var _journal_tab: Button
 var _journal: Label
 var _journal2: Label
+var _pages_button: Button
+var _notice_button: Button
 var _zoom_out: Button
 var _list: Control
 var _bag_scroll: ScrollContainer
@@ -206,9 +208,27 @@ func _side_margin(view: Vector2) -> float:
 	var inset: float = maxf(float(safe.position.x), window.x - float(safe.end.x))
 	return maxf(MARGIN, ceil(inset * view.x / window.x))
 
-func cover_for_sleep() -> void:
+## Darkens the screen for sleep and shows one line about tomorrow.
+func cover_for_sleep(tomorrow: String = "") -> void:
 	_sleep_dark.visible = true
 	_sleep_dark.move_to_front()
+	var line: Label = _sleep_dark.get_node_or_null("Tomorrow") as Label
+	if line == null:
+		line = _make_label(Vector2.ZERO, Color("fff3dc"))
+		line.name = "Tomorrow"
+		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		line.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.add_theme_font_size_override("font_size", 16)
+		_sleep_dark.add_child(line)
+		line.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		line.offset_left = 40.0
+		line.offset_right = -40.0
+	line.text = tomorrow
+	Locale.apply_control(line)
+	line.modulate.a = 0.0
+	if tomorrow != "":
+		create_tween().tween_property(line, "modulate:a", 1.0, 0.6).set_delay(0.5)
 
 func uncover_sleep() -> void:
 	_sleep_dark.visible = false
@@ -324,6 +344,11 @@ func refresh() -> void:
 	if _journal != null:
 		_journal.visible = _tab == "quests"
 		_journal2.visible = _tab == "quests"
+		_pages_button.visible = _tab == "quests"
+		var page_systems: Node = get_tree().current_scene.get_node_or_null("Systems")
+		if page_systems != null:
+			_pages_button.text = Locale.t("pages") % [Journal.found(page_systems), Journal.PAGE_COUNT]
+			Locale.apply_control(_pages_button)
 		if _journal.visible:
 			var lines: PackedStringArray = _journal_text(stead).split("\n")
 			var half: int = int(ceil(lines.size() / 2.0))
@@ -355,6 +380,7 @@ func _refresh_settings(stead: Stead) -> void:
 		labels[_music_button] = Locale.t("music") % Locale.t("level_%d" % stead.music_level)
 		labels[_sound] = Locale.t("effects") % Locale.t("level_%d" % stead.sfx_level)
 		labels[_prayer_button] = Locale.t("prayer_reminder") % Locale.t("switch_on" if stead.prayer_reminder else "switch_off")
+		labels[_notice_button] = Locale.t("phone_notices") % Locale.t("switch_on" if stead.phone_notices else "switch_off")
 		_prayer_next.visible = _tab == "settings" and stead.prayer_reminder
 		if _prayer_next.visible:
 			var next: Array = PrayerTimes.next_prayer(PrayerTimes.today(), PrayerTimes.now_minutes())
@@ -551,6 +577,13 @@ func _build_menu() -> void:
 		column.add_theme_constant_override("line_spacing", -4)
 		column.visible = false
 		page.add_child(column)
+	_pages_button = _tab_button("", Vector2(inner.position.x + 10.0, 160))
+	_pages_button.size = Vector2(inner.size.x - 20.0, 26)
+	_pages_button.focus_mode = Control.FOCUS_NONE
+	_pages_button.add_theme_font_size_override("font_size", 12)
+	_pages_button.visible = false
+	_pages_button.pressed.connect(_read_pages)
+	page.add_child(_pages_button)
 	var list: Panel = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", Vector2(inner.position.x, 48), Vector2(inner.size.x, 108), 11, 2)
 	page.add_child(list)
 	_list = list
@@ -577,8 +610,10 @@ func _build_menu() -> void:
 	_language = _settings_button(1, 1, _toggle_language)
 	_help_button = _settings_button(2, 1, _show_help)
 	_prayer_button = _settings_button(0, 2, _toggle_prayer)
+	_notice_button = _settings_button(2, 2, _toggle_notices)
 	_prayer_next = _make_label(Vector2(20.0 + 146.0, 54.0 + 2 * 39.0), UiStyle.DARK)
-	_prayer_next.size = Vector2(282, 36)
+	_prayer_next.size = Vector2(136, 36)
+	_prayer_next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_prayer_next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prayer_next.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_prayer_next.add_theme_font_size_override("font_size", 12)
@@ -714,8 +749,7 @@ var _shown_seed: String = ""
 
 func _refresh_seed_slot(inventory: Inventory) -> void:
 	var slot: Button = _slots[SEED_SLOT]
-	var crop: Dictionary = CropCatalog.get_crop(inventory.selected_seed)
-	var seed_item: String = str(crop.get("seed_item", "seeds"))
+	var seed_item: String = _seed_item_of(inventory.selected_seed)
 	if _shown_seed != inventory.selected_seed:
 		_shown_seed = inventory.selected_seed
 		slot.icon = Juice.item_icon(seed_item)
@@ -723,20 +757,27 @@ func _refresh_seed_slot(inventory: Inventory) -> void:
 	_seed_count.text = str(inventory.count_of(seed_item))
 	slot.modulate = Color.WHITE if inventory.count_of(seed_item) > 0 else Color(1, 1, 1, 0.55)
 
-## Picks the next kind of seed, the ones in the bag first.
+## The bag item that the seed button uses: a seed, or a sprinkler.
+func _seed_item_of(choice: String) -> String:
+	if choice == FarmField.SPRINKLER:
+		return FarmField.SPRINKLER
+	return str(CropCatalog.get_crop(choice).get("seed_item", "seeds"))
+
+## Picks the next kind of seed, the ones in the bag first. Sprinklers join the turn when the bag has one.
 func _next_seed() -> void:
 	var inventory: Inventory = get_tree().current_scene.get_node("Systems/Inventory") as Inventory
 	var ids: PackedStringArray = CropCatalog.ids()
+	ids.append(FarmField.SPRINKLER)
 	var at: int = ids.find(inventory.selected_seed)
 	for step: int in range(1, ids.size() + 1):
 		var crop_id: String = ids[(at + step) % ids.size()]
-		if inventory.count_of(str(CropCatalog.get_crop(crop_id).get("seed_item", ""))) > 0 or step == ids.size():
+		if inventory.count_of(_seed_item_of(crop_id)) > 0 or step == ids.size():
 			inventory.selected_seed = crop_id
 			break
 	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
 	Juice.tap(get_tree())
 	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
-	activities_flash(Locale.item(str(CropCatalog.get_crop(inventory.selected_seed).get("seed_item", ""))))
+	activities_flash(Locale.item(_seed_item_of(inventory.selected_seed)))
 	refresh()
 
 func activities_flash(text: String) -> void:
@@ -794,6 +835,12 @@ func _journal_text(stead: Stead) -> String:
 		lines.append(clock.forecast_text())
 	return "\n".join(lines)
 
+## Closes the menu and reads grandfather's pages found so far, then says who has the next one.
+func _read_pages() -> void:
+	var systems: Node = get_tree().current_scene.get_node("Systems")
+	dismiss_menu()
+	(get_tree().current_scene.get_node("UI/Dialogue") as DialogueBox).open_lines(Journal.read_lines(systems))
+
 func _toggle_language() -> void:
 	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
 	if stead == null:
@@ -831,6 +878,15 @@ func _cycle_music() -> void:
 		return
 	stead.music_level = (stead.music_level + 2) % 3
 	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).apply_levels()
+	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
+	refresh()
+
+func _toggle_notices() -> void:
+	var stead: Stead = get_tree().current_scene.get_node_or_null("Systems/Stead") as Stead
+	if stead == null:
+		return
+	stead.phone_notices = not stead.phone_notices
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
 	(get_tree().current_scene.get_node("Systems/SaveGame") as SaveGame).write_now()
 	refresh()
 
@@ -1003,9 +1059,11 @@ func _build_bag_rows(list: Panel) -> void:
 	specs.append({"kind": "item", "crop_id": "", "item": "dates", "label": "Date", "icon": "res://assets/farming/Date inventory icon.png"})
 	specs.append({"kind": "item", "crop_id": "", "item": "forage", "label": "Herb", "icon": "res://assets/farming/Wild herb inventory icon.png"})
 	for extra_id: String in GoodsCatalog.extra_ids():
+		# A sprinkler is chosen like a seed and set down on a tilled square.
+		var placeable: bool = extra_id == FarmField.SPRINKLER
 		specs.append({
-			"kind": "item",
-			"crop_id": "",
+			"kind": "seed" if placeable else "item",
+			"crop_id": extra_id if placeable else "",
 			"item": extra_id,
 			"label": Locale.item(extra_id),
 			"icon": GoodsCatalog.icon_path(extra_id),
@@ -1130,7 +1188,7 @@ func _tap_bag_row(local_position: Vector2) -> void:
 func _select_seed(crop_id: String) -> void:
 	var systems: Node = get_tree().current_scene.get_node("Systems")
 	var inventory: Inventory = systems.get_node("Inventory") as Inventory
-	if not CropCatalog.has_crop(crop_id):
+	if not CropCatalog.has_crop(crop_id) and crop_id != FarmField.SPRINKLER:
 		return
 	inventory.selected_seed = crop_id
 	var save: SaveGame = systems.get_node("SaveGame") as SaveGame

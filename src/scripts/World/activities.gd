@@ -558,6 +558,8 @@ func _fund_work() -> void:
 	note = lines[0]
 	_chime("level")
 	_save()
+	# Each finished project brings back one of grandfather's pages and starts the next chapter.
+	lines.append_array(Journal.chapter_lines(str(project["id"])))
 	if works.all_done():
 		lines.append(Locale.t("works_all_done"))
 	_dialogue().open_lines(lines)
@@ -655,6 +657,7 @@ func _sell_to_jassim() -> void:
 		return
 	var sold: int = inventory.turnips
 	var earned: int = inventory.sell_turnips()
+	var first_sale: bool = not quest_done
 	quest_done = true
 	note = ""
 	_chime("coin")
@@ -662,6 +665,9 @@ func _sell_to_jassim() -> void:
 	_refresh()
 	if hud != null and hud.has_method("show_sale"):
 		hud.call("show_sale", Locale.item("turnips"), sold, earned, inventory.turnips, inventory.dinars)
+	if first_sale:
+		await get_tree().create_timer(3.2).timeout
+		_dialogue().open_lines(Journal.first_page_lines())
 
 func _buy_seed(crop_id: String, crop: Dictionary) -> void:
 	var inventory: Inventory = _inventory()
@@ -765,6 +771,7 @@ func _work_choice(choice: String) -> void:
 		_dialogue().offer(Locale.t("craft"), PackedStringArray([
 			"craft_feed|%s  (%s)" % [Locale.t("craft_feed"), Stead.cost_text(RecipeCatalog.recipe("feed")["costs"])],
 			"craft_feed_herbs|%s" % Locale.t("craft_feed_herbs"),
+			"craft_sprinkler|%s  (%s)" % [Locale.t("craft_sprinkler"), Stead.cost_text(RecipeCatalog.recipe("sprinkler")["costs"])],
 			"cancel|%s" % Locale.t("cancel"),
 		]))
 		return
@@ -817,7 +824,7 @@ func _refusal(stead: Stead, shop: String, choice: String) -> String:
 	if shop == "supplies":
 		return Locale.t("need_dinars") % RecipeCatalog.BUNDLE_PRICE
 	if shop == "craft":
-		var spec: Dictionary = RecipeCatalog.recipe("feed" if choice == "craft_feed" else "feed_herbs")
+		var spec: Dictionary = RecipeCatalog.recipe(_recipe_for(choice))
 		return Locale.t("need_items") % stead.missing_text(spec.get("costs", {}))
 	if shop == "animals" and choice.begins_with("buy_"):
 		var spec: Dictionary = RecipeCatalog.animal(choice.trim_prefix("buy_"))
@@ -837,7 +844,10 @@ func _work_action(choice: String) -> void:
 		return
 	var ok: bool = false
 	var line: String = Locale.t("cannot")
-	if shop == "craft" and (choice == "craft_feed" or choice == "craft_feed_herbs"):
+	if shop == "craft" and choice == "craft_sprinkler":
+		ok = stead.craft("sprinkler")
+		line = Locale.t("made") % Locale.item("sprinkler") + " " + Locale.t("sprinkler_how")
+	elif shop == "craft" and (choice == "craft_feed" or choice == "craft_feed_herbs"):
 		ok = stead.craft("feed" if choice == "craft_feed" else "feed_herbs")
 		line = Locale.t("made") % Locale.item("feed")
 	elif shop == "build":
@@ -864,6 +874,14 @@ func _work_action(choice: String) -> void:
 		_save()
 	_dialogue().open_lines(PackedStringArray([note]))
 	_refresh()
+
+func _recipe_for(choice: String) -> String:
+	match choice:
+		"craft_feed":
+			return "feed"
+		"craft_sprinkler":
+			return "sprinkler"
+	return "feed_herbs"
 
 func _stead() -> Stead:
 	return get_parent().get_node_or_null("Stead") as Stead
