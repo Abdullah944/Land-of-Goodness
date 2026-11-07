@@ -10,3 +10,11 @@ The owner tracks every project's tasks on the Trello board "All Projects" (https
 ## Laptop memory and disk
 
 This Mac has only 8 GB of RAM and little disk space. When you finish testing, close what you opened: iPhone simulator (`xcrun simctl shutdown all`, then quit the Simulator app), Android emulator (`adb emu kill`), and any dev server or Metro bundler you started. Before starting a simulator or emulator, check whether one is already running and reuse it. Don't leave anything running in the background.
+
+## Two laptops
+
+Daily work happens on the ASUS (Windows, 32 GB) at `C:\Projects\ard-al-khair`, with Godot 4.7.2 at `C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe`. The chat stays on the Mac and runs commands there with `ssh asus "<PowerShell command>"` (Tailscale). Filter the post-quantum SSH warning lines from the output.
+
+- Edit, test and commit on the ASUS, then push to GitHub (branch production-v1).
+- The Mac copy is only for iPhone builds: `git pull`, export from Godot on the Mac, build in Xcode, install on the iPhone 16e.
+- Hand-off: when a version is ready for the iPhone, add a Trello card "[Land of Goodness] Mac: build <commit>" in To do.
