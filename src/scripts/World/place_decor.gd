@@ -250,6 +250,8 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 	for row: Array in layout["fixed"]:
 		decor.add_child(_sprite(int(row[0]), row[1]))
 	place.add_child(decor)
+	if shaped:
+		_clear_paths(decor, place_name, layout["avoid"])
 	if shaped and bool(WorldShapes.PLACES[place_name]["wooded"]):
 		_add_forest(place, place_name)
 	if shaped:
@@ -266,6 +268,46 @@ static func dress(place: Node, cleared: Dictionary = {}) -> void:
 			PropPiece.add_to(place, {"name": "Pond_%d" % i, "path": "res://assets/nature/Oasis pond.png", "at": FARM_PONDS[i][0], "fit": FARM_PONDS[i][1], "block": FARM_PONDS[i][2], "centered": true})
 		_add_zones(place)
 		_add_groves(place)
+
+## Props the boy can never clear: hay, pots, logs and stumps. They must never sit on a road or path.
+const KEEP_OFF_PATHS: Array[int] = [HAY, POT, LOG, STUMP]
+
+## Moves any prop the boy cannot clear off roads and dirt paths, to the nearest open grass.
+static func _clear_paths(decor: Node2D, place_name: String, avoid: Array) -> void:
+	for sprite: Sprite2D in stuck_on_paths(decor, place_name):
+		var spot: Vector2 = _off_path(place_name, sprite.position, avoid)
+		if spot != Vector2.INF:
+			sprite.position = spot
+		else:
+			sprite.queue_free()
+
+## The props that cannot be cleared and stand on a road or path.
+static func stuck_on_paths(decor: Node, place_name: String) -> Array[Sprite2D]:
+	var stuck: Array[Sprite2D] = []
+	var kinds: Array[Texture2D] = []
+	for kind: int in KEEP_OFF_PATHS:
+		if kind < _cuts.size():
+			kinds.append(_cuts[kind])
+	for child: Node in decor.get_children():
+		var sprite: Sprite2D = child as Sprite2D
+		if sprite == null or sprite.is_queued_for_deletion() or not kinds.has(sprite.texture):
+			continue
+		if WorldShapes.on_path(place_name, sprite.position, 14.0):
+			stuck.append(sprite)
+	return stuck
+
+## The nearest spot off every path, inside the place and outside the kept-free areas, or INF.
+static func _off_path(place_name: String, from: Vector2, avoid: Array) -> Vector2:
+	for ring: int in range(1, 10):
+		var reach: float = 24.0 * ring
+		for turn: int in 12:
+			var spot: Vector2 = from + Vector2(reach, 0).rotated(TAU * turn / 12.0)
+			if WorldShapes.on_path(place_name, spot, 20.0) or WorldShapes.edge(place_name, spot) > 0.94:
+				continue
+			if WorldShapes.in_exit(place_name, spot) or WorldShapes.water_depth(place_name, spot) > -12.0 or _blocked(spot, avoid):
+				continue
+			return spot
+	return Vector2.INF
 
 static func _add_zones(place: Node) -> void:
 	for i: int in QUARRY.size():
@@ -289,7 +331,8 @@ static func _add_bushes(place: Node, place_name: String, layout: Dictionary) -> 
 	for i: int in int(BUSH_COUNTS.get(place_name, 0)):
 		var at: Vector2 = area.position + Vector2(roll.randf() * area.size.x, roll.randf() * area.size.y)
 		var kind: String = kinds[roll.randi_range(0, kinds.size() - 1)]
-		if WorldShapes.keep_clear(place_name, at) or WorldShapes.edge(place_name, at) > 0.96 or WorldShapes.in_exit(place_name, at) or _blocked(at, layout["avoid"]):
+		# A bush is wide and solid, so it keeps well back from roads and paths: the boy can never clear it.
+		if WorldShapes.keep_clear(place_name, at) or WorldShapes.on_path(place_name, at, 26.0) or WorldShapes.edge(place_name, at) > 0.96 or WorldShapes.in_exit(place_name, at) or _blocked(at, layout["avoid"]):
 			continue
 		PropPiece.add_to(place, {"name": "Grove_bush%d" % i, "path": PLANT % kind, "at": at, "block": Vector2(18, 8) if kind.begins_with("bush") or kind.ends_with("crop") else Vector2.ZERO})
 

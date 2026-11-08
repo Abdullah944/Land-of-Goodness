@@ -174,6 +174,38 @@ static func on_cobble(place: String, world: Vector2) -> bool:
 			return true
 	return false
 
+static var _dirt_maps: Dictionary = {}
+
+## True on the brown dirt paths painted into the ground. They look like roads to the player.
+static func on_dirt(place: String, world: Vector2) -> bool:
+	if not _dirt_maps.has(place):
+		var map: Image = null
+		var ground: Texture2D = null
+		if ResourceLoader.exists(mask_path(place, 0)) and ResourceLoader.exists(ground_path(place)):
+			map = (load(mask_path(place, 0)) as Texture2D).get_image()
+			if map.is_compressed():
+				map.decompress()
+			ground = load(ground_path(place)) as Texture2D
+		_dirt_maps[place] = [map, ground.get_size() if ground != null else Vector2.ONE]
+	var map_info: Array = _dirt_maps[place]
+	var map: Image = map_info[0]
+	if map == null:
+		return false
+	var world_size: Vector2 = map_info[1]
+	var pixel: Vector2i = Vector2i(((world + world_size * 0.5) / world_size * Vector2(map.get_size())).floor())
+	if pixel.x < 0 or pixel.y < 0 or pixel.x >= map.get_width() or pixel.y >= map.get_height():
+		return false
+	return map.get_pixelv(pixel).g > 0.5
+
+## Any road, stone square or dirt path, with a little room around it.
+static func on_path(place: String, world: Vector2, margin: float = 0.0) -> bool:
+	if on_road(place, world, margin):
+		return true
+	for step: Vector2 in [Vector2.ZERO, Vector2(margin, 0), Vector2(-margin, 0), Vector2(0, margin), Vector2(0, -margin)]:
+		if on_dirt(place, world + step):
+			return true
+	return false
+
 ## True where small details and trees should stay away from.
 static func keep_clear(place: String, world: Vector2) -> bool:
 	return water_depth(place, world) > -12.0 or on_planks(place, world) or on_road(place, world, 6.0)

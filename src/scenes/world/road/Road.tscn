@@ -5,11 +5,9 @@
 [ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="3_spot_mark"]
 [ext_resource type="Texture2D" path="res://assets/props/stall_produce.png" id="4_stall_produc"]
 [ext_resource type="Texture2D" path="res://assets/props/stall_pots.png" id="5_stall_pots"]
-[ext_resource type="Texture2D" path="res://assets/props/table.png" id="6_table"]
 [ext_resource type="Texture2D" path="res://assets/props/crate.png" id="7_crate"]
 [ext_resource type="Texture2D" path="res://assets/props/sack.png" id="8_sack"]
 [ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="9_barrel"]
-[ext_resource type="Texture2D" path="res://assets/props/basket.png" id="10_basket"]
 [ext_resource type="Texture2D" path="res://assets/props/lamp_post.png" id="11_lantern"]
 [ext_resource type="Texture2D" path="res://assets/nature/Date palm.png" id="12_date_palm"]
 [ext_resource type="Texture2D" path="res://assets/nature/Wild herb.png" id="13_wild_herb"]
@@ -62,13 +60,6 @@ person = ExtResource("5_stall_pots")
 stand_on_feet = true
 block_size = Vector2(40, 12)
 
-[node name="Shade" type="Node2D" parent="."]
-position = Vector2(-80, 70)
-script = ExtResource("3_spot_mark")
-person = ExtResource("6_table")
-stand_on_feet = true
-block_size = Vector2(24, 8)
-
 [node name="Prop0" type="Node2D" parent="."]
 position = Vector2(120, -34)
 script = ExtResource("3_spot_mark")
@@ -87,27 +78,6 @@ block_size = Vector2(12, 6)
 position = Vector2(-20, -34)
 script = ExtResource("3_spot_mark")
 person = ExtResource("9_barrel")
-stand_on_feet = true
-block_size = Vector2(12, 6)
-
-[node name="Prop3" type="Node2D" parent="."]
-position = Vector2(10, 58)
-script = ExtResource("3_spot_mark")
-person = ExtResource("10_basket")
-stand_on_feet = true
-block_size = Vector2(12, 6)
-
-[node name="Prop4" type="Node2D" parent="."]
-position = Vector2(-110, 62)
-script = ExtResource("3_spot_mark")
-person = ExtResource("7_crate")
-stand_on_feet = true
-block_size = Vector2(12, 6)
-
-[node name="Prop5" type="Node2D" parent="."]
-position = Vector2(-58, 62)
-script = ExtResource("3_spot_mark")
-person = ExtResource("8_sack")
 stand_on_feet = true
 block_size = Vector2(12, 6)
 
