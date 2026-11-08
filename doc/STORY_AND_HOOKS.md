@@ -66,6 +66,8 @@ Everyone helps build Saad's unfinished diwaniya from the carpenter's sketch.
 
 Each one is 2–3 short talks. No romance and no combat.
 
+**Built 2026-11-08.** Hearts stop at 5, so the stories open at 3 hearts and close at 5. The help asked for: Jassim 6 wood (then 3 eggs a week), the elder 3 found pages (+5 Khair), the merchant 5 tomatoes (120 dinars and 3 watermelon seeds), the carpenter 3 copper (a toy dhow), the fisherman a visit before 8 AM (3 fish and a pearl).
+
 ## 3. Hooks: what brings the player back
 
 ### A. Inside the game ("one more day")
@@ -89,7 +91,7 @@ Each one is 2–3 short talks. No romance and no combat.
 
 ## 4. Build order and status (2026-11-07)
 
-Built: 1, 2, 3 and 4 (gentle overnight and phone notes with the Notification Scheduler plugin). Not built yet: friendship stories, the collections book, and the winter crop.
+Built: 1, 2, 3, 4 (gentle overnight and phone notes with the Notification Scheduler plugin) and the friendship stories (2026-11-08). Not built yet: the collections book and the winter crop.
 
 1. **Sprinklers + tomatoes regrow** (fixes the biggest loop problem, small)
 2. **Tomorrow teaser + ripe sparkle on the map** (small, a strong hook)

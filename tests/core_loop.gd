@@ -130,6 +130,7 @@ func _run() -> void:
 	check((walls.shape as RectangleShape2D).size.y > 60.0, "a building is solid across its walls, not just its base")
 	check(str(mosque.get("sign_key")) == "sign_mosque" and str(_place(main).get_node("Stall").get("sign_key")) == "sign_market", "the mosque and the market carry name boards")
 	_check_friends(main)
+	_check_stories(main.get_node("Systems"))
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -680,6 +681,66 @@ func _check_friends(main: Node) -> void:
 	clock.season = old_season
 	friends.from_data({})
 	fairs.apply_place()
+
+func _check_stories(systems: Node) -> void:
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var old: Dictionary = {"day": clock.day, "minute": clock.minute, "wood": bag.wood, "copper": bag.count_of("copper"), "eggs": bag.count_of("eggs"), "fish": bag.fish, "pearl": bag.count_of("pearl"), "tomatoes": bag.tomatoes, "dinars": bag.dinars}
+	friends.from_data({})
+	friends.points["jassim"] = Friendship.HEART * 2
+	friends.heart_talks_seen["jassim_2"] = true
+	check(friends.talk("jassim") == "" and friends.story_row("jassim") == "", "no story before three hearts")
+	friends.points["jassim"] = Friendship.HEART * Friendship.STORY_START
+	check(friends.talk("jassim") == Locale.t("story_jassim_ask") and friends.story_row("jassim").begins_with("story|"), "at three hearts Jassim asks for help and the menu shows it")
+	bag.wood = 2
+	check(friends.finish_story("jassim", systems).is_empty() and friends.story_hint("jassim", systems).contains("4"), "the story waits until the wood is there")
+	bag.wood = 8
+	var lines: PackedStringArray = friends.finish_story("jassim", systems)
+	check(lines.size() == 2 and bag.wood == 2 and bag.count_of("eggs") == int(old["eggs"]) + 3 and friends.story_state("jassim") == Friendship.HELPED, "helping Jassim takes the wood and gives eggs")
+	check(friends.take_weekly_eggs() == 0, "no second batch of eggs the same week")
+	clock.day += 7
+	check(friends.take_weekly_eggs() == Friendship.WEEKLY_EGGS and friends.take_weekly_eggs() == 0, "Jassim shares eggs again the next week, once")
+	friends.points["jassim"] = Friendship.HEART * Friendship.STORY_END
+	friends.heart_talks_seen["jassim_4"] = true
+	check(friends.talk("jassim") == Locale.t("story_jassim_thanks") and friends.story_state("jassim") == Friendship.THANKED and friends.talk("jassim") != Locale.t("story_jassim_thanks"), "at five hearts Jassim says thank you, once")
+	friends.stories["fisherman"] = Friendship.ASKED
+	clock.minute = 10.0 * 60.0
+	check(not friends.story_ready("fisherman", systems), "the dawn trip waits for the early morning")
+	clock.minute = 6.5 * 60.0
+	var fish: int = bag.fish
+	check(friends.finish_story("fisherman", systems).size() == 2 and bag.fish == fish + 3, "a dawn trip with the fisherman shares his catch")
+	friends.stories["carpenter"] = Friendship.ASKED
+	bag.add_item("copper", 3)
+	friends.finish_story("carpenter", systems)
+	check(bag.count_of("toy_dhow") == 1 and GoodsCatalog.icon_path("toy_dhow") != "", "the carpenter carves a toy dhow for the bag")
+	friends.stories["elder"] = Friendship.ASKED
+	check(friends.story_hint("elder", systems).contains("3"), "the elder waits for three pages")
+	friends.stories["merchant"] = Friendship.ASKED
+	bag.tomatoes = 5
+	var dinars: int = bag.dinars
+	friends.finish_story("merchant", systems)
+	check(bag.tomatoes == 0 and bag.dinars == dinars + 120, "the merchant pays for tomatoes from our own land")
+	var saved: Dictionary = friends.to_data()
+	friends.from_data(saved)
+	check(friends.story_state("jassim") == Friendship.THANKED and friends.story_state("merchant") == Friendship.HELPED and friends.eggs_week == int(saved["eggs_week"]), "stories survive a save")
+	var language: String = Locale.language
+	for key: String in ["story_jassim_ask", "story_fisherman_done", "toy_dhow", "story_elder_wait"]:
+		Locale.language = "ar"
+		var arabic: String = Locale.t(key)
+		Locale.language = "en"
+		check(arabic != Locale.t(key) and arabic != key, "story words have Arabic: " + key)
+	Locale.language = language
+	bag.add_item("toy_dhow", -1)
+	clock.day = int(old["day"])
+	clock.minute = float(old["minute"])
+	bag.wood = int(old["wood"])
+	bag.fish = int(old["fish"])
+	bag.tomatoes = int(old["tomatoes"])
+	bag.dinars = int(old["dinars"])
+	for item_id: String in ["copper", "eggs", "pearl"]:
+		bag.add_item(item_id, int(old[item_id]) - bag.count_of(item_id))
+	friends.from_data({})
 
 func _check_fish_game(main: Node, activities: Activities) -> void:
 	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory

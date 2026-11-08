@@ -336,6 +336,7 @@ func _talk() -> void:
 	if not quest_done:
 		greeting = Locale.t("greeting_quest")
 	greeting = _friend_line("jassim", greeting)
+	greeting = _with_eggs(greeting)
 	dialogue.offer(_with_request(greeting, "jassim"), _with_help("jassim", _menu_choices()))
 
 func talk_role(role: String) -> void:
@@ -386,6 +387,9 @@ func _on_shop_choice(choice: String) -> void:
 		return
 	if choice == "help":
 		_give_help()
+		return
+	if choice == "story":
+		_do_story()
 		return
 	if choice == "works":
 		_fund_work()
@@ -601,6 +605,12 @@ func _with_request(line: String, person: String) -> String:
 	return "%s\n%s" % [line, Locale.t("request_line") % [int(wish["amount"]), Locale.item(str(wish["item"]))]]
 
 func _with_help(person: String, rows: PackedStringArray) -> PackedStringArray:
+	var friends: Friendship = _friends()
+	var story_row: String = friends.story_row(person) if friends != null else ""
+	if story_row != "":
+		var with_story: PackedStringArray = PackedStringArray([story_row])
+		with_story.append_array(rows)
+		rows = with_story
 	var works: VillageWorks = _works()
 	if works == null or not works.can_help(person):
 		return rows
@@ -609,6 +619,35 @@ func _with_help(person: String, rows: PackedStringArray) -> PackedStringArray:
 	var result: PackedStringArray = PackedStringArray([help_row])
 	result.append_array(rows)
 	return result
+
+## Helping with a neighbor's small story, or hearing what they still need.
+func _do_story() -> void:
+	var friends: Friendship = _friends()
+	if friends == null:
+		return
+	var person: String = _gift_to
+	var lines: PackedStringArray = friends.finish_story(person, get_parent())
+	if lines.is_empty():
+		_say(friends.story_hint(person, get_parent()))
+		return
+	_shop = ""
+	note = lines[0]
+	_emote(person, "heart")
+	Juice.tap(get_tree(), Juice.TAP_FIRM)
+	_chime("level")
+	_save()
+	_dialogue().open_lines(lines)
+	_refresh()
+
+## Once a week after the fence, Jassim hands over eggs with his greeting.
+func _with_eggs(line: String) -> String:
+	var friends: Friendship = _friends()
+	var eggs: int = friends.take_weekly_eggs() if friends != null else 0
+	if eggs < 1:
+		return line
+	_inventory().add_item("eggs", eggs)
+	_save()
+	return "%s\n%s" % [Locale.t("story_jassim_eggs") % eggs, line]
 
 ## A neighbor's heart talk or birthday line takes the place of today's greeting.
 func _friend_line(person: String, line: String) -> String:
