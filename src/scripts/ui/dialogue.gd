@@ -24,6 +24,7 @@ const CHOICE_ICONS: Dictionary = {
 const HEART_PICTURE: String = "res://assets/ui/Terracotta pixel heart icon.png"
 const MORE: String = "__more"
 
+var _text_extra: float = 0.0
 var _offer_all: PackedStringArray = []
 var _offer_page: int = 0
 var _lines: PackedStringArray = []
@@ -112,7 +113,7 @@ func _build_portrait() -> void:
 	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_portrait_box.add_child(_portrait)
 	_speaker_name = Label.new()
-	_speaker_name.position = Vector2(4, 29)
+	_speaker_name.position = Vector2(4, 27)
 	_speaker_name.size = Vector2(FACE_W + 4.0, 11)
 	_speaker_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_speaker_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -122,7 +123,7 @@ func _build_portrait() -> void:
 	_panel.add_child(_speaker_name)
 	# Five small hearts: how close the boy is to this neighbor.
 	_heart_row = HBoxContainer.new()
-	_heart_row.position = Vector2(5, 46)
+	_heart_row.position = Vector2(5, 48)
 	_heart_row.size = Vector2(FACE_W, 6)
 	_heart_row.add_theme_constant_override("separation", 1)
 	_heart_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -308,7 +309,7 @@ func _clear_offer_buttons() -> void:
 
 ## Buttons start lower when a neighbor's hearts show under the face.
 func _first_row() -> float:
-	return 56.0 if _heart_row.visible else 46.0
+	return (58.0 if _heart_row.visible else 46.0) + (_text_extra if _offering else 0.0)
 
 ## Short lists stay one wide row each; longer ones sit in two columns, so the panel never covers the screen.
 func _offer_spot(index: int, count: int) -> Rect2:
@@ -321,6 +322,18 @@ func _offer_spot(index: int, count: int) -> Rect2:
 func _fit_actions(rows: int) -> void:
 	_label.size = Vector2(OFFER_W - 16.0, 40)
 	_label.add_theme_font_size_override("font_size", 12)
+	# Measure at the offer's own width, not the width of the last talk box.
+	_panel.size.x = OFFER_W
+	_place_speaker()
+	# A long line gets a smaller font, and if it still does not fit, the buttons move down so no words are cut off.
+	var lines_used: int = 0
+	for font_size: int in [12, 11, 10]:
+		_label.add_theme_font_size_override("font_size", font_size)
+		lines_used = _label.get_line_count()
+		if lines_used <= 3:
+			break
+	_text_extra = float(maxi(0, lines_used - 3)) * float(_label.get_line_height())
+	_label.size.y = 40.0 + _text_extra
 	var lines: int = rows if rows <= 3 else (rows + 1) / 2
 	var height: float = _first_row() + 8.0 + ROW_STEP * lines
 	_panel.size = Vector2(OFFER_W, height)

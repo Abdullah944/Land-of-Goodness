@@ -222,7 +222,7 @@ func goal_text() -> String:
 	var activities: Node = get_parent().get_node_or_null("Activities")
 	var quest_done: bool = activities != null and bool(activities.get("quest_done"))
 	if not quest_done:
-		return Locale.t("quest_turnip")
+		return first_step()
 	if not bool(flags.get("crafted_feed", false)):
 		return Locale.t("quest_feed")
 	if not coop:
@@ -263,6 +263,34 @@ func check_milestone() -> bool:
 	if bag != null:
 		bag.dinars += 300
 	return true
+
+## Before the first sale, the line under the day walks a new player through one small step at a time.
+func first_step() -> String:
+	if not bool(flags.get("met_jassim", false)):
+		return Locale.t("step_hello")
+	var bag: Inventory = _bag()
+	if bag != null and bag.turnips > 0:
+		return Locale.t("quest_turnip")
+	var farm: FarmField = get_parent().get_node_or_null("FarmField") as FarmField
+	if farm == null:
+		return Locale.t("quest_turnip")
+	if farm.has_ripe():
+		return Locale.t("step_harvest")
+	var dug: bool = false
+	var growing: bool = false
+	var dry: bool = false
+	for key: String in farm.plots.keys():
+		var plot: Dictionary = farm.plots[key]
+		if not bool(plot.get("tilled", false)) or bool(plot.get("sprinkler", false)):
+			continue
+		dug = true
+		if int(plot.get("stage", -1)) >= 0:
+			growing = true
+			if not bool(plot.get("watered", false)):
+				dry = true
+	if growing:
+		return Locale.t("step_water") if dry else Locale.t("step_sleep")
+	return Locale.t("step_plant") if dug else Locale.t("step_dig")
 
 func steps() -> Array[Dictionary]:
 	var activities: Node = get_parent().get_node_or_null("Activities")

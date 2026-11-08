@@ -401,7 +401,8 @@ func _draw_here_tag(here: String) -> void:
 	var title: String = Locale.t("map_here") % Locale.t(str(PLACES[here][2]))
 	var font: Font = _font()
 	var wide: float = font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
-	var box: Rect2 = Rect2(Vector2(5, size.y - 20.0), Vector2(wide + 12.0, 15.0))
+	# Top right, beside the compass, where no place names sit.
+	var box: Rect2 = Rect2(Vector2(size.x - wide - 12.0 - 42.0, 5.0), Vector2(wide + 12.0, 15.0))
 	draw_rect(box, Color(UiStyle.CREAM, 0.92))
 	draw_rect(box, UiStyle.BROWN, false, 1.0)
 	draw_string(font, box.position + Vector2(6, 11.5), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, UiStyle.DARK)

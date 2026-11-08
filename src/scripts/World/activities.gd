@@ -335,6 +335,10 @@ func _talk() -> void:
 	var greeting: String = _line("greeting")
 	if not quest_done:
 		greeting = Locale.t("greeting_quest")
+		var stead: Stead = _stead()
+		if stead != null and not bool(stead.flags.get("met_jassim", false)):
+			stead.flags["met_jassim"] = true
+			_save()
 	greeting = _friend_line("jassim", greeting)
 	greeting = _with_eggs(greeting)
 	dialogue.offer(_with_request(greeting, "jassim"), _with_help("jassim", _menu_choices()))

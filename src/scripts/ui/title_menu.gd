@@ -85,6 +85,15 @@ func _redraw_buttons() -> void:
 			rows.append(["continue", _continue])
 		rows.append(["new_game", _ask_new])
 		rows.append(["language", _toggle_language])
+	var version: Label = Label.new()
+	version.text = "v%s" % str(ProjectSettings.get_setting("application/config/version", ""))
+	version.position = Vector2(_window.position.x + 30.0, top + 150.0)
+	version.size = Vector2(240, 12)
+	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	version.add_theme_font_size_override("font_size", 8)
+	version.add_theme_color_override("font_color", Color("7a5a44"))
+	version.set_meta("title_item", true)
+	_page.add_child(version)
 	for i: int in rows.size():
 		var button: Button = Button.new()
 		button.text = Locale.t(str(rows[i][0]))
@@ -152,6 +161,10 @@ func _hold(on: bool) -> void:
 	var player: Node = scene.find_child("Player", true, false)
 	if player != null:
 		player.set("busy", on)
+	# The game's own hearts, clock and quest line stay hidden behind the start screen.
+	var hud: CanvasLayer = scene.get_node_or_null("UI/HUD") as CanvasLayer
+	if hud != null:
+		hud.visible = not on
 
 func _save() -> SaveGame:
 	var scene: Node = get_tree().current_scene

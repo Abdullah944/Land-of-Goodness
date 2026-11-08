@@ -33,6 +33,7 @@ var _burger: Button
 var _menu: Control
 var _slots: Array[Button] = []
 var _tab: String = "bag"
+var _seed_icons: Dictionary = {}
 var _craft: Button
 var _bag_money: Label
 var _zoom_in: Button
@@ -819,10 +820,17 @@ func _journal_text(stead: Stead) -> String:
 		for project: Dictionary in VillageWorks.PROJECTS:
 			lines.append("%s %s" % ["[x]" if works.is_done(str(project["id"])) else "[  ]", Locale.t(str(project["id"]))])
 	else:
+		# Finished steps are ticked; only the current step and the one after it are shown ahead.
+		var ahead: int = 0
 		for step: Dictionary in stead.steps():
-			var mark: String = "[x]" if bool(step["done"]) else "[  ]"
+			var done: bool = bool(step["done"])
+			if not done:
+				ahead += 1
+				if ahead > 2:
+					break
+			var mark: String = "[x]" if done else ("  >" if ahead == 1 else "[  ]")
 			lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
-	if works != null:
+	if works != null and works.requests_open():
 		var wish: Dictionary = works.request_today()
 		if not bool(wish.get("done", false)):
 			var who: String = str(wish.get("person", ""))
@@ -967,6 +975,33 @@ func _zoom(multiplier: float) -> void:
 
 func _player() -> Player:
 	return get_tree().current_scene.find_child("Player", true, false) as Player
+
+## A seed bag with a small picture of what it grows, so each seed row is easy to tell apart.
+func _seed_icon(crop_id: String) -> Texture2D:
+	if _seed_icons.has(crop_id):
+		return _seed_icons[crop_id]
+	var bag: Image = _trimmed_image("res://assets/farming/Six Pixel Farm Seeds.png")
+	var crop: Dictionary = CropCatalog.get_crop(crop_id)
+	var path: String = GoodsCatalog.icon_path(str(crop.get("harvest_item", "")))
+	if path != "":
+		var fruit: Image = _trimmed_image(path)
+		var side: float = float(bag.get_width()) * 0.6
+		var shrink: float = side / float(maxi(fruit.get_width(), fruit.get_height()))
+		fruit.resize(maxi(1, int(fruit.get_width() * shrink)), maxi(1, int(fruit.get_height() * shrink)), Image.INTERPOLATE_NEAREST)
+		var at: Vector2i = bag.get_size() - fruit.get_size()
+		bag.blend_rect(fruit, Rect2i(Vector2i.ZERO, fruit.get_size()), at)
+	var longest: float = float(maxi(bag.get_width(), bag.get_height()))
+	var picture: Texture2D = UiStyle.hd_texture(bag, Vector2(bag.get_size()) * 16.0 / longest)
+	_seed_icons[crop_id] = picture
+	return picture
+
+func _trimmed_image(path: String) -> Image:
+	var image: Image = UiStyle.pixels_of(load(path) as Texture2D).duplicate() as Image
+	if image.is_compressed():
+		image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	var used: Rect2i = image.get_used_rect()
+	return image.get_region(used) if used.size != Vector2i.ZERO else image
 
 func _fit_icon(path: String, pixels: int) -> Texture2D:
 	return UiStyle.fit_picture(load(path) as Texture2D, pixels)
@@ -1137,6 +1172,8 @@ func _build_bag_rows(list: Panel) -> void:
 
 func _bag_icon(spec: Dictionary) -> Texture2D:
 	var item: String = str(spec["item"])
+	if str(spec["kind"]) == "seed" and CropCatalog.ids().has(str(spec.get("crop_id", ""))):
+		return _seed_icon(str(spec["crop_id"]))
 	if GoodsCatalog.icon_path(item) != "":
 		return _fit_icon(GoodsCatalog.icon_path(item), 18)
 	if item == "seeds":

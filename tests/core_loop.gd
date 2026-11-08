@@ -131,6 +131,7 @@ func _run() -> void:
 	check(str(mosque.get("sign_key")) == "sign_mosque" and str(_place(main).get_node("Stall").get("sign_key")) == "sign_market", "the mosque and the market carry name boards")
 	_check_friends(main)
 	_check_stories(main.get_node("Systems"))
+	_check_first_steps(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -741,6 +742,48 @@ func _check_stories(systems: Node) -> void:
 	for item_id: String in ["copper", "eggs", "pearl"]:
 		bag.add_item(item_id, int(old[item_id]) - bag.count_of(item_id))
 	friends.from_data({})
+
+func _check_first_steps(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var farm: FarmField = systems.get_node("FarmField") as FarmField
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var activities: Activities = systems.get_node("Activities") as Activities
+	var works: VillageWorks = systems.get_node("VillageWorks") as VillageWorks
+	var old_plots: Dictionary = farm.plots.duplicate(true)
+	var old_flags: Dictionary = stead.flags.duplicate()
+	var old_done: bool = activities.quest_done
+	var old_turnips: int = bag.turnips
+	activities.quest_done = false
+	stead.flags.erase("met_jassim")
+	farm.plots.clear()
+	bag.turnips = 0
+	check(stead.goal_text() == Locale.t("step_hello") and not works.requests_open() and not works.can_help(str(works.request_today().get("person", ""))), "a new player is first sent to say hello, and nobody asks for goods yet")
+	stead.flags["met_jassim"] = true
+	check(stead.goal_text() == Locale.t("step_dig"), "then to dig a square")
+	farm.plots["0,0"] = {"tilled": true, "stage": -1, "watered": false, "crop": "", "sprinkler": false}
+	check(stead.goal_text() == Locale.t("step_plant"), "then to plant")
+	farm.plots["0,0"] = {"tilled": true, "stage": 0, "watered": false, "crop": "turnip", "sprinkler": false}
+	check(stead.goal_text() == Locale.t("step_water"), "then to water")
+	farm.plots["0,0"]["watered"] = true
+	check(stead.goal_text() == Locale.t("step_sleep"), "then to sleep")
+	farm.plots["0,0"]["stage"] = 99
+	check(stead.goal_text() == Locale.t("step_harvest"), "then to pick the ripe turnip")
+	bag.turnips = 1
+	check(stead.goal_text() == Locale.t("quest_turnip"), "then to sell it to Jassim")
+	activities.quest_done = true
+	check(works.requests_open(), "after the first sale, neighbors start asking for goods")
+	var language: String = Locale.language
+	Locale.language = "ar"
+	var arabic: String = Locale.t("step_dig")
+	Locale.language = "en"
+	check(arabic != Locale.t("step_dig"), "the first steps have Arabic words")
+	Locale.language = language
+	farm.plots = old_plots
+	stead.flags = old_flags
+	activities.quest_done = old_done
+	bag.turnips = old_turnips
+	farm.apply()
 
 func _check_fish_game(main: Node, activities: Activities) -> void:
 	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory

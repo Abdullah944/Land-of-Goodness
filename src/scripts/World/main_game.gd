@@ -55,7 +55,7 @@ func _add_arabic_fallback() -> void:
 	base.fallbacks = chain
 
 func _intro_lines() -> PackedStringArray:
-	return PackedStringArray([Locale.t("intro_1"), Locale.t("intro_2"), Locale.t("help_clear"), Locale.t("help_farm"), Locale.t("help_rest")])
+	return PackedStringArray([Locale.t("intro_1"), Locale.t("intro_2")])
 
 func _find_spawn() -> Marker2D:
 	var world: Node = get_node("World")

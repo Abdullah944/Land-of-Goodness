@@ -91,7 +91,14 @@ func request_today() -> Dictionary:
 		request = _make_request(day)
 	return request
 
+## Neighbors start asking for help once the boy has made his first sale.
+func requests_open() -> bool:
+	var activities: Node = get_parent().get_node_or_null("Activities")
+	return activities == null or bool(activities.get("quest_done"))
+
 func can_help(person: String) -> bool:
+	if not requests_open():
+		return false
 	var wish: Dictionary = request_today()
 	return str(wish.get("person", "")) == person and not bool(wish.get("done", false))
 
