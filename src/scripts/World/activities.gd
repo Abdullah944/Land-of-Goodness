@@ -975,6 +975,10 @@ func _enter_mosque() -> void:
 
 func _enter_cave() -> void:
 	var loader: LevelLoader = get_parent().get_node("LevelLoader") as LevelLoader
+	# The farm's cave mouth always opens onto the first level.
+	var stead: Stead = _stead()
+	if stead != null:
+		stead.flags["cave_level"] = 1
 	var cave: PackedScene = load("res://src/scenes/world/cave/Cave.tscn") as PackedScene
 	loader.go_to(cave, "PlayerSpawn")
 

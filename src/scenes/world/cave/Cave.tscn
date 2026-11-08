@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" path="res://assets/props/barrel.png" id="12_barrel"]
 [ext_resource type="Texture2D" path="res://assets/props/crate.png" id="13_crate"]
 [ext_resource type="Texture2D" path="res://assets/props/lantern.png" id="14_lantern"]
+[ext_resource type="Script" path="res://src/scripts/World/cave_floor.gd" id="15_cave_floor"]
 
 [sub_resource type="RectangleShape2D" id="Rect_48x24"]
 size = Vector2(48, 24)
@@ -23,6 +24,7 @@ size = Vector2(24, 24)
 
 [node name="Cave" type="Node2D"]
 y_sort_enabled = true
+script = ExtResource("15_cave_floor")
 
 [node name="Floor" type="Polygon2D" parent="."]
 texture_repeat = 2

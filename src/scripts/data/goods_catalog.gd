@@ -17,13 +17,14 @@ const _EXTRAS: Dictionary = {
 	"copper": {"sell": 40, "icon": "res://assets/items/goods/copper.png"},
 	"pearl": {"sell": 120, "icon": "res://assets/items/goods/pearl.png"},
 	"sprinkler": {"sell": 0, "icon": "res://assets/farming/sprinkler.png"},
+	"iron": {"sell": 60, "icon": "res://assets/props/ore_iron.png"},
 	"toy_dhow": {"sell": 0, "icon": "res://assets/building/harbor/Dhow.png"},
 }
 
 const _CROP_ICONS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons"]
 
 static func extra_ids() -> PackedStringArray:
-	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper", "pearl", "sprinkler", "toy_dhow"])
+	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper", "pearl", "iron", "sprinkler", "toy_dhow"])
 
 static func is_extra(item_id: String) -> bool:
 	return item_id in extra_ids()

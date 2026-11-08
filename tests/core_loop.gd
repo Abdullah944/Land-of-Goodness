@@ -132,6 +132,7 @@ func _run() -> void:
 	_check_friends(main)
 	_check_stories(main.get_node("Systems"))
 	_check_first_steps(main)
+	await _check_cave(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -779,11 +780,77 @@ func _check_first_steps(main: Node) -> void:
 	Locale.language = "en"
 	check(arabic != Locale.t("step_dig"), "the first steps have Arabic words")
 	Locale.language = language
+	var place: Node = _place(main)
+	var decor: Node = place.get_node_or_null("Decor") if place != null else null
+	check(decor == null or PlaceDecor.stuck_on_paths(decor, str(place.name)).is_empty(), "no hay, pot, log or stump stands on a road or dirt path in " + (str(place.name) if place != null else "?"))
+	var road_scene: Node = (load("res://src/scenes/world/road/Road.tscn") as PackedScene).instantiate()
+	var junk: int = 0
+	for child: Node in road_scene.get_children():
+		var picture: Texture2D = child.get("person") as Texture2D
+		var file: String = picture.resource_path.get_file() if picture != null else ""
+		if file in ["crate.png", "sack.png", "basket.png", "table.png", "barrel.png"] and (child as Node2D).position.y > 0.0:
+			junk += 1
+	road_scene.free()
+	check(junk == 0, "nothing the boy cannot clear stands on the walking side of the caravan road")
 	farm.plots = old_plots
 	stead.flags = old_flags
 	activities.quest_done = old_done
 	bag.turnips = old_turnips
 	farm.apply()
+
+## Ten cave levels, each its own color and layout, joined by a ladder down at the back and the way up at the front.
+func _check_cave(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var loader: LevelLoader = systems.get_node("LevelLoader") as LevelLoader
+	var activities: Activities = systems.get_node("Activities") as Activities
+	var colors: Dictionary = {}
+	for depth: int in range(1, CaveFloor.DEEPEST + 1):
+		colors[CaveFloor.floor_color(depth).to_html()] = true
+	check(colors.size() == CaveFloor.DEEPEST, "each of the ten cave levels has its own color")
+	activities._enter_cave()
+	for i: int in 4:
+		await process_frame
+	var cave: CaveFloor = main.get_node("World/Cave") as CaveFloor
+	check(cave != null and cave.level == 1 and cave.get_node_or_null("LadderDown") != null and cave.get_node_or_null("Rock") != null, "the farm's cave opens on level 1, with its rock and a ladder down")
+	await create_timer(loader.settle_left() + 0.05).timeout
+	cave.go_down()
+	for i: int in 6:
+		await process_frame
+	cave = main.get_node("World/Cave") as CaveFloor
+	check(cave.level == 2 and int(stead.flags.get("cave_deepest", 0)) >= 2 and cave.get_node_or_null("Rock") == null, "the ladder leads down to level 2, which has its own layout")
+	var veins: int = 0
+	var walk_clear: bool = true
+	for child: Node in cave.get_children():
+		if child.get_script() == load("res://src/scripts/World/copper_vein.gd"):
+			veins += 1
+		if (child.name.begins_with("Mining") or child.get_script() == load("res://src/scripts/World/copper_vein.gd")) and cave.on_walk((child as Node2D).position):
+			walk_clear = false
+	check(veins == CaveFloor.stone_count(2) + CaveFloor.copper_count(2) + CaveFloor.iron_count(2), "level 2 has its rocks and veins")
+	check(walk_clear, "nothing stands on the walk from the way in to the ladder")
+	var stone: int = (systems.get_node("Inventory") as Inventory).stone
+	var first_rock: Node = cave.get_node("Rock0")
+	first_rock.call("_on_body_entered", main.find_child("Player", true, false))
+	check((systems.get_node("Inventory") as Inventory).stone == stone + 1 and not (first_rock as Node2D).visible, "a cave rock gives stone once a day")
+	await create_timer(loader.settle_left() + 0.05).timeout
+	cave.go_up()
+	for i: int in 6:
+		await process_frame
+	cave = main.get_node("World/Cave") as CaveFloor
+	check(cave.level == 1, "the way out of level 2 climbs back to level 1")
+	stead.flags["cave_level"] = CaveFloor.DEEPEST
+	loader.go_to(load(CaveFloor.SCENE) as PackedScene, "PlayerSpawn")
+	for i: int in 6:
+		await process_frame
+	cave = main.get_node("World/Cave") as CaveFloor
+	check(cave.level == 10 and cave.get_node_or_null("LadderDown") == null and cave.get_node_or_null("Treasure") != null and CaveFloor.iron_count(10) > 0, "level 10 is the bottom, with iron and a glowing treasure")
+	var language: String = Locale.language
+	Locale.language = "ar"
+	var arabic: String = Locale.t("cave_level")
+	Locale.language = "en"
+	check(arabic != Locale.t("cave_level") and Locale.t("iron") != "iron", "cave words have English and Arabic")
+	Locale.language = language
+	stead.flags["cave_level"] = 1
 
 func _check_fish_game(main: Node, activities: Activities) -> void:
 	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory
