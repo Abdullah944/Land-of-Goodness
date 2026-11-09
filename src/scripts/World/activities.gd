@@ -266,7 +266,7 @@ func give_stone() -> void:
 		return
 	rock_mined = true
 	var inventory: Inventory = _inventory()
-	inventory.stone += 1
+	inventory.add_item("stone", 1)
 	note = Locale.t("broke_rock")
 	_save()
 

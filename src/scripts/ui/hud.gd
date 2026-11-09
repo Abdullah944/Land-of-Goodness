@@ -43,6 +43,17 @@ var _journal_tab: Button
 var _journal: Label
 var _journal2: Label
 var _pages_button: Button
+var _book_button: Button
+## The collections book: one page at a time, its pictures, and the line about the picture tapped.
+var _book: Control
+var _book_title: Label
+var _book_cells: Array[Button] = []
+var _book_marks: Array[Label] = []
+var _book_names: Array[Label] = []
+var _book_about: Label
+var _book_deepest: Label
+var _book_page: int = 0
+var _book_item: String = ""
 var _notice_button: Button
 var _zoom_out: Button
 var _list: Control
@@ -346,6 +357,13 @@ func refresh() -> void:
 		_journal.visible = _tab == "quests"
 		_journal2.visible = _tab == "quests"
 		_pages_button.visible = _tab == "quests"
+		_book_button.visible = _tab == "quests"
+		_book.visible = _tab == "book"
+		var bag_now: Inventory = systems.get_node("Inventory") as Inventory
+		_book_button.text = Locale.t("book") % [CollectionBook.found_total(bag_now.found), CollectionBook.total()]
+		Locale.apply_control(_book_button)
+		if _book.visible:
+			_refresh_book(bag_now, stead)
 		var page_systems: Node = get_tree().current_scene.get_node_or_null("Systems")
 		if page_systems != null:
 			_pages_button.text = Locale.t("pages") % [Journal.found(page_systems), Journal.PAGE_COUNT]
@@ -579,12 +597,21 @@ func _build_menu() -> void:
 		column.visible = false
 		page.add_child(column)
 	_pages_button = _tab_button("", Vector2(inner.position.x + 10.0, 160))
-	_pages_button.size = Vector2(inner.size.x - 20.0, 26)
+	var half_w: float = (inner.size.x - 26.0) * 0.5
+	_pages_button.size = Vector2(half_w, 26)
 	_pages_button.focus_mode = Control.FOCUS_NONE
 	_pages_button.add_theme_font_size_override("font_size", 12)
 	_pages_button.visible = false
 	_pages_button.pressed.connect(_read_pages)
 	page.add_child(_pages_button)
+	_book_button = _tab_button("", Vector2(inner.position.x + 16.0 + half_w, 160))
+	_book_button.size = Vector2(half_w, 26)
+	_book_button.focus_mode = Control.FOCUS_NONE
+	_book_button.add_theme_font_size_override("font_size", 12)
+	_book_button.visible = false
+	_book_button.pressed.connect(_open_book)
+	page.add_child(_book_button)
+	_build_book(page, Rect2(inner.position.x, 48, inner.size.x, 142))
 	var list: Panel = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", Vector2(inner.position.x, 48), Vector2(inner.size.x, 108), 11, 2)
 	page.add_child(list)
 	_list = list
@@ -842,6 +869,139 @@ func _journal_text(stead: Stead) -> String:
 	if clock != null:
 		lines.append(clock.forecast_text())
 	return "\n".join(lines)
+
+## The book sits where the quest list is, with arrows to turn its four pages.
+func _build_book(page: Control, area: Rect2) -> void:
+	_book = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", area.position, area.size, 11, 2)
+	_book.visible = false
+	page.add_child(_book)
+	_book_title = _make_label(Vector2(40, 6), UiStyle.DARK)
+	_book_title.size = Vector2(area.size.x - 80.0, 18)
+	_book_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_book_title.add_theme_font_size_override("font_size", 13)
+	_book.add_child(_book_title)
+	var back: Button = _tab_button("◀", Vector2(8, 5))
+	back.size = Vector2(30, 20)
+	back.focus_mode = Control.FOCUS_NONE
+	back.pressed.connect(_turn_book.bind(-1))
+	_book.add_child(back)
+	var on: Button = _tab_button("▶", Vector2(area.size.x - 38.0, 5))
+	on.size = Vector2(30, 20)
+	on.focus_mode = Control.FOCUS_NONE
+	on.pressed.connect(_turn_book.bind(1))
+	_book.add_child(on)
+	var most: int = 0
+	for book_page: Dictionary in CollectionBook.PAGES:
+		most = maxi(most, (book_page["items"] as Array).size())
+	var cell_w: float = (area.size.x - 16.0) / float(most)
+	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
+	for i: int in most:
+		var cell: Button = Button.new()
+		cell.position = Vector2(8.0 + i * cell_w, 38)
+		cell.size = Vector2(cell_w, 36)
+		cell.flat = true
+		cell.expand_icon = false
+		cell.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cell.focus_mode = Control.FOCUS_NONE
+		for state: String in ["normal", "hover", "pressed", "focus"]:
+			cell.add_theme_stylebox_override(state, empty)
+		cell.pressed.connect(_pick_book_item.bind(i))
+		cell.button_down.connect(Juice.press.bind(cell))
+		_book.add_child(cell)
+		_book_cells.append(cell)
+		var mark: Label = _make_label(Vector2.ZERO, UiStyle.CREAM)
+		mark.size = cell.size
+		mark.text = "?"
+		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		mark.add_theme_font_size_override("font_size", 14)
+		mark.add_theme_constant_override("outline_size", 3)
+		mark.add_theme_color_override("font_outline_color", UiStyle.DARK)
+		cell.add_child(mark)
+		_book_marks.append(mark)
+		var name_label: Label = _make_label(Vector2(8.0 + i * cell_w, 74), UiStyle.DARK)
+		name_label.size = Vector2(cell_w, 14)
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 9)
+		name_label.clip_text = true
+		_book.add_child(name_label)
+		_book_names.append(name_label)
+	_book_deepest = _make_label(Vector2(10, 90), UiStyle.DARK)
+	_book_deepest.size = Vector2(area.size.x - 20.0, 14)
+	_book_deepest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_book_deepest.add_theme_font_size_override("font_size", 10)
+	_book.add_child(_book_deepest)
+	_book_about = _make_label(Vector2(12, 104), UiStyle.DARK)
+	_book_about.size = Vector2(area.size.x - 24.0, 34)
+	_book_about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_book_about.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_book_about.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_book_about.add_theme_font_size_override("font_size", 11)
+	_book.add_child(_book_about)
+
+static var _book_icons: Dictionary = {}
+
+func _book_icon(item_id: String) -> Texture2D:
+	if not _book_icons.has(item_id):
+		var path: String = GoodsCatalog.icon_path(item_id)
+		_book_icons[item_id] = UiStyle.fit_picture(load(path) as Texture2D, 26) if path != "" and ResourceLoader.exists(path) else null
+	return _book_icons[item_id]
+
+func _refresh_book(bag: Inventory, stead: Stead) -> void:
+	var book_page: Dictionary = CollectionBook.PAGES[_book_page]
+	var items: Array = book_page["items"]
+	_book_title.text = Locale.t("book_page") % [Locale.t(str(book_page["key"])), CollectionBook.found_on(book_page, bag.found), items.size()]
+	Locale.apply_control(_book_title)
+	for i: int in _book_cells.size():
+		var cell: Button = _book_cells[i]
+		var shown: bool = i < items.size()
+		cell.visible = shown
+		_book_names[i].visible = shown
+		if not shown:
+			continue
+		var item_id: String = str(items[i])
+		var have: bool = bag.found.has(item_id)
+		cell.icon = _book_icon(item_id)
+		# Things not found yet show as a dark shape with a question mark.
+		cell.self_modulate = Color.WHITE if have else Color(0.12, 0.08, 0.06, 0.55)
+		_book_marks[i].visible = not have
+		_book_names[i].text = Locale.item(item_id) if have else "?"
+		_book_names[i].modulate = Color.WHITE if item_id != _book_item else Color("b5651d")
+		Locale.apply_control(_book_names[i])
+	_book_deepest.visible = str(book_page["key"]) == "book_cave"
+	if _book_deepest.visible:
+		var deepest: int = int(stead.flags.get("cave_deepest", 0)) if stead != null else 0
+		_book_deepest.text = Locale.t("book_deepest") % [deepest, CaveFloor.DEEPEST]
+		Locale.apply_control(_book_deepest)
+	if _book_item == "" or not items.has(_book_item):
+		_book_about.text = Locale.t("book_tap")
+	elif bag.found.has(_book_item):
+		_book_about.text = "%s: %s" % [Locale.item(_book_item), Locale.t("about_" + _book_item)]
+	else:
+		_book_about.text = Locale.t("book_unknown")
+	Locale.apply_control(_book_about)
+
+func _open_book() -> void:
+	var systems: Node = get_tree().current_scene.get_node("Systems")
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	bag.note_held(systems.get_node_or_null("ChestStore") as ChestStore)
+	bag.pay_book_pages()
+	_book_item = ""
+	(systems.get_node("SoundBank") as SoundBank).play("ui")
+	_show_tab("book")
+
+func _turn_book(step: int) -> void:
+	_book_page = posmod(_book_page + step, CollectionBook.PAGES.size())
+	_book_item = ""
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	refresh()
+
+func _pick_book_item(index: int) -> void:
+	var items: Array = CollectionBook.PAGES[_book_page]["items"]
+	if index < items.size():
+		_book_item = str(items[index])
+		(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+		refresh()
 
 ## Closes the menu and reads grandfather's pages found so far, then says who has the next one.
 func _read_pages() -> void:

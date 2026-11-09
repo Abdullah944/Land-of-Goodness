@@ -133,6 +133,7 @@ func _run() -> void:
 	_check_stories(main.get_node("Systems"))
 	_check_first_steps(main)
 	await _check_cave(main)
+	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
 	await process_frame
 	await process_frame
@@ -851,6 +852,54 @@ func _check_cave(main: Node) -> void:
 	check(arabic != Locale.t("cave_level") and Locale.t("iron") != "iron", "cave words have English and Arabic")
 	Locale.language = language
 	stead.flags["cave_level"] = 1
+
+func _check_book(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var kindness: Kindness = systems.get_node("Kindness") as Kindness
+	var save: SaveGame = systems.get_node("SaveGame") as SaveGame
+	check(CollectionBook.total() == 18 and CollectionBook.PAGES.size() == 4, "the book has four pages and 18 things")
+	var all_have_words: bool = true
+	for item_id: String in CollectionBook.all_items():
+		if Locale.t("about_" + item_id) == "about_" + item_id or GoodsCatalog.icon_path(item_id) == "":
+			all_have_words = false
+	check(all_have_words, "every thing in the book has a picture and a line about it")
+	bag.found.clear()
+	bag.book_paid.clear()
+	for item_id: String in CollectionBook.all_items():
+		bag.take_item(item_id, bag.count_of(item_id))
+	bag.add_item("copper", 2)
+	bag.take_item("copper", 2)
+	check(bag.found.has("copper") and bag.count_of("copper") == 0, "a thing stays found after it leaves the bag")
+	var points: int = kindness.points
+	bag.add_item("stone", 1)
+	check(not bag.book_paid.has("book_cave"), "a page that is not full gives nothing")
+	bag.add_item("iron", 1)
+	check(bag.book_paid.has("book_cave") and kindness.points == mini(points + CollectionBook.PAGE_REWARD, Kindness.MAX_POINTS), "a full page gives a little Khair")
+	points = kindness.points
+	bag.add_item("iron", 1)
+	bag.pay_book_pages()
+	check(kindness.points == points, "each page pays only once")
+	var data: Dictionary = bag.to_data()
+	bag.from_data(data)
+	check(bag.found.has("copper") and bag.book_paid.has("book_cave"), "found things and paid pages are kept in the save")
+	data.erase("found")
+	data.erase("book_paid")
+	data["extra"] = {"wool": 1}
+	bag.from_data(data)
+	check(bag.found.has("wool") and bag.found.has("stone") and not bag.found.has("copper"), "an older save fills the book from what the bag holds")
+	var hud: Node = main.get_node("UI/HUD")
+	hud.call("_toggle_menu")
+	hud.call("_open_book")
+	await process_frame
+	var book: Control = hud.get("_book") as Control
+	var title: Label = hud.get("_book_title") as Label
+	check(book.visible and title.text.contains("/7"), "the book opens on the farm page from the journal")
+	hud.call("_turn_book", 2)
+	check(title.text.contains("3/3") or title.text.contains("/3"), "the arrows turn to the cave page")
+	hud.call("_turn_book", -2)
+	hud.call("_toggle_menu")
+	save.write_now()
 
 func _check_fish_game(main: Node, activities: Activities) -> void:
 	var bag: Inventory = main.get_node("Systems/Inventory") as Inventory

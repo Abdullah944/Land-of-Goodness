@@ -22,6 +22,9 @@ var forage: int = 0
 var hearts: float = 5.0
 var max_hearts: float = 5.0
 var extra: Dictionary = {}
+## Everything in the collections book the boy has ever had, and the book pages already rewarded.
+var found: Dictionary = {}
+var book_paid: Dictionary = {}
 
 const TOOL_TIRE: float = 0.1
 const STORED_GOODS: Array[String] = [
@@ -136,6 +139,26 @@ func count_of(item_id: String) -> int:
 
 func add_item(item_id: String, amount: int) -> void:
 	_set_item(item_id, count_of(item_id) + amount)
+	if amount > 0 and CollectionBook.has_item(item_id) and not found.has(item_id):
+		found[item_id] = true
+		pay_book_pages()
+
+## Marks as found whatever is in the bag or the chest now, so older saves start their book filled in.
+func note_held(chest: ChestStore = null) -> void:
+	for item_id: String in CollectionBook.all_items():
+		if count_of(item_id) > 0 or (chest != null and chest.count_of(item_id) > 0):
+			found[item_id] = true
+
+## The first time a book page is full: a little Khair and a note, once per page.
+func pay_book_pages() -> void:
+	for key: String in CollectionBook.unpaid_full(found, book_paid):
+		book_paid[key] = true
+		var kindness: Node = get_parent().get_node_or_null("Kindness") if get_parent() != null else null
+		if kindness != null:
+			kindness.call("reward", CollectionBook.PAGE_REWARD)
+		var activities: Node = get_parent().get_node_or_null("Activities") if get_parent() != null else null
+		if activities != null and activities.has_method("flash"):
+			activities.call("flash", Locale.t("book_page_done") % [Locale.t(key), CollectionBook.PAGE_REWARD])
 
 func take_item(item_id: String, amount: int) -> bool:
 	if amount < 1 or count_of(item_id) < amount:
@@ -183,6 +206,8 @@ func to_data() -> Dictionary:
 		"forage": forage,
 		"hearts": hearts,
 		"extra": extra.duplicate(),
+		"found": found.keys(),
+		"book_paid": book_paid.keys(),
 	}
 
 func from_data(data: Dictionary) -> void:
@@ -214,6 +239,17 @@ func from_data(data: Dictionary) -> void:
 		_set_item(item_id, maxi(0, count_of(item_id)))
 	dinars = maxi(0, dinars)
 	hearts = clampf(hearts, 0.0, 7.0)
+	found.clear()
+	book_paid.clear()
+	for key: Variant in _list_of(data.get("found", [])):
+		if CollectionBook.has_item(str(key)):
+			found[str(key)] = true
+	for key: Variant in _list_of(data.get("book_paid", [])):
+		book_paid[str(key)] = true
+	note_held()
+
+static func _list_of(value: Variant) -> Array:
+	return value if value is Array else []
 
 ## The repaired market brings more buyers, so goods sell for a tenth more.
 func _with_market(amount: int) -> int:
