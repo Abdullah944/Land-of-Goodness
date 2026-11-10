@@ -45,6 +45,8 @@ var heart_talks_seen: Dictionary = {}
 ## Where each neighbor's story stands: "", ASKED, HELPED or THANKED.
 var stories: Dictionary = {}
 var eggs_week: int = -1
+## Neighbors the boy has talked to at least once.
+var met: Dictionary = {}
 
 func hearts(person: String) -> int:
 	return mini(MAX_HEARTS, int(float(points.get(person, 0)) / HEART))
@@ -60,6 +62,7 @@ func taste(person: String, item_id: String) -> String:
 func talk(person: String) -> String:
 	if not person in PEOPLE:
 		return ""
+	met[person] = true
 	if not talked.has(person):
 		talked[person] = true
 		_add(person, TALK_POINTS)
@@ -74,6 +77,14 @@ func talk(person: String) -> String:
 	if is_birthday(person):
 		return Locale.t("birthday_line")
 	return ""
+
+## How many of the five neighbors the boy has said hello to.
+func met_count() -> int:
+	var count: int = 0
+	for person: String in PEOPLE:
+		if met.has(person):
+			count += 1
+	return count
 
 ## How the neighbor feels about a gift. Birthdays count three times.
 func gift(person: String, item_id: String) -> String:
@@ -204,7 +215,7 @@ func on_new_day() -> void:
 	talked.clear()
 
 func to_data() -> Dictionary:
-	return {"points": points.duplicate(), "talked": talked.duplicate(), "seen": heart_talks_seen.duplicate(), "stories": stories.duplicate(), "eggs_week": eggs_week}
+	return {"points": points.duplicate(), "talked": talked.duplicate(), "seen": heart_talks_seen.duplicate(), "stories": stories.duplicate(), "eggs_week": eggs_week, "met": met.keys()}
 
 func from_data(data: Dictionary) -> void:
 	points.clear()
@@ -222,6 +233,16 @@ func from_data(data: Dictionary) -> void:
 		for person: Variant in stored:
 			if str(person) in PEOPLE:
 				points[str(person)] = clampi(int(stored[person]), 0, HEART * MAX_HEARTS)
+	met.clear()
+	var known: Variant = data.get("met", [])
+	if known is Array:
+		for person: Variant in known:
+			if str(person) in PEOPLE:
+				met[str(person)] = true
+	# Older saves did not keep this list. Anyone the boy has points with, he has met.
+	for person: String in points:
+		if int(points[person]) > 0:
+			met[person] = true
 	for section: Array in [[talked, data.get("talked", {})], [heart_talks_seen, data.get("seen", {})]]:
 		if section[1] is Dictionary:
 			for key: Variant in section[1]:

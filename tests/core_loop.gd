@@ -772,13 +772,77 @@ func _check_first_steps(main: Node) -> void:
 	farm.plots["0,0"] = {"tilled": true, "stage": 0, "watered": false, "crop": "turnip", "sprinkler": false}
 	check(stead.goal_text() == Locale.t("step_water"), "then to water")
 	farm.plots["0,0"]["watered"] = true
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var kindness: Kindness = systems.get_node("Kindness") as Kindness
+	var old_day: int = clock.day
+	var old_friends: Dictionary = friends.to_data()
+	var old_khair: Dictionary = kindness.to_data()
+	var old_seeds: int = bag.seeds
+	var old_dinars: int = bag.dinars
+	clock.day = 1
+	friends.from_data({})
+	stead.flags.erase("welcomed")
 	check(stead.goal_text() == Locale.t("step_sleep"), "then to sleep")
+	clock.day = 2
+	check(stead.goal_text() == Locale.t("step_meet") % [0, 5], "on the second day, the wait for the turnips sends him to meet the neighbors")
+	for person: String in ["jassim", "elder", "merchant", "carpenter"]:
+		friends.talk(person)
+	check(stead.goal_text() == Locale.t("step_meet") % [4, 5] and activities.take_welcome() == "", "the line counts who he has met, and the gift waits for all five")
+	friends.talk("fisherman")
+	var welcome: String = activities.take_welcome()
+	# The gift's Khair can also reach a Khair level, which adds seeds of its own.
+	check(welcome != "" and bag.dinars == old_dinars + Activities.WELCOME_DINARS and bag.seeds >= old_seeds + Activities.WELCOME_SEEDS, "meeting all five brings the village's welcome gift")
+	check(activities.take_welcome() == "" and bag.dinars == old_dinars + Activities.WELCOME_DINARS, "the welcome gift comes only once")
+	var seen_woods: bool = bool(stead.visited.get("Forest", false))
+	stead.visited.erase("Forest")
+	check(stead.goal_text() == Locale.t("step_woods"), "after meeting everyone, the line sends him to the woods")
+	stead.visited["Forest"] = true
+	check(stead.goal_text() == Locale.t("step_sleep"), "after the woods, the line says to sleep again")
+	if not seen_woods:
+		stead.visited.erase("Forest")
+	var kept: Dictionary = friends.to_data()
+	friends.from_data(kept)
+	check(friends.met_count() == 5, "the neighbors he has met survive a reload")
+	bag.dinars = old_dinars
+	bag.seeds = old_seeds
+	clock.day = old_day
+	friends.from_data(old_friends)
+	kindness.from_data(old_khair)
 	farm.plots["0,0"]["stage"] = 99
 	check(stead.goal_text() == Locale.t("step_harvest"), "then to pick the ripe turnip")
 	bag.turnips = 1
 	check(stead.goal_text() == Locale.t("quest_turnip"), "then to sell it to Jassim")
 	activities.quest_done = true
 	check(works.requests_open(), "after the first sale, neighbors start asking for goods")
+	var held: Dictionary = {"wood": bag.wood, "stone": bag.stone, "forage": bag.forage}
+	var held_flags: Dictionary = stead.flags.duplicate()
+	var held_coop: bool = stead.coop
+	stead.flags["crafted_feed"] = true
+	stead.coop = false
+	bag.wood = 12
+	bag.stone = 2
+	check(stead.goal_text() == "%s. %s" % [Locale.t("quest_coop"), Locale.t("need_items") % ("4 " + Locale.item("stone"))], "the coop quest says what is still missing")
+	check(stead.where_hint() == Locale.t("where_stone"), "and where to find it")
+	bag.stone = 6
+	check(stead.goal_text() == Locale.t("quest_coop") and stead.where_hint() == "", "with everything in the bag, the quest line is short again")
+	stead.flags.erase("crafted_feed")
+	bag.forage = 0
+	check(stead.where_hint() == Locale.t("where_forage"), "the feed quest points to where herbs grow")
+	bag.wood = int(held["wood"])
+	bag.stone = int(held["stone"])
+	bag.forage = int(held["forage"])
+	stead.flags = held_flags
+	stead.coop = held_coop
+	var found_before: Dictionary = bag.found.duplicate()
+	bag.found.clear()
+	var asks_crop: bool = false
+	for day: int in range(1, 60):
+		var wish: Dictionary = works._make_request(day)
+		if str(wish["item"]) in ["turnips", "tomatoes", "wheat", "watermelons"]:
+			asks_crop = true
+	check(not asks_crop, "nobody asks for a crop the boy has never grown")
+	bag.found = found_before
 	var language: String = Locale.language
 	Locale.language = "ar"
 	var arabic: String = Locale.t("step_dig")
@@ -1133,6 +1197,13 @@ func _check_juice(main: Node) -> void:
 	letters.pending = {"person": "carpenter", "line": "letter_wood", "item": "wood", "amount": 5}
 	letters.read()
 	check(bag.count_of("wood") == wood + 5 and dialogue.visible and letters.pending.is_empty(), "a letter is read once and its gift goes in the bag")
+	var letter_clock: GameClock = systems.get_node("Clock") as GameClock
+	var letter_day: int = letter_clock.day
+	letter_clock.day = Letters.FIRST_DAY
+	letters.on_new_day()
+	check(str(letters.pending.get("person", "")) == "elder" and str(letters.pending.get("item", "")) == "dates", "the third morning always brings the elder's first letter")
+	letters.pending = {}
+	letter_clock.day = letter_day
 	while dialogue.visible:
 		dialogue._advance()
 	var clock: GameClock = systems.get_node("Clock") as GameClock

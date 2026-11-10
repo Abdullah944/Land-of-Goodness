@@ -661,7 +661,36 @@ func _friend_line(person: String, line: String) -> String:
 		return line
 	var special: String = friends.talk(person)
 	_dialogue().set_hearts(friends.hearts(person))
+	var welcome: String = take_welcome()
+	if welcome != "":
+		return welcome
 	return special if special != "" else line
+
+const WELCOME_DINARS: int = 50
+const WELCOME_SEEDS: int = 4
+const WELCOME_KHAIR: int = 2
+
+## Once the boy has said hello to all five neighbors, the village gives him a small start. Returns its line once, then "".
+func take_welcome() -> String:
+	var friends: Friendship = _friends()
+	var stead: Stead = _stead()
+	if friends == null or stead == null or bool(stead.flags.get("welcomed", false)):
+		return ""
+	if friends.met_count() < Friendship.PEOPLE.size():
+		return ""
+	stead.flags["welcomed"] = true
+	var inventory: Inventory = _inventory()
+	inventory.dinars += WELCOME_DINARS
+	inventory.add_item("seeds", WELCOME_SEEDS)
+	pop_item("seeds", WELCOME_SEEDS)
+	var kindness: Kindness = _kindness()
+	if kindness != null:
+		kindness.reward(WELCOME_KHAIR)
+	_chime("level")
+	Juice.tap(get_tree(), Juice.TAP_FIRM)
+	_save()
+	_refresh()
+	return Locale.t("welcome_all") % [WELCOME_DINARS, WELCOME_SEEDS]
 
 func _join_fair() -> void:
 	var fairs: Festivals = _fairs()
@@ -808,7 +837,8 @@ func _work_choice(choice: String) -> void:
 		return
 	if choice == "quests":
 		_shop = ""
-		_dialogue().open_lines(PackedStringArray([stead.goal_text(), Locale.t("quests_body")]))
+		var where: String = stead.where_hint()
+		_dialogue().open_lines(PackedStringArray([stead.goal_text(), where if where != "" else Locale.t("quests_body")]))
 		return
 	if choice == "craft":
 		_shop = "craft"
@@ -862,14 +892,20 @@ func _animal_choices(stead: Stead) -> PackedStringArray:
 	return rows
 
 ## Says what is missing, so a refused tap never leaves the player guessing.
+## "Still needed: 4 Stone", and under it where stone is found.
+func _with_where(stead: Stead, costs: Dictionary) -> String:
+	var line: String = Locale.t("need_items") % stead.missing_text(costs)
+	var where: String = stead.where_text(costs)
+	return line if where == "" else "%s\n%s" % [line, where]
+
 func _refusal(stead: Stead, shop: String, choice: String) -> String:
 	if shop == "build":
-		return Locale.t("need_items") % stead.missing_text(RecipeCatalog.building(choice).get("costs", {}))
+		return _with_where(stead, RecipeCatalog.building(choice).get("costs", {}))
 	if shop == "supplies":
 		return Locale.t("need_dinars") % RecipeCatalog.BUNDLE_PRICE
 	if shop == "craft":
 		var spec: Dictionary = RecipeCatalog.recipe(_recipe_for(choice))
-		return Locale.t("need_items") % stead.missing_text(spec.get("costs", {}))
+		return _with_where(stead, spec.get("costs", {}))
 	if shop == "animals" and choice.begins_with("buy_"):
 		var spec: Dictionary = RecipeCatalog.animal(choice.trim_prefix("buy_"))
 		var home: String = str(spec.get("home", ""))

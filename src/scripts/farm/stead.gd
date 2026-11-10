@@ -224,11 +224,11 @@ func goal_text() -> String:
 	if not quest_done:
 		return first_step()
 	if not bool(flags.get("crafted_feed", false)):
-		return Locale.t("quest_feed")
+		return _with_missing("quest_feed", _step_costs("quest_feed"))
 	if not coop:
-		return Locale.t("quest_coop")
+		return _with_missing("quest_coop", _step_costs("quest_coop"))
 	if count_kind("chicken") < 1:
-		return Locale.t("quest_chicken")
+		return _with_missing("quest_chicken", _step_costs("quest_chicken"))
 	if not bool(flags.get("got_egg", false)):
 		return Locale.t("quest_egg")
 	if not bool(visited.get("Harbor", false)):
@@ -236,9 +236,9 @@ func goal_text() -> String:
 	if not bool(visited.get("Orchard", false)):
 		return Locale.t("quest_orchard")
 	if not barn:
-		return Locale.t("quest_barn")
+		return _with_missing("quest_barn", _step_costs("quest_barn"))
 	if count_kind("goat") + count_kind("sheep") + count_kind("cow") < 1 and not bool(flags.get("got_barn_product", false)):
-		return Locale.t("quest_barn_animal")
+		return _with_missing("quest_barn_animal", _step_costs("quest_barn_animal"))
 	if not bool(flags.get("got_barn_product", false)):
 		return Locale.t("quest_barn_product")
 	var works: VillageWorks = get_parent().get_node_or_null("VillageWorks") as VillageWorks
@@ -253,6 +253,54 @@ func goal_text() -> String:
 		return Locale.t("quest_work") % Locale.t(str(project["id"]))
 	var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
 	return Locale.t("quest_khair") % (kindness.points if kindness != null else 0)
+
+## What a quest step costs, so its line can say what is still missing. Empty for steps that cost nothing.
+func _step_costs(step_key: String) -> Dictionary:
+	match step_key:
+		"quest_feed":
+			return RecipeCatalog.recipe("feed_herbs").get("costs", {})
+		"quest_coop":
+			return RecipeCatalog.building("coop").get("costs", {})
+		"quest_barn":
+			return RecipeCatalog.building("barn").get("costs", {})
+		"quest_chicken":
+			return {"dinars": int(RecipeCatalog.animal("chicken").get("price", 0))}
+		"quest_barn_animal":
+			return {"dinars": int(RecipeCatalog.animal("sheep").get("price", 0))}
+	return {}
+
+## The quest line, with what the boy still lacks for it added when he lacks something.
+func _with_missing(step_key: String, costs: Dictionary) -> String:
+	var missing: String = missing_text(costs)
+	if missing == "":
+		return Locale.t(step_key)
+	return "%s. %s" % [Locale.t(step_key), Locale.t("need_items") % missing]
+
+## One short line on where to find the first thing the current quest step still lacks, or "".
+func where_hint() -> String:
+	var activities: Node = get_parent().get_node_or_null("Activities")
+	if activities == null or not bool(activities.get("quest_done")):
+		return ""
+	for step: Dictionary in steps():
+		if bool(step["done"]):
+			continue
+		return where_text(_step_costs(str(step["key"])))
+	return ""
+
+## Where to find the first missing thing in these costs, or "" when nothing is missing or it has no hint.
+func where_text(costs: Dictionary) -> String:
+	var bag: Inventory = _bag()
+	if bag == null:
+		return ""
+	for key: Variant in costs:
+		var item_id: String = str(key)
+		var have: int = bag.dinars if item_id == "dinars" else bag.count_of(item_id)
+		if have >= int(costs[key]):
+			continue
+		var hint: String = Locale.t("where_" + item_id)
+		if hint != "where_" + item_id:
+			return hint
+	return ""
 
 ## Pays the one-time village thanks when the farm goal is first reached.
 func check_milestone() -> bool:
@@ -288,8 +336,18 @@ func first_step() -> String:
 			growing = true
 			if not bool(plot.get("watered", false)):
 				dry = true
+	if growing and dry:
+		return Locale.t("step_water")
 	if growing:
-		return Locale.t("step_water") if dry else Locale.t("step_sleep")
+		# From the second morning, the wait for the first turnips is a good time to meet the village.
+		var friends: Friendship = get_parent().get_node_or_null("Friendship") as Friendship
+		var clock: GameClock = get_parent().get_node_or_null("Clock") as GameClock
+		if friends != null and clock != null and clock.day >= 2 and friends.met_count() < Friendship.PEOPLE.size():
+			return Locale.t("step_meet") % [friends.met_count(), Friendship.PEOPLE.size()]
+		# Then the woods, where the wood, stone and herbs for the first buildings are.
+		if clock != null and clock.day >= 2 and not bool(visited.get("Forest", false)):
+			return Locale.t("step_woods")
+		return Locale.t("step_sleep")
 	return Locale.t("step_plant") if dug else Locale.t("step_dig")
 
 func steps() -> Array[Dictionary]:

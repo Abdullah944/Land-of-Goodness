@@ -857,6 +857,8 @@ func _journal_text(stead: Stead) -> String:
 					break
 			var mark: String = "[x]" if done else ("  >" if ahead == 1 else "[  ]")
 			lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
+			if not done and ahead == 1 and stead.where_hint() != "":
+				lines.append(stead.where_hint())
 	if works != null and works.requests_open():
 		var wish: Dictionary = works.request_today()
 		if not bool(wish.get("done", false)):

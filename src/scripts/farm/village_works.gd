@@ -166,10 +166,13 @@ func _make_request(day: int) -> Dictionary:
 	var pool: Array[String] = ["wood", "stone", "fish", "forage"]
 	var clock: GameClock = get_parent().get_node_or_null("Clock") as GameClock
 	var season: String = clock.season if clock != null else "Spring"
+	# Neighbors only ask for a crop the boy has grown before, so no request is out of reach.
+	var bag: Inventory = _bag()
 	for crop_id: String in CropCatalog.ids():
 		var crop: Dictionary = CropCatalog.get_crop(crop_id)
-		if crop.get("seasons", []).has(season):
-			pool.append(str(crop.get("harvest_item", "")))
+		var harvest: String = str(crop.get("harvest_item", ""))
+		if crop.get("seasons", []).has(season) and (bag == null or bag.found.has(harvest)):
+			pool.append(harvest)
 	var stead: Stead = _stead()
 	if stead != null:
 		if bool(stead.visited.get("Orchard", false)):

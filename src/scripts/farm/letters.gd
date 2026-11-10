@@ -19,12 +19,18 @@ const LETTERS: Array = [
 	["merchant", "letter_market", "", 0, []],
 ]
 const SHOW_DELAY: float = 1.2
+## The first letter always comes on this morning, from the elder, so the quiet wait for the first turnips has a small surprise.
+const FIRST_DAY: int = 3
+const FIRST_LETTER: Array = ["elder", "letter_elder", "dates", 3, []]
 
 var pending: Dictionary = {}
 var _wait: float = 0.0
 
 func on_new_day() -> void:
 	var clock: GameClock = get_parent().get_node("Clock") as GameClock
+	if clock.day == FIRST_DAY:
+		pending = {"person": FIRST_LETTER[0], "line": FIRST_LETTER[1], "item": FIRST_LETTER[2], "amount": int(FIRST_LETTER[3])}
+		return
 	if clock.day < 2 or randf() >= CHANCE:
 		return
 	var choices: Array = []
