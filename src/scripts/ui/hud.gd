@@ -978,7 +978,9 @@ func _refresh_book(bag: Inventory, stead: Stead) -> void:
 	elif bag.found.has(_book_item):
 		_book_about.text = "%s: %s" % [Locale.item(_book_item), Locale.t("about_" + _book_item)]
 	else:
-		_book_about.text = Locale.t("book_unknown")
+		# Some things give a hint about where to look.
+		var hint: String = Locale.t("hint_" + _book_item)
+		_book_about.text = Locale.t("book_unknown") if hint == "hint_" + _book_item else hint
 	Locale.apply_control(_book_about)
 
 func _open_book() -> void:

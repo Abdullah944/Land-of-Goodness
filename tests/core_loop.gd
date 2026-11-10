@@ -45,8 +45,12 @@ func _run() -> void:
 	check(activities.quest_done, "old quest stays done")
 	check(not activities.fish_at("Home"), "old fish day still blocks the farm spot")
 	check(activities.fish_at("Harbor"), "harbor fish is a separate daily spot")
-	check(inventory.count_of("fish") == 1, "one gulf fish was added")
-	inventory.add_item("fish", 1)
+	var harbor_catch: int = inventory.count_of("fish")
+	for kind: String in FishCatalog.kinds():
+		harbor_catch += inventory.count_of(kind)
+		inventory.take_item(kind, inventory.count_of(kind))
+	check(harbor_catch == 1, "one gulf fish was added")
+	inventory.add_item("fish", 2 - inventory.count_of("fish"))
 	var before: int = inventory.dinars
 	var earned: int = inventory.sell_stack("fish")
 	check(earned == 60 and inventory.dinars == before + 60 and inventory.count_of("fish") == 0, "fish sells once")
@@ -858,7 +862,7 @@ func _check_book(main: Node) -> void:
 	var bag: Inventory = systems.get_node("Inventory") as Inventory
 	var kindness: Kindness = systems.get_node("Kindness") as Kindness
 	var save: SaveGame = systems.get_node("SaveGame") as SaveGame
-	check(CollectionBook.total() == 18 and CollectionBook.PAGES.size() == 4, "the book has four pages and 18 things")
+	check(CollectionBook.total() == 23 and CollectionBook.PAGES.size() == 5, "the book has five pages and 23 things")
 	var all_have_words: bool = true
 	for item_id: String in CollectionBook.all_items():
 		if Locale.t("about_" + item_id) == "about_" + item_id or GoodsCatalog.icon_path(item_id) == "":
@@ -895,9 +899,23 @@ func _check_book(main: Node) -> void:
 	var book: Control = hud.get("_book") as Control
 	var title: Label = hud.get("_book_title") as Label
 	check(book.visible and title.text.contains("/7"), "the book opens on the farm page from the journal")
-	hud.call("_turn_book", 2)
-	check(title.text.contains("3/3") or title.text.contains("/3"), "the arrows turn to the cave page")
-	hud.call("_turn_book", -2)
+	hud.call("_turn_book", 3)
+	check(title.text.contains(Locale.t("book_cave")), "the arrows turn to the cave page")
+	hud.call("_turn_book", -3)
+	check(FishCatalog.pick("Home", "Spring", 0.9) == "fish", "the home pond always gives the plain fish")
+	var harbor_spring: Dictionary = FishCatalog.table("Harbor", "Spring")
+	var harbor_winter: Dictionary = FishCatalog.table("Harbor", "Winter")
+	check(harbor_spring.has("zubaidi") and not harbor_spring.has("hamour") and harbor_winter.has("hamour") and not harbor_winter.has("zubaidi"), "zubaidi and hamour bite only in their seasons")
+	var seen: Dictionary = {}
+	for i: int in 200:
+		for season: String in ["Spring", "Winter"]:
+			seen[FishCatalog.pick("Harbor", season, i / 200.0)] = true
+			seen[FishCatalog.pick("Forest", season, i / 200.0)] = true
+	var every_kind: bool = true
+	for kind: String in FishCatalog.kinds():
+		if not seen.has(kind) or GoodsCatalog.sell_price(kind) <= GoodsCatalog.sell_price("fish") or not bag.can_store(kind):
+			every_kind = false
+	check(every_kind, "all five Gulf fish can be caught, stored and sell for more than the plain fish")
 	hud.call("_toggle_menu")
 	save.write_now()
 

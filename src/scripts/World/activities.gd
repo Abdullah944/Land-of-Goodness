@@ -211,9 +211,10 @@ func fish_at(place_name: String, spot_name: String = "FishingSpot") -> bool:
 	if place_name == "Home" and spot_name == "FishingSpot":
 		fished_today = true
 		fish_day = _day()
-	_inventory().add_item("fish", 1)
-	note = Locale.t("caught")
-	pop_item("fish")
+	var kind: String = FishCatalog.pick(place_name, _season(), randf())
+	_inventory().add_item(kind, 1)
+	note = Locale.t("caught") if kind == FishCatalog.PLAIN else Locale.t("caught_kind") % Locale.item(kind)
+	pop_item(kind)
 	var works: VillageWorks = _works()
 	if place_name == "Harbor" and works != null and works.is_done("dock") and randf() < PEARL_CHANCE:
 		_inventory().add_item("pearl", 1)
@@ -1067,6 +1068,10 @@ func _mark_key(place: Node, spot: Node) -> String:
 func _day() -> int:
 	var clock: GameClock = get_parent().get_node("Clock") as GameClock
 	return clock.day
+
+func _season() -> String:
+	var clock: GameClock = get_parent().get_node("Clock") as GameClock
+	return clock.season
 
 func _set_mark(spot: Node2D, available: bool) -> void:
 	spot.visible = available

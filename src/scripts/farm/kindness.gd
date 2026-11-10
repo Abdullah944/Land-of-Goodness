@@ -9,7 +9,7 @@ const GIFT_POINTS: int = 2
 const FUND_POINTS: int = 3
 const FEED_POINTS: int = 1
 const FUND_PRICE: int = 10
-const FOODS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons", "fish", "dates", "eggs", "milk"]
+const FOODS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons", "fish", "dates", "eggs", "milk", "maid", "sheim", "safi", "zubaidi", "hamour"]
 ## Things that are not food but still make a good present.
 const GIFTS: Array[String] = ["pearl", "copper", "wool", "forage", "wood"]
 const LEVELS: Array[Dictionary] = [

@@ -1,5 +1,5 @@
 # src/scripts/farm/collection_book.gd
-# Purpose: The collections book. Four pages of everything the boy can grow, catch, mine or make.
+# Purpose: The collections book. Five pages of everything the boy can grow, catch, mine or make.
 # A thing counts as found the first time it lands in his bag, and stays found after it is sold or used.
 # The first time a page is full, he earns a little Khair, once per page.
 
@@ -8,7 +8,8 @@ extends RefCounted
 
 const PAGES: Array[Dictionary] = [
 	{"key": "book_farm", "items": ["turnips", "tomatoes", "wheat", "watermelons", "eggs", "milk", "wool"]},
-	{"key": "book_sea", "items": ["fish", "pearl", "wood", "dates", "forage"]},
+	{"key": "book_land", "items": ["wood", "dates", "forage"]},
+	{"key": "book_sea", "items": ["fish", "maid", "sheim", "safi", "zubaidi", "hamour", "pearl"]},
 	{"key": "book_cave", "items": ["stone", "copper", "iron"]},
 	{"key": "book_made", "items": ["feed", "sprinkler", "toy_dhow"]},
 ]
