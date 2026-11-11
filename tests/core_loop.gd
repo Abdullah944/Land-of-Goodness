@@ -81,8 +81,8 @@ func _run() -> void:
 	check(inventory.count_of("eggs") == eggs, "a hungry chicken does not lay")
 	check(chest.store_one(inventory, "eggs") and chest.count_of("eggs") == 1 and inventory.count_of("eggs") == eggs - 1, "an egg stores in the chest")
 	check(chest.take_one(inventory, "eggs") and inventory.count_of("eggs") == eggs, "the egg comes back")
-	inventory.wood = 20
-	inventory.stone = 12
+	inventory.wood = int(RecipeCatalog.building("barn")["costs"]["wood"])
+	inventory.stone = int(RecipeCatalog.building("barn")["costs"]["stone"])
 	check(stead.build("barn") and stead.barn, "barn follows the coop")
 	inventory.dinars = 420
 	check(stead.buy_animal("goat"), "a goat needs the barn")

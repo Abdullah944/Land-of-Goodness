@@ -10,7 +10,7 @@ const _EXTRAS: Dictionary = {
 	"stone": {"sell": 4, "icon": "res://assets/items/goods/stone.png"},
 	"dates": {"sell": 15, "icon": "res://assets/items/goods/dates.png"},
 	"forage": {"sell": 12, "icon": "res://assets/items/goods/forage.png"},
-	"eggs": {"sell": 18, "icon": "res://assets/items/goods/eggs.png"},
+	"eggs": {"sell": 25, "icon": "res://assets/items/goods/eggs.png"},
 	"milk": {"sell": 45, "icon": "res://assets/items/goods/milk.png"},
 	"wool": {"sell": 36, "icon": "res://assets/items/goods/wool.png"},
 	"feed": {"sell": 0, "icon": "res://assets/items/goods/feed.png"},

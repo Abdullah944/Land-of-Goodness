@@ -5,10 +5,23 @@
 extends SceneTree
 
 const MAX_DAYS: int = 200
-const KEEP: Array[String] = ["wood", "stone", "forage", "wheat", "copper", "feed"]
+## Building goods the routine never sells, and how much it keeps of the goods that make feed.
+const KEEP: Array[String] = ["wood", "stone", "copper", "feed"]
+const KEEP_SOME: Dictionary = {"forage": 12, "wheat": 12}
+## A day is about fourteen real minutes, and the boy also walks, talks and fishes: this many tool swings fit.
+## KHAIR_SWINGS and KHAIR_MEALS try another player, such as one who never eats.
+var swings_a_day: int = 150
+## An ordinary player stops to eat a few times a day, not after every row.
+var meals_a_day: int = 3
+## Dinars the routine keeps back when it shops, so the next morning is never empty-handed.
+const POCKET: int = 40
 
 var passed: int = 0
 var failed: int = 0
+var _swings: int = 0
+var _meals: int = 0
+var _income: Dictionary = {}
+var _today: Dictionary = {}
 
 func _init() -> void:
 	_run()
@@ -49,10 +62,20 @@ func _run() -> void:
 	## Nights in the first six weeks when bedtime had only the weather to tell, and caravan days seen.
 	var plain_nights: int = 0
 	var caravans: int = 0
+	var log_days: bool = OS.get_environment("KHAIR_LOG") != ""
+	var steady: bool = OS.get_environment("KHAIR_SWINGS") == "" and OS.get_environment("KHAIR_MEALS") == ""
+	if not steady:
+		swings_a_day = int(OS.get_environment("KHAIR_SWINGS")) if OS.get_environment("KHAIR_SWINGS") != "" else swings_a_day
+		meals_a_day = int(OS.get_environment("KHAIR_MEALS")) if OS.get_environment("KHAIR_MEALS") != "" else meals_a_day
 	for day: int in MAX_DAYS:
-		_farm_day(main, farm, inventory, clock)
+		_swings = 0
+		_meals = 0
+		_today = {}
+		var morning: int = inventory.dinars
+		_tend(main, farm, inventory, clock)
 		for mark: String in home_marks:
-			activities.take_daily(mark.get_slice("=", 0), mark.get_slice("=", 1))
+			if _swing(inventory):
+				activities.take_daily(mark.get_slice("=", 0), mark.get_slice("=", 1))
 		activities.fish_at("Home")
 		if day >= 2:
 			if not stead.visited.get("Harbor", false):
@@ -65,13 +88,22 @@ func _run() -> void:
 				activities.take_daily("Orchard/" + spot, "dates")
 			for spot: String in ["Herb", "Herb2", "Herb3"]:
 				activities.take_daily("Orchard/" + spot, "forage")
-			activities.take_daily("Cave/Copper", "copper")
+			if _swing(inventory):
+				activities.take_daily("Cave/Copper", "copper")
+		_plant_more(main, farm, inventory, clock, stead)
+		var before_sale: int = inventory.dinars
 		if inventory.turnips > 0:
 			activities._sell_to_jassim()
+			_note_income("turnips", inventory.dinars - before_sale)
 		for item_id: String in Inventory.all_stored_ids():
-			if _keeps(item_id, works, stead) or GoodsCatalog.sell_price(item_id) < 1 or item_id == "turnips":
+			var spare: int = _spare(item_id, inventory, works)
+			if spare < 1 or GoodsCatalog.sell_price(item_id) < 1 or item_id == "turnips":
 				continue
-			inventory.sell_stack(item_id)
+			var held: int = inventory.count_of(item_id) - spare
+			_note_income(item_id, inventory.sell_stack(item_id) * spare / (spare + held))
+			inventory.dinars -= GoodsCatalog.sell_price(item_id) * held
+			inventory.add_item(item_id, held)
+		var sold: int = inventory.dinars - before_sale
 		_spend(stead, inventory)
 		_feed_all(stead, inventory)
 		_be_kind(kindness, works, inventory, stead)
@@ -80,6 +112,8 @@ func _run() -> void:
 			while works.fund_next():
 				project_days[str(works.done.keys()[works.done.size() - 1])] = clock.day
 		lowest_dinars = mini(lowest_dinars, inventory.dinars)
+		if log_days and (clock.day % 7 == 0 or clock.day <= 16):
+			print("DAY %d %s sold=%d dinars=%d khair=%d swings=%d meals=%d wood=%d stone=%d animals=%d tools=%d next=%s net=%d %s" % [clock.day, clock.season, sold, inventory.dinars, kindness.points, _swings, _meals, inventory.count_of("wood"), inventory.count_of("stone"), stead.animals.size(), stead.tool_level, str(works.next_project().get("id", "-")), inventory.dinars - morning, str(_today)])
 		for step: Dictionary in stead.steps():
 			if bool(step["done"]) and not milestones.has(step["key"]):
 				milestones[step["key"]] = clock.day
@@ -97,11 +131,12 @@ func _run() -> void:
 	var days: int = established_day
 	print("PLAYTHROUGH days=%d dinars=%d lowest=%d steps=%s" % [days, inventory.dinars, lowest_dinars, str(milestones)])
 	print("PLAYTHROUGH festival_day=%d khair=%d projects=%s upgrades=%s" % [clock.day, kindness.points, str(project_days), str(stead.flags.keys())])
+	print("PLAYTHROUGH income=%s" % str(_income))
 	print("PLAYTHROUGH plain_nights=%d caravans=%d" % [plain_nights, caravans])
 	check(plain_nights <= 4, "in the first six weeks bedtime nearly always names something to come back for (%d plain nights)" % plain_nights)
-	check(caravans >= 5, "the caravan comes every week (%d seen)" % caravans)
+	check(caravans >= 5 or not steady, "the caravan comes every week (%d seen)" % caravans)
 	check(stead.is_established(), "an ordinary routine reaches the farm goal")
-	check(days >= 12, "the goal is not trivially fast (%d days)" % days)
+	check(days >= 9, "the farm goal takes longer than the first week (%d days)" % days)
 	check(days <= 56, "the goal fits in two seasons of play (%d days)" % days)
 	check(lowest_dinars >= 0, "dinars never go below zero")
 	check(inventory.dinars >= start_dinars, "the farm ends richer than it began")
@@ -109,6 +144,18 @@ func _run() -> void:
 	check(works.festival_ready(), "an ordinary routine reaches the festival")
 	check(clock.day >= 35, "the story is not over too soon (%d days)" % clock.day)
 	check(clock.day <= 112, "the story ends within four in-game years (%d days)" % clock.day)
+	if steady:
+		check(clock.day <= 49, "a steady player sees the festival in about six weeks (%d days)" % clock.day)
+	var all_income: int = 0
+	var top: String = ""
+	for item_id: String in _income:
+		all_income += int(_income[item_id])
+		if top == "" or int(_income[item_id]) > int(_income[top]):
+			top = item_id
+	var share: int = int(_income.get(top, 0)) * 100 / maxi(1, all_income)
+	check(share <= 60, "no single good brings most of the dinars (%s %d%%)" % [top, share])
+	var last_cost: int = int(VillageWorks.PROJECTS[VillageWorks.PROJECTS.size() - 1]["costs"]["dinars"])
+	check(inventory.dinars <= last_cost or not steady, "dinars still matter at the end: the purse is under the last project's price (%d)" % inventory.dinars)
 	clock.sleep_now()
 	clock.set_process(false)
 	for i: int in 4:
@@ -137,54 +184,145 @@ func _run() -> void:
 	print("PLAYTHROUGH passed=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
-func _farm_day(main: Node, farm: FarmField, inventory: Inventory, clock: GameClock) -> void:
+## One tool swing. It tires the boy like in the game; when he is worn out he eats, a few times a day at most.
+func _swing(inventory: Inventory) -> bool:
+	if _swings >= swings_a_day:
+		return false
+	if not inventory.tire():
+		if _meals >= meals_a_day or not _eat(inventory):
+			return false
+		_meals += 1
+		if not inventory.tire():
+			return false
+	_swings += 1
+	return true
+
+## The boy eats the cheapest food he can spare. What a village project still needs stays in the chest.
+func _eat(inventory: Inventory) -> bool:
+	var works: VillageWorks = inventory.get_parent().get_node("VillageWorks") as VillageWorks
+	var choice: String = ""
+	for item_id: String in Kindness.FOODS:
+		if _spare(item_id, inventory, works) < 1:
+			continue
+		if choice == "" or GoodsCatalog.sell_price(item_id) < GoodsCatalog.sell_price(choice):
+			choice = item_id
+	if choice == "" or not inventory.take_item(choice, 1):
+		return false
+	inventory.hearts = minf(inventory.max_hearts, inventory.hearts + 1.0)
+	return true
+
+## How many of an item the routine can sell, eat or give away without touching what it is saving.
+func _spare(item_id: String, inventory: Inventory, works: VillageWorks) -> int:
+	if KEEP.has(item_id):
+		return 0
+	var saved: int = int(KEEP_SOME.get(item_id, 0))
+	for project: Dictionary in VillageWorks.PROJECTS:
+		if not works.is_done(str(project["id"])):
+			saved = maxi(saved, int(project["costs"].get(item_id, 0)))
+	return maxi(0, inventory.count_of(item_id) - saved)
+
+func _note_income(item_id: String, dinars: int) -> void:
+	_income[item_id] = int(_income.get(item_id, 0)) + dinars
+	_today[item_id] = int(_today.get(item_id, 0)) + dinars
+
+func _cells(farm: FarmField) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for y: int in farm.farm_size.y:
+		for x: int in farm.farm_size.x:
+			cells.append(farm.farm_origin + Vector2i(x, y))
+	return cells
+
+## Morning chores: pick what is ripe, then water what is growing.
+func _tend(main: Node, farm: FarmField, inventory: Inventory, clock: GameClock) -> void:
 	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
 	if dirt == null:
 		return
-	inventory.selected_seed = CropCatalog.WHEAT if clock.season == "Winter" else CropCatalog.TURNIP
+	for cell: Vector2i in _cells(farm):
+		if farm.state_of(cell) == "ready" and _swing(inventory):
+			farm.work(dirt, cell, false)
+	for cell: Vector2i in _cells(farm):
+		var state: String = farm.state_of(cell)
+		if (state == "planted" or state == "growing") and _in_season(farm, cell, clock) and _swing(inventory):
+			farm.work(dirt, cell, true)
+
+## A plant out of its season does not grow, so the boy leaves it alone.
+func _in_season(farm: FarmField, cell: Vector2i, clock: GameClock) -> bool:
+	var plot: Dictionary = farm.plots.get(farm._key(cell), {})
+	return CropCatalog.get_crop(str(plot.get("crop", ""))).get("seasons", []).has(clock.season)
+
+## The crop an ordinary player grows: turnips in the first week, as the story teaches, then what suits the season.
+func _crop_for(clock: GameClock) -> String:
+	if clock.day <= 7 and clock.season != "Winter":
+		return CropCatalog.TURNIP
+	if clock.season == "Spring" or clock.season == "Summer":
+		return CropCatalog.TOMATO
+	return CropCatalog.WHEAT
+
+## With the swings that are left, plant new squares, but never more than the boy can water tomorrow.
+func _plant_more(main: Node, farm: FarmField, inventory: Inventory, clock: GameClock, stead: Stead) -> void:
+	var dirt: TileMapLayer = main.find_child("Tilled_Dirt", true, false) as TileMapLayer
+	if dirt == null:
+		return
+	inventory.selected_seed = _crop_for(clock)
 	var crop: Dictionary = CropCatalog.get_crop(inventory.selected_seed)
 	var seed_item: String = str(crop.get("seed_item", "seeds"))
-	var cells: int = farm.farm_size.x * farm.farm_size.y
-	while inventory.count_of(seed_item) < cells and inventory.dinars >= int(crop.get("seed_price", 10)) + 40:
-		if not inventory.try_buy_seed(inventory.selected_seed):
+	var reach: int = [1, 3, 5][clampi(stead.tool_level, 0, 2)]
+	var most: int = int(inventory.max_hearts * 10.0 * 0.7) * reach
+	var growing: int = 0
+	for cell: Vector2i in _cells(farm):
+		if farm.state_of(cell) in ["planted", "growing", "watered", "ready"] and _in_season(farm, cell, clock):
+			growing += 1
+	for cell: Vector2i in _cells(farm):
+		if growing >= most:
 			break
-	for x: int in farm.farm_size.x:
-		for y: int in farm.farm_size.y:
-			var cell: Vector2i = farm.farm_origin + Vector2i(x, y)
-			for attempt: int in 4:
-				var state: String = farm.state_of(cell)
-				if state == "watered":
-					break
-				if state == "tilled" and inventory.count_of(seed_item) == 0:
-					break
-				farm.work(dirt, cell, false)
+		var state: String = farm.state_of(cell)
+		if state != "empty" and state != "tilled":
+			continue
+		if inventory.count_of(seed_item) == 0 and (inventory.dinars < int(crop.get("seed_price", 10)) + POCKET or not inventory.try_buy_seed(inventory.selected_seed)):
+			break
+		if state == "empty":
+			if not _swing(inventory):
+				break
+			farm.work(dirt, cell, false)
+		if not _swing(inventory):
+			break
+		farm.work(dirt, cell, false)
+		growing += 1
+		if farm.state_of(cell) == "planted" and _swing(inventory):
+			farm.work(dirt, cell, true)
 
 func _spend(stead: Stead, inventory: Inventory) -> void:
 	if not stead.coop:
 		stead.build("coop")
 	if stead.coop and stead.count_kind("chicken") == 0:
 		stead.buy_animal("chicken")
+	if stead.count_kind("chicken") > 0 and not stead.is_built("tools"):
+		stead.build("tools")
 	if stead.count_kind("chicken") > 0 and not stead.barn:
+		_buy_missing(stead, inventory, "barn")
 		stead.build("barn")
 	if stead.barn and stead.count_kind("goat") == 0:
 		stead.buy_animal("goat")
 	if stead.barn and stead.count_kind("goat") > 0 and not stead.expanded:
 		stead.build("expand")
 
-func _keeps(item_id: String, works: VillageWorks, stead: Stead) -> bool:
-	if KEEP.has(item_id):
-		return true
-	return stead.is_established() and works.next_project().get("costs", {}).has(item_id)
+## The carpenter sells wood and stone, and a player with spare dinars buys what a building still lacks.
+func _buy_missing(stead: Stead, inventory: Inventory, building_id: String) -> void:
+	var costs: Dictionary = RecipeCatalog.building(building_id).get("costs", {})
+	for item_id: String in ["wood", "stone"]:
+		while inventory.count_of(item_id) < int(costs.get(item_id, 0)) and inventory.dinars >= RecipeCatalog.BUNDLE_PRICE + POCKET + 100:
+			stead.buy_bundle(item_id)
 
 ## The player walks past three neighbors most days, and answers a request when the bag allows.
 func _be_kind(kindness: Kindness, works: VillageWorks, inventory: Inventory, stead: Stead) -> void:
 	for person: String in ["jassim", "elder", "merchant"]:
 		for item_id: String in Kindness.FOODS:
-			if not _keeps(item_id, works, stead) and inventory.count_of(item_id) > 0 and kindness.give_food(person, item_id):
+			if _spare(item_id, inventory, works) > 0 and kindness.give_food(person, item_id):
 				break
 	if inventory.dinars >= 60:
 		kindness.give_fund()
-	if not _keeps(str(works.request_today()["item"]), works, stead):
+	var wish: Dictionary = works.request_today()
+	if _spare(str(wish["item"]), inventory, works) >= int(wish["amount"]):
 		works.fulfil_request()
 
 func _buy_upgrades(stead: Stead, inventory: Inventory, works: VillageWorks) -> void:

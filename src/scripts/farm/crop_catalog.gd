@@ -42,7 +42,7 @@ const _CROPS: Dictionary = {
 		## After a harvest the plant stays and fruits again from this stage.
 		"regrow_to": 1,
 		"seed_price": 20,
-		"sell_price": 40,
+		"sell_price": 30,
 		"seasons": ["Spring", "Summer"],
 		"texture": TOMATO_SHEET,
 		"sprites": [
@@ -60,7 +60,7 @@ const _CROPS: Dictionary = {
 		"harvest_amount": 1,
 		"mature_stage": 4,
 		"seed_price": 15,
-		"sell_price": 30,
+		"sell_price": 40,
 		"seasons": ["Autumn", "Winter"],
 		"texture": WHEAT_SHEET,
 		"sprites": [
@@ -79,7 +79,7 @@ const _CROPS: Dictionary = {
 		"harvest_amount": 1,
 		"mature_stage": 4,
 		"seed_price": 40,
-		"sell_price": 90,
+		"sell_price": 110,
 		"seasons": ["Summer"],
 		"texture": MELON_SHEET,
 		"sprites": [

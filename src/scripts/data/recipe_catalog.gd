@@ -26,7 +26,7 @@ const FEED_PRICE: int = 10
 
 const BUILDINGS: Dictionary = {
 	"coop": {"name_key": "coop", "costs": {"wood": 12, "stone": 6}, "requires": ""},
-	"barn": {"name_key": "barn", "costs": {"wood": 20, "stone": 12}, "requires": "coop"},
+	"barn": {"name_key": "barn", "costs": {"wood": 30, "stone": 20}, "requires": "coop"},
 	"expand": {"name_key": "expand", "costs": {"wood": 8, "stone": 8, "dinars": 100}, "requires": ""},
 	"tools": {"name_key": "tools", "costs": {"copper": 3, "dinars": 120}, "requires": ""},
 	"house": {"name_key": "house", "costs": {"wood": 30, "stone": 20, "dinars": 1200}, "requires": ""},

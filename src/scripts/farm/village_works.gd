@@ -7,11 +7,11 @@ extends Node
 const REQUEST_POINTS: int = 3
 const PEOPLE: Array[String] = ["jassim", "elder", "fisherman", "merchant", "carpenter"]
 const PROJECTS: Array[Dictionary] = [
-	{"id": "well", "khair": 8, "costs": {"stone": 16, "wood": 8, "dinars": 600}},
-	{"id": "grove", "khair": 8, "costs": {"dates": 8, "wood": 12, "dinars": 900}},
-	{"id": "market", "khair": 8, "costs": {"wood": 16, "stone": 10, "dinars": 1200}},
-	{"id": "dock", "khair": 8, "costs": {"wood": 24, "copper": 5, "fish": 5, "dinars": 1600}},
-	{"id": "diwaniya", "khair": 8, "costs": {"wood": 30, "stone": 24, "milk": 4, "eggs": 4, "dinars": 2500}},
+	{"id": "well", "khair": 8, "costs": {"stone": 16, "wood": 8, "dinars": 800}},
+	{"id": "grove", "khair": 8, "costs": {"dates": 8, "wood": 12, "dinars": 1600}},
+	{"id": "market", "khair": 8, "costs": {"wood": 16, "stone": 10, "dinars": 2600}},
+	{"id": "dock", "khair": 8, "costs": {"wood": 24, "copper": 5, "fish": 5, "dinars": 4000}},
+	{"id": "diwaniya", "khair": 8, "costs": {"wood": 30, "stone": 24, "milk": 4, "eggs": 4, "dinars": 6000}},
 ]
 ## Pictures each finished project adds to a place. "flat" pieces lie on the ground.
 const PIECES: Dictionary = {
