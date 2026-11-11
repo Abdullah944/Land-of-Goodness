@@ -1031,8 +1031,9 @@ func _build_book(page: Control, area: Rect2) -> void:
 		mark.add_theme_color_override("font_outline_color", UiStyle.DARK)
 		cell.add_child(mark)
 		_book_marks.append(mark)
-		var name_label: Label = _make_label(Vector2(8.0 + i * cell_w, 74), UiStyle.DARK)
-		name_label.size = Vector2(cell_w, 14)
+		# A name may run a little past its own cell, so a long one like "Watermelon" is not cut on an eight-item page.
+		var name_label: Label = _make_label(Vector2(8.0 + i * cell_w - 6.0, 74), UiStyle.DARK)
+		name_label.size = Vector2(cell_w + 12.0, 14)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.add_theme_font_size_override("font_size", 9)
 		name_label.clip_text = true
