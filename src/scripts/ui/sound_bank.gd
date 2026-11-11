@@ -2,11 +2,17 @@
 # Purpose: Plays real nature recordings in place of music, and short sounds. Their volumes stay with the farm progress.
 # Birds play a different stretch each time, fade out, rest in silence, and come back. On rainy days rain fades in
 # instead, and a quiet waterfall joins in where there is running water. See tools/loop_nature.py for the recordings.
+# Birds sing by day and crickets after dusk. Inside a room the outdoors is heard faintly, and deep in the cave not at all.
 
 class_name SoundBank
 extends Node
 
-const KINDS: Array[String] = ["coin", "gather", "ui", "hoe", "water", "harvest", "chop", "mine", "level"]
+const KINDS: Array[String] = ["coin", "gather", "ui", "hoe", "water", "harvest", "chop", "mine", "level", "no", "door", "page", "cast", "build"]
+## The tool sounds were recorded louder than the rest; these bring every effect to about the same loudness.
+const TRIM_DB: Dictionary = {"hoe": -5.0, "chop": -5.0, "mine": -4.0, "ui": -3.0}
+## Sounds heard many times in a row get a slightly different pitch each time.
+const VARIED: Array[String] = ["hoe", "water", "chop", "mine", "gather"]
+const PITCH_SPREAD: float = 0.06
 ## Volume in decibels for levels 1 and 2. Level 0 is silent.
 const LEVEL_DB: Array[float] = [-80.0, -12.0, 0.0]
 const QUIET_DB: float = -40.0
@@ -23,7 +29,14 @@ const BIRD_PLAY: Vector2 = Vector2(45, 110)
 const SEASON_REST: Dictionary = {
 	"Spring": Vector2(15, 40), "Summer": Vector2(25, 55), "Autumn": Vector2(20, 50), "Winter": Vector2(35, 80),
 }
-const CRICKET_SEASONS: Array[String] = ["Summer", "Autumn"]
+const CRICKET_SEASONS: Array[String] = ["Spring", "Summer", "Autumn"]
+## Birds sing until the evening, and crickets start at dusk. Minutes since midnight.
+const BIRDS_UNTIL: float = 19.0 * 60.0
+const CRICKETS_FROM: float = 18.5 * 60.0
+## Rooms, where the outdoors is heard through the walls, and places too deep to hear it at all.
+const ROOMS: Array[String] = ["HouseInside", "MosqueInside", "WorkshopInside"]
+const DEEP: Array[String] = ["Cave"]
+const ROOM_DB: float = -14.0
 const CRICKET_PLAY: Vector2 = Vector2(15, 26)
 const CRICKET_REST: Vector2 = Vector2(25, 60)
 ## Places with a river or a lake, where the waterfall plays too.
@@ -41,6 +54,8 @@ var _cricket: Dictionary = {}
 var _rain: AudioStreamPlayer
 var _waterfall: AudioStreamPlayer
 var _last_clip: String = ""
+## The last effect asked for, even with the sound off. Tests read it.
+var last_kind: String = ""
 
 func _ready() -> void:
 	_roll.randomize()
@@ -58,13 +73,26 @@ func _ready() -> void:
 	_waterfall.stream = _sound("waterfall", true)
 
 func play(kind: String) -> void:
+	last_kind = kind
 	var level: int = _level("sfx_level")
 	if level < 1:
 		return
 	var player: AudioStreamPlayer = _players.get(kind) as AudioStreamPlayer
 	if player != null and player.stream != null:
-		player.volume_db = LEVEL_DB[level]
+		player.volume_db = LEVEL_DB[level] + float(TRIM_DB.get(kind, 0.0))
+		player.pitch_scale = _roll.randf_range(1.0 - PITCH_SPREAD, 1.0 + PITCH_SPREAD) if kind in VARIED else 1.0
 		player.play()
+
+## What is heard in a place: which voices are on, and how much quieter the outdoors is there.
+static func mood(place: String, season: String, raining: bool, minute: float) -> Dictionary:
+	var outside: bool = not place in DEEP
+	return {
+		"birds": outside and not raining and minute < BIRDS_UNTIL,
+		"crickets": outside and not raining and minute >= CRICKETS_FROM and season in CRICKET_SEASONS,
+		"rain": outside and raining,
+		"waterfall": place in WATER_PLACES,
+		"trim": ROOM_DB if place in ROOMS else 0.0,
+	}
 
 ## Called after a load and after a change in Settings: sounds already playing move to the new volume.
 func apply_levels() -> void:
@@ -75,18 +103,18 @@ func apply_levels() -> void:
 		if level < 1:
 			_fade(player, QUIET_DB, true, 0.5)
 		elif float(player.get_meta("fading_to", 0.0)) > QUIET_DB:
-			_fade(player, LEVEL_DB[level], false, 0.5)
+			_fade(player, _loud(level), false, 0.5)
 
 func _process(delta: float) -> void:
 	var level: int = _level("music_level")
-	var raining: bool = _clock_value("weather", "Clear") == "Rain"
 	var season: String = _clock_value("season", "Spring")
-	_keep_loop(_rain, raining and level >= 1, RAIN_FADE_SECONDS)
-	_keep_loop(_waterfall, level >= 1 and _place() in WATER_PLACES, FADE_SECONDS)
+	var now: Dictionary = mood(_place(), season, _clock_value("weather", "Clear") == "Rain", _minute())
+	var on: bool = level >= 1
+	_keep_loop(_rain, on and bool(now["rain"]), RAIN_FADE_SECONDS)
+	_keep_loop(_waterfall, on and bool(now["waterfall"]), FADE_SECONDS)
 	# Birds and crickets go quiet while it rains, and come back after the rain.
-	var calm: bool = level >= 1 and not raining
-	_take_turns(_birds, delta, calm, BIRD_PLAY, SEASON_REST.get(season, SEASON_REST["Spring"]), _bird_clip.bind(season))
-	_take_turns(_cricket, delta, calm and season in CRICKET_SEASONS, CRICKET_PLAY, CRICKET_REST, func() -> String: return "cricket")
+	_take_turns(_birds, delta, on and bool(now["birds"]), BIRD_PLAY, SEASON_REST.get(season, SEASON_REST["Spring"]), _bird_clip.bind(season))
+	_take_turns(_cricket, delta, on and bool(now["crickets"]), CRICKET_PLAY, CRICKET_REST, func() -> String: return "cricket")
 
 ## One voice's turn: when its stretch ends it fades out and rests; when the rest ends a new stretch starts.
 func _take_turns(voice: Dictionary, delta: float, allowed: bool, play_for: Vector2, rest_for: Vector2, pick: Callable) -> void:
@@ -99,6 +127,9 @@ func _take_turns(voice: Dictionary, delta: float, allowed: bool, play_for: Vecto
 		return
 	voice["left"] = float(voice["left"]) - delta
 	if float(voice["left"]) > 0.0:
+		# Walking through a door changes how loud the outdoors is.
+		if bool(voice["playing"]):
+			_fade(player, _loud(_level("music_level")), false, 1.0)
 		return
 	if bool(voice["playing"]):
 		voice["playing"] = false
@@ -115,7 +146,7 @@ func _take_turns(voice: Dictionary, delta: float, allowed: bool, play_for: Vecto
 	player.stream = sound
 	player.volume_db = QUIET_DB
 	player.play(start)
-	_fade(player, LEVEL_DB[_level("music_level")], false, FADE_SECONDS)
+	_fade(player, _loud(_level("music_level")), false, FADE_SECONDS)
 	voice["playing"] = true
 	voice["left"] = length
 
@@ -137,7 +168,7 @@ func _keep_loop(player: AudioStreamPlayer, wanted: bool, seconds: float) -> void
 		if not player.playing:
 			player.volume_db = QUIET_DB
 			player.play()
-		_fade(player, LEVEL_DB[_level("music_level")], false, seconds)
+		_fade(player, _loud(_level("music_level")), false, seconds)
 	elif player.playing:
 		_fade(player, QUIET_DB, true, seconds)
 
@@ -179,6 +210,14 @@ func _new_player() -> AudioStreamPlayer:
 func _clock_value(key: String, fallback: String) -> String:
 	var clock: Node = get_parent().get_node_or_null("Clock")
 	return str(clock.get(key)) if clock != null else fallback
+
+func _minute() -> float:
+	var clock: Node = get_parent().get_node_or_null("Clock")
+	return float(clock.get("minute")) if clock != null else 12.0 * 60.0
+
+## The volume for the nature sounds here: the chosen level, and quieter inside a room.
+func _loud(level: int) -> float:
+	return LEVEL_DB[level] + float(mood(_place(), "", false, 0.0)["trim"])
 
 func _place() -> String:
 	var stead: Node = get_parent().get_node_or_null("Stead")

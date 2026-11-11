@@ -199,6 +199,7 @@ func _on_fish_game(caught: bool) -> void:
 		fish_at(game.place_name, game.spot_name)
 	elif not caught:
 		note = Locale.t("fish_lost")
+		_chime("no")
 		_refresh()
 
 func fish_at(place_name: String, spot_name: String = "FishingSpot") -> bool:
@@ -434,6 +435,7 @@ func _on_shop_choice(choice: String) -> void:
 				_save()
 			else:
 				note = Locale.t("need_dinars") % RecipeCatalog.FEED_PRICE
+				_chime("no")
 			_dialogue().open_lines(PackedStringArray([note]))
 			_refresh()
 		return
@@ -512,6 +514,7 @@ func _give_fund() -> void:
 		_say(Locale.t("fund_today"))
 		return
 	if not kindness.give_fund():
+		_chime("no")
 		_say(Locale.t("need_dinars") % Kindness.FUND_PRICE)
 		return
 	note = Locale.t("gift_thanks") % Kindness.FUND_POINTS
@@ -572,6 +575,7 @@ func _fund_work() -> void:
 	if project.is_empty():
 		return
 	if not works.fund_next():
+		_chime("no")
 		_say(Locale.t("need_items") % stead.missing_text(project["costs"]))
 		return
 	var lines: PackedStringArray = PackedStringArray([Locale.t("done_" + str(project["id"]))])
@@ -759,10 +763,12 @@ func _buy_seed(crop_id: String, crop: Dictionary) -> void:
 	var seed_name: String = Locale.item(str(crop.get("seed_item", "seeds")))
 	if not inventory.try_buy_seed(crop_id):
 		note = Locale.t("need_dinars") % price
+		_chime("no")
 		_dialogue().open_lines(PackedStringArray([note]))
 		_refresh()
 		return
 	note = Locale.t("bought") % seed_name
+	_chime("coin")
 	_dialogue().open_lines(PackedStringArray([note]))
 	_save()
 	_refresh()
@@ -791,6 +797,7 @@ func _buy_caravan(choice: String) -> void:
 		return
 	if not bool(got["ok"]):
 		note = Locale.t("need_dinars") % int(got["price"])
+		_chime("no")
 	else:
 		var key: String = "caravan_sack_open" if choice == Caravan.SACK else "caravan_bought"
 		note = Locale.t(key) % [int(got["amount"]), Locale.item(str(got["item"]))]
@@ -994,9 +1001,11 @@ func _work_action(choice: String) -> void:
 		line = Locale.t("fed") % fed
 	if not ok:
 		note = _refusal(stead, shop, choice)
+		_chime("no")
 	else:
 		note = line
-		_chime("ui")
+		# Hammer taps for things made, coins for things bought, and a soft pat for feeding.
+		_chime("build" if shop == "craft" or shop == "build" else ("gather" if choice.begins_with("feed_") else "coin"))
 		_save()
 	_dialogue().open_lines(PackedStringArray([note]))
 	_refresh()

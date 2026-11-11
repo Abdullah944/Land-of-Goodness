@@ -1101,13 +1101,13 @@ func _open_book() -> void:
 	bag.note_held(systems.get_node_or_null("ChestStore") as ChestStore)
 	bag.pay_book_pages()
 	_book_item = ""
-	(systems.get_node("SoundBank") as SoundBank).play("ui")
+	(systems.get_node("SoundBank") as SoundBank).play("page")
 	_show_tab("book")
 
 func _turn_book(step: int) -> void:
 	_book_page = posmod(_book_page + step, CollectionBook.PAGES.size())
 	_book_item = ""
-	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("ui")
+	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("page")
 	refresh()
 
 func _pick_book_item(index: int) -> void:

@@ -413,6 +413,9 @@ func _choose(yes: bool) -> void:
 func _advance() -> void:
 	if _choosing:
 		return
+	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
+	if bank != null:
+		bank.call("play", "ui")
 	_index += 1
 	if _index >= _lines.size():
 		visible = false

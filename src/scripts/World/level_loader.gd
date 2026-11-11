@@ -51,6 +51,10 @@ func _swap_place(next_scene: PackedScene, spawn_name: String) -> void:
 		activities.apply_gathered()
 	var stead: Stead = main.get_node_or_null("Systems/Stead") as Stead
 	if stead != null:
+		# A door is heard when the boy steps into a room or back out of one.
+		var bank: SoundBank = main.get_node_or_null("Systems/SoundBank") as SoundBank
+		if bank != null and (stead.place_name in SoundBank.ROOMS or str(next_place.name) in SoundBank.ROOMS):
+			bank.play("door")
 		stead.note_place(str(next_place.name))
 		stead.apply_buildings()
 	var save: SaveGame = main.get_node_or_null("Systems/SaveGame") as SaveGame

@@ -296,6 +296,7 @@ func _plant(plot: Dictionary) -> void:
 	if inventory == null or not _take_seed(inventory, crop):
 		if activities != null:
 			activities.note = Locale.t("need_seed")
+			_no()
 		return
 	plot["stage"] = 0
 	plot["watered"] = false
@@ -310,6 +311,7 @@ func _place_sprinkler(plot: Dictionary) -> void:
 	if inventory == null or not inventory.take_item(SPRINKLER, 1):
 		if _activities() != null:
 			_activities().note = Locale.t("need_sprinkler")
+			_no()
 		return
 	plot["sprinkler"] = true
 	plot["watered"] = false
@@ -582,3 +584,9 @@ func _save() -> void:
 	var save: SaveGame = get_parent().get_node_or_null("SaveGame") as SaveGame
 	if save != null:
 		save.write_now()
+
+## The soft "not now" sound, for when the bag lacks what the square needs.
+func _no() -> void:
+	var bank: Node = get_parent().get_node_or_null("SoundBank")
+	if bank != null:
+		bank.call("play", "no")

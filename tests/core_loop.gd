@@ -139,6 +139,7 @@ func _run() -> void:
 	await _check_feel(main)
 	_check_ending_pages(main)
 	_check_hooks(main)
+	await _check_sound(main)
 	await _check_cave(main)
 	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
@@ -773,6 +774,69 @@ func _check_ending_pages(main: Node) -> void:
 	check(stead.after_text() == Locale.t("quest_free"), "with every story and the whole book done, the farm is simply the boy's to enjoy")
 	friends.stories = old_stories
 	bag.found = old_found
+
+## Sound: every effect exists, the loud ones are turned down, the outdoors follows the place and the hour,
+## and the actions that used to be silent now make a sound.
+func _check_sound(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var bank: SoundBank = systems.get_node("SoundBank") as SoundBank
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var activities: Activities = systems.get_node("Activities") as Activities
+	var loader: LevelLoader = systems.get_node("LevelLoader") as LevelLoader
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	var old: Dictionary = {"sfx": stead.sfx_level, "bag": bag.to_data()}
+	var whole: bool = true
+	for kind: String in SoundBank.KINDS:
+		var player: AudioStreamPlayer = bank._players.get(kind) as AudioStreamPlayer
+		whole = whole and player != null and player.stream != null
+	check(whole, "every sound effect has its recording")
+	stead.sfx_level = 2
+	bank.play("hoe")
+	var hoe_db: float = (bank._players["hoe"] as AudioStreamPlayer).volume_db
+	bank.play("coin")
+	var coin: AudioStreamPlayer = bank._players["coin"] as AudioStreamPlayer
+	check(hoe_db < coin.volume_db and coin.volume_db == 0.0 and coin.pitch_scale == 1.0, "the loud tool sounds are turned down to match the rest")
+	var noon: Dictionary = SoundBank.mood("Home", "Summer", false, 12.0 * 60.0)
+	var night: Dictionary = SoundBank.mood("Home", "Summer", false, 21.0 * 60.0)
+	check(bool(noon["birds"]) and not bool(noon["crickets"]) and not bool(night["birds"]) and bool(night["crickets"]), "birds sing by day and crickets after dusk")
+	check(not bool(SoundBank.mood("Home", "Winter", false, 21.0 * 60.0)["crickets"]), "winter nights have no crickets")
+	var wet: Dictionary = SoundBank.mood("Home", "Spring", true, 12.0 * 60.0)
+	check(bool(wet["rain"]) and not bool(wet["birds"]), "rain replaces the birds")
+	var deep: Dictionary = SoundBank.mood("Cave", "Spring", true, 12.0 * 60.0)
+	check(not bool(deep["rain"]) and not bool(deep["birds"]) and not bool(deep["crickets"]), "the cave hears nothing from outside")
+	check(float(SoundBank.mood("MosqueInside", "Spring", false, 600.0)["trim"]) < 0.0 and float(noon["trim"]) == 0.0, "inside a room the outdoors is fainter")
+	# Actions that used to be silent.
+	var crop: Dictionary = CropCatalog.get_crop(CropCatalog.TURNIP)
+	bag.dinars = 0
+	activities._buy_seed(CropCatalog.TURNIP, crop)
+	var refused: String = bank.last_kind
+	dialogue._advance()
+	bag.dinars = 500
+	activities._buy_seed(CropCatalog.TURNIP, crop)
+	var paid: String = bank.last_kind
+	dialogue._advance()
+	check(refused == "no" and paid == "coin" and bank.last_kind == "ui", "a refusal, a purchase and the next line of talk each have a sound")
+	activities._on_fish_game(false)
+	check(bank.last_kind == "no", "a lost fish has a sound")
+	loader.go_to(load("res://src/scenes/world/workshop/Workshop_inside.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	check(bank.last_kind == "door" and bank._loud(2) == SoundBank.ROOM_DB, "a door is heard on the way into a room, and the outdoors goes faint")
+	bank.last_kind = ""
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 3:
+		await process_frame
+	check(bank.last_kind == "door" and bank._loud(2) == 0.0, "and again on the way out")
+	coin.stop()
+	bank.play("coin")
+	var heard: bool = coin.playing
+	coin.stop()
+	stead.sfx_level = 0
+	bank.play("coin")
+	check(heard and not coin.playing, "with sound off nothing plays")
+	stead.sfx_level = int(old["sfx"])
+	bag.from_data(old["bag"])
 
 ## Reasons to come back: the caravan on the last day of each season, a gift at the door after a night away,
 ## and a bedtime line that names something close.

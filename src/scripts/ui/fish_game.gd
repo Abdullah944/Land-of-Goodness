@@ -95,6 +95,9 @@ func start(place: String, spot: String) -> void:
 	_playing = true
 	visible = true
 	_hold_player(true)
+	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
+	if bank != null:
+		bank.call("play", "cast")
 
 func _process(delta: float) -> void:
 	if not _playing:
