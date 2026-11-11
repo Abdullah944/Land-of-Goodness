@@ -122,6 +122,17 @@ static func day_of_season(day: int) -> int:
 func story_state(person: String) -> String:
 	return str(stories.get(person, ""))
 
+## Whether the boy gave this neighbor the help their story asked for.
+func story_done(person: String) -> bool:
+	return story_state(person) == HELPED or story_state(person) == THANKED
+
+func stories_done() -> int:
+	var count: int = 0
+	for person: String in STORIES.keys():
+		if story_done(person):
+			count += 1
+	return count
+
 ## The story's opening or thank-you talk, when the hearts are there for it.
 func _story_step(person: String) -> String:
 	if not STORIES.has(person):

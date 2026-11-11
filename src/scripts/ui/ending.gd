@@ -4,7 +4,11 @@
 class_name EndingScreen
 extends CanvasLayer
 
-const PAGES: Array[String] = ["ending_1", "ending_2", "ending_3", "ending_4"]
+## The festival opens with the square, then each neighbor has a moment, then grandfather's last page and the boy's own story.
+const OPENING: Array[String] = ["ending_1", "ending_2", "ending_3"]
+const CLOSING: Array[String] = ["ending_4", "ending_saad"]
+
+var _pages: PackedStringArray = PackedStringArray()
 
 var _page: Control
 var _panel: Panel
@@ -35,6 +39,7 @@ func play() -> void:
 	var hud: Node = scene.get_node_or_null("UI/HUD")
 	if hud != null:
 		hud.call("set_world_chrome", false)
+	_pages = _write_pages(scene.get_node("Systems"))
 	_build()
 	visible = true
 	_index = 0
@@ -47,14 +52,14 @@ func advance() -> void:
 	if not _playing:
 		return
 	_index += 1
-	if _index > PAGES.size():
+	if _index > _pages.size():
 		_close()
 		return
 	_show_page()
 
 func _show_page() -> void:
-	if _index < PAGES.size():
-		_label.text = Locale.t(PAGES[_index])
+	if _index < _pages.size():
+		_label.text = _pages[_index]
 		_next.text = Locale.t("next")
 	else:
 		var clock: GameClock = get_tree().current_scene.get_node("Systems/Clock") as GameClock
@@ -63,6 +68,32 @@ func _show_page() -> void:
 	Locale.apply_control(_label)
 	Locale.apply_control(_next)
 	_fit_screen()
+
+func page_count() -> int:
+	return _pages.size()
+
+## A neighbor whose story the boy finished speaks about it. The others are there too, with a plainer line.
+func _write_pages(systems: Node) -> PackedStringArray:
+	var pages: PackedStringArray = PackedStringArray()
+	for key: String in OPENING:
+		pages.append(Locale.t(key))
+	var friends: Friendship = systems.get_node_or_null("Friendship") as Friendship
+	for person: String in Friendship.STORIES.keys():
+		var told: bool = friends != null and friends.story_done(person)
+		pages.append(Locale.t("end_%s_story" % person if told else "end_%s" % person))
+	for key: String in CLOSING:
+		pages.append(Locale.t(key))
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var bag: Inventory = systems.get_node_or_null("Inventory") as Inventory
+	var kindness: Kindness = systems.get_node_or_null("Kindness") as Kindness
+	pages.append(Locale.t("ending_summary") % [
+		clock.day,
+		friends.stories_done() if friends != null else 0,
+		CollectionBook.found_total(bag.found) if bag != null else 0,
+		CollectionBook.total(),
+		kindness.points if kindness != null else 0,
+	])
+	return pages
 
 func _close() -> void:
 	var scene: Node = get_tree().current_scene
@@ -114,20 +145,20 @@ func _build() -> void:
 	lights.color = UiStyle.GOLD
 	_page.add_child(lights)
 	_panel = Panel.new()
-	_panel.size = Vector2(380, 128)
+	_panel.size = Vector2(400, 142)
 	UiStyle.panel(_panel)
 	_page.add_child(_panel)
 	_label = Label.new()
 	_label.position = Vector2(14, 10)
-	_label.size = Vector2(352, 76)
+	_label.size = Vector2(372, 90)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label.add_theme_color_override("font_color", UiStyle.DARK)
 	_label.add_theme_font_size_override("font_size", 14)
 	_panel.add_child(_label)
 	_next = Button.new()
-	_next.position = Vector2(14, 90)
-	_next.size = Vector2(352, 30)
+	_next.position = Vector2(14, 104)
+	_next.size = Vector2(372, 30)
 	_next.focus_mode = Control.FOCUS_NONE
 	UiStyle.button(_next)
 	_next.pressed.connect(advance)

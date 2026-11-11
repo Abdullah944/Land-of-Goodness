@@ -104,10 +104,19 @@ func _run() -> void:
 		await process_frame
 	var ending: EndingScreen = main.get_node("UI/Ending") as EndingScreen
 	check(ending.is_playing() and main.get_node("World").get_node_or_null("Village") != null, "sleeping starts the festival in the village")
-	for page: int in EndingScreen.PAGES.size() + 1:
+	var pages: int = ending.page_count()
+	var friends_at_end: Friendship = main.get_node("Systems/Friendship") as Friendship
+	var told_line: bool = false
+	for person: String in Friendship.STORIES.keys():
+		var key: String = "end_%s_story" % person if friends_at_end.story_done(person) else "end_%s" % person
+		told_line = ending._pages.has(Locale.t(key))
+		if not told_line:
+			break
+	check(pages == 11 and told_line, "the festival gives each neighbor a moment, and a finished story changes what they say")
+	for page: int in pages + 1:
 		ending.advance()
 	check(not ending.is_playing() and works.finished, "the festival closes and the story is marked finished")
-	check(stead.goal_text() == Locale.t("quest_free"), "the farm stays open after the ending")
+	check(stead.goal_text() == stead.after_text() and stead.goal_text() != "", "the farm stays open after the ending, and the line names what is still open")
 	check(save.load_game() and works.finished, "the finished story survives a reload")
 	clock.sleep_now()
 	clock.set_process(false)

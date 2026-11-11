@@ -137,6 +137,7 @@ func _run() -> void:
 	_check_stories(main.get_node("Systems"))
 	_check_first_steps(main)
 	await _check_feel(main)
+	_check_ending_pages(main)
 	await _check_cave(main)
 	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
@@ -749,6 +750,28 @@ func _check_stories(systems: Node) -> void:
 	for item_id: String in ["copper", "eggs", "pearl"]:
 		bag.add_item(item_id, int(old[item_id]) - bag.count_of(item_id))
 	friends.from_data({})
+
+## The festival's pages follow the neighbors' stories, and the line after the story names what is still open.
+func _check_ending_pages(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var ending: EndingScreen = main.get_node("UI/Ending") as EndingScreen
+	var old_stories: Dictionary = friends.stories.duplicate()
+	var old_found: Dictionary = bag.found.duplicate()
+	friends.stories = {"jassim": Friendship.THANKED, "elder": Friendship.ASKED}
+	var pages: PackedStringArray = ending._write_pages(systems)
+	check(pages.size() == 11 and pages.has(Locale.t("end_jassim_story")) and pages.has(Locale.t("end_elder")) and not pages.has(Locale.t("end_jassim")), "at the festival a neighbor whose story was finished speaks about it, and the others get a plain line")
+	check(pages[pages.size() - 1].contains("1") and pages[pages.size() - 2] == Locale.t("ending_saad"), "the festival closes with grandfather's last page and the boy's own story in numbers")
+	check(stead.after_text() == Locale.t("quest_after") % [1, CollectionBook.found_total(bag.found), CollectionBook.total()], "after the story the line counts the stories and the book")
+	for person: String in Friendship.STORIES.keys():
+		friends.stories[person] = Friendship.HELPED
+	for item_id: String in CollectionBook.all_items():
+		bag.found[item_id] = true
+	check(stead.after_text() == Locale.t("quest_free"), "with every story and the whole book done, the farm is simply the boy's to enjoy")
+	friends.stories = old_stories
+	bag.found = old_found
 
 ## The top bar plays a change out: dinars count to the new sum, Khair fills, and a finished step is marked.
 func _check_feel(main: Node) -> void:

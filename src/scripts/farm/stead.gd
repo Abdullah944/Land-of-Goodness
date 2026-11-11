@@ -245,7 +245,7 @@ func goal_text() -> String:
 	if works == null:
 		return Locale.t("quest_established")
 	if works.finished:
-		return Locale.t("quest_free")
+		return after_text()
 	if works.festival_ready():
 		return Locale.t("quest_festival")
 	var project: Dictionary = works.next_project()
@@ -253,6 +253,16 @@ func goal_text() -> String:
 		return Locale.t("quest_work") % Locale.t(str(project["id"]))
 	var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
 	return Locale.t("quest_khair") % (kindness.points if kindness != null else 0)
+
+## After the festival the line names what is still open: the neighbors' stories and the collections book.
+func after_text() -> String:
+	var friends: Friendship = get_parent().get_node_or_null("Friendship") as Friendship
+	var bag: Inventory = _bag()
+	var stories: int = friends.stories_done() if friends != null else Friendship.STORIES.size()
+	var found: int = CollectionBook.found_total(bag.found) if bag != null else CollectionBook.total()
+	if stories >= Friendship.STORIES.size() and found >= CollectionBook.total():
+		return Locale.t("quest_free")
+	return Locale.t("quest_after") % [stories, found, CollectionBook.total()]
 
 ## How many steps of the main quest line are behind the boy. It only goes up, so a rise means a step was just finished.
 func progress() -> int:
