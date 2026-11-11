@@ -138,6 +138,7 @@ func _run() -> void:
 	_check_first_steps(main)
 	await _check_feel(main)
 	_check_ending_pages(main)
+	_check_hooks(main)
 	await _check_cave(main)
 	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
@@ -772,6 +773,105 @@ func _check_ending_pages(main: Node) -> void:
 	check(stead.after_text() == Locale.t("quest_free"), "with every story and the whole book done, the farm is simply the boy's to enjoy")
 	friends.stories = old_stories
 	bag.found = old_found
+
+## Reasons to come back: the caravan on the last day of each season, a gift at the door after a night away,
+## and a bedtime line that names something close.
+func _check_hooks(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var clock: GameClock = systems.get_node("Clock") as GameClock
+	var fairs: Festivals = systems.get_node("Festivals") as Festivals
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var letters: Letters = systems.get_node("Letters") as Letters
+	var friends: Friendship = systems.get_node("Friendship") as Friendship
+	var save: SaveGame = systems.get_node("SaveGame") as SaveGame
+	var farm: FarmField = systems.get_node("FarmField") as FarmField
+	var map: Node = main.find_child("WorldMap", true, false)
+	var old: Dictionary = {"day": clock.day, "season": clock.season, "dinars": bag.dinars, "found": bag.found.duplicate(), "paid": bag.book_paid.duplicate(), "pending": letters.pending.duplicate(), "doors": letters.door_count, "points": friends.points.duplicate(), "plots": farm.plots.duplicate(true), "next": clock.next_weather, "bag": bag.to_data()}
+	var weeks_ok: bool = not Caravan.is_day(0) and not Caravan.is_day(5) and Caravan.is_day(6) and Caravan.is_day(13) and not Caravan.is_day(11)
+	check(weeks_ok and Caravan.offers(5).is_empty(), "the caravan comes on the last day of each season and on no other day")
+	var seeds_by_season: PackedStringArray = PackedStringArray()
+	var fair_price: bool = true
+	for day: int in [6, 13, 20, 27]:
+		var rows: Array[Dictionary] = Caravan.offers(day)
+		seeds_by_season.append(str(rows[0]["id"]))
+		fair_price = fair_price and rows.size() == 3 and int(rows[1]["price"]) >= GoodsCatalog.sell_price(str(rows[1]["item"])) * int(rows[1]["amount"])
+	check(seeds_by_season == PackedStringArray(["watermelon", "wheat", "wheat", "tomato"]), "the caravan brings seeds for the season that starts tomorrow (%s)" % ", ".join(seeds_by_season))
+	check(fair_price, "nothing from the caravan can be sold on for more than it cost")
+	var off_paths: bool = true
+	for piece: Dictionary in Caravan.PROPS:
+		off_paths = off_paths and not WorldShapes.on_path("Village", piece["at"], 14.0) and not piece.has("block")
+	check(off_paths, "the caravan's goods stand off the village paths and block nothing")
+	farm.plots = {}
+	clock.day = 5
+	clock.season = "Spring"
+	check(Tomorrow.line(systems) == Locale.t("caravan_tomorrow") and PhoneNotices._what_to_say(systems) == Locale.t("notice_caravan"), "the night before, bedtime and the phone note say the caravan is coming")
+	clock.day = 6
+	bag.dinars = 500
+	bag.found = {}
+	check(fairs.caravan_open() and fairs.morning_note() == Locale.t("caravan_today") and (map == null or map.task_places().has("Village")), "on caravan day the morning says so and the map marks the village")
+	var seeds_before: int = bag.count_of("watermelon_seeds")
+	var got: Dictionary = fairs.buy_caravan("watermelon")
+	check(bool(got.get("ok", false)) and bag.count_of("watermelon_seeds") == seeds_before + 6 and bag.dinars == 500 - 160, "six seeds for the price of four")
+	check(fairs.buy_caravan("watermelon").is_empty() and fairs.caravan_today().size() == 2, "each thing is sold once a visit")
+	var sack: Dictionary = fairs.buy_caravan(Caravan.SACK)
+	check(bool(sack.get("ok", false)) and str(sack["item"]) == "dates" and int(sack["amount"]) == 4 and bag.found.has("dates"), "the mystery sack holds something new for the book")
+	var sack_fair: bool = true
+	var all_found: Dictionary = {}
+	for item_id: String in Caravan.SACK_FINDS:
+		var find: Dictionary = Caravan.sack_find(all_found, 6)
+		sack_fair = sack_fair and str(find["item"]) == item_id and GoodsCatalog.sell_price(item_id) * int(find["amount"]) < Caravan.SACK_PRICE
+		all_found[item_id] = true
+	check(sack_fair and int(Caravan.sack_find(all_found, 6)["amount"]) >= 1, "whatever is in the sack is worth less than the sack cost")
+	bag.dinars = 10
+	check(not bool(fairs.buy_caravan("copper").get("ok", true)) and bag.dinars == 10 and fairs.caravan_open(), "too few dinars buys nothing and takes nothing")
+	var kept: Dictionary = fairs.to_data()
+	fairs.from_data(JSON.parse_string(JSON.stringify(kept)))
+	check(fairs.caravan_today().size() == 1, "what was bought stays bought after a reload")
+	clock.day = 7
+	clock.season = "Summer"
+	check(not fairs.caravan_open() and fairs.buy_caravan("copper").is_empty(), "the next morning the caravan has gone")
+	# A gift at the door after a real night away.
+	letters.pending = {}
+	letters.door_count = 0
+	clock.day = 9
+	save.away_seconds = 9.0 * 3600.0
+	var eggs: int = bag.count_of("eggs")
+	check(save.catch_up() and bool(letters.pending.get("door", false)) and str(letters.pending["person"]) == "jassim", "after a night away a neighbor has left something at the door")
+	letters.read()
+	main.get_node("UI/Dialogue").call("_close_offer")
+	main.get_node("UI/Dialogue").set("visible", false)
+	check(bag.count_of("eggs") == eggs + 2 and letters.pending.is_empty(), "opening it puts the gift in the bag")
+	letters.leave_at_door()
+	check(str(letters.pending["person"]) == "elder", "the neighbors take turns")
+	save.away_seconds = 1.0 * 3600.0
+	letters.pending = {}
+	check(not save.catch_up() and letters.pending.is_empty(), "a short break leaves nothing at the door")
+	# Bedtime names something close when there is no bigger news.
+	farm.plots = {}
+	clock.day = 15
+	clock.season = "Autumn"
+	clock.next_weather = "Clear"
+	friends.points = {}
+	bag.found = {"wood": true, "dates": true}
+	check(Tomorrow.line(systems) == Locale.t("tomorrow_book") % [1, Locale.t("book_land")], "bedtime names a book page that is nearly full")
+	bag.found = {}
+	friends.points = {"merchant": 195}
+	check(Tomorrow.line(systems) == Locale.t("tomorrow_friend") % Locale.t("name_merchant"), "or a neighbor who is one hello from a new heart")
+	friends.points = {}
+	check(Tomorrow.line(systems) == clock.forecast_text(), "and with nothing close, the weather")
+	bag.from_data(old["bag"])
+	bag.dinars = int(old["dinars"])
+	bag.found = old["found"]
+	bag.book_paid = old["paid"]
+	letters.pending = old["pending"]
+	letters.door_count = int(old["doors"])
+	friends.points = old["points"]
+	farm.plots = old["plots"]
+	clock.day = int(old["day"])
+	clock.season = str(old["season"])
+	clock.next_weather = str(old["next"])
+	fairs.caravan_day = -1
+	fairs.caravan_bought = PackedStringArray()
 
 ## The top bar plays a change out: dinars count to the new sum, Khair fills, and a finished step is marked.
 func _check_feel(main: Node) -> void:

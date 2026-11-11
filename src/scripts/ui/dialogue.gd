@@ -22,6 +22,7 @@ const CHOICE_ICONS: Dictionary = {
 	"supplies": "wood", "build": "stone", "craft": "copper_bar", "animals": "eggs", "give_fund": "pearl",
 }
 const HEART_PICTURE: String = "res://assets/ui/Terracotta pixel heart icon.png"
+const CARAVAN_PICTURE: String = "res://assets/props/sack.png"
 const MORE: String = "__more"
 
 var _text_extra: float = 0.0
@@ -343,6 +344,8 @@ func _fit_actions(rows: int) -> void:
 func _choice_icon(key: String) -> Texture2D:
 	if key == "give_food" or key == "help":
 		return UiStyle.fit_picture(load(HEART_PICTURE) as Texture2D, ICON_PX)
+	if key.begins_with("caravan"):
+		return UiStyle.fit_picture(load(CARAVAN_PICTURE) as Texture2D, ICON_PX)
 	var item: String = str(CHOICE_ICONS.get(key, key))
 	if CropCatalog.ids().has(item):
 		# A crop's seeds show the crop they grow into: easier to tell apart than four seed bags.

@@ -46,6 +46,9 @@ func _run() -> void:
 	var kindness: Kindness = systems.get_node("Kindness") as Kindness
 	var established_day: int = 0
 	var project_days: Dictionary = {}
+	## Nights in the first six weeks when bedtime had only the weather to tell, and caravan days seen.
+	var plain_nights: int = 0
+	var caravans: int = 0
 	for day: int in MAX_DAYS:
 		_farm_day(main, farm, inventory, clock)
 		for mark: String in home_marks:
@@ -82,6 +85,11 @@ func _run() -> void:
 				milestones[step["key"]] = clock.day
 		if stead.is_established() and established_day == 0:
 			established_day = clock.day
+		if clock.day <= 42:
+			if clock.next_weather == "Clear" and Tomorrow.line(systems) == clock.forecast_text():
+				plain_nights += 1
+			if (systems.get_node("Festivals") as Festivals).caravan_open():
+				caravans += 1
 		if works.festival_ready():
 			break
 		clock.sleep_now()
@@ -89,6 +97,9 @@ func _run() -> void:
 	var days: int = established_day
 	print("PLAYTHROUGH days=%d dinars=%d lowest=%d steps=%s" % [days, inventory.dinars, lowest_dinars, str(milestones)])
 	print("PLAYTHROUGH festival_day=%d khair=%d projects=%s upgrades=%s" % [clock.day, kindness.points, str(project_days), str(stead.flags.keys())])
+	print("PLAYTHROUGH plain_nights=%d caravans=%d" % [plain_nights, caravans])
+	check(plain_nights <= 4, "in the first six weeks bedtime nearly always names something to come back for (%d plain nights)" % plain_nights)
+	check(caravans >= 5, "the caravan comes every week (%d seen)" % caravans)
 	check(stead.is_established(), "an ordinary routine reaches the farm goal")
 	check(days >= 12, "the goal is not trivially fast (%d days)" % days)
 	check(days <= 56, "the goal fits in two seasons of play (%d days)" % days)

@@ -1,6 +1,7 @@
 # src/scripts/farm/letters.gd
 # Purpose: Now and then a villager sends a short letter in the morning, often with a small gift.
 # It is read as soon as the boy is up and nothing else is open.
+# After a real night away from the game, a neighbor leaves a small gift at the door instead.
 
 class_name Letters
 extends Node
@@ -23,8 +24,32 @@ const SHOW_DELAY: float = 1.2
 const FIRST_DAY: int = 3
 const FIRST_LETTER: Array = ["elder", "letter_elder", "dates", 3, []]
 
+## After a real night away, a neighbor has left something at the door. They take turns: person, line key, gift, amount.
+const DOOR_GIFTS: Array = [
+	["jassim", "door_jassim", "eggs", 2],
+	["elder", "door_elder", "dates", 3],
+	["merchant", "door_merchant", "season_seeds", 3],
+	["carpenter", "door_carpenter", "wood", 5],
+	["fisherman", "door_fisherman", "fish", 2],
+]
+
 var pending: Dictionary = {}
+## How many door gifts have been left so far, so the neighbors take turns.
+var door_count: int = 0
 var _wait: float = 0.0
+
+## Called when a night passed while the game was closed. The gift waits like a letter and opens the same way.
+## The elder's first letter is never pushed aside.
+func leave_at_door() -> void:
+	var clock: GameClock = get_parent().get_node("Clock") as GameClock
+	if clock.day == FIRST_DAY and not pending.is_empty():
+		return
+	var row: Array = DOOR_GIFTS[door_count % DOOR_GIFTS.size()]
+	door_count += 1
+	var item: String = str(row[2])
+	if item == "season_seeds":
+		item = _season_seed(clock.season)
+	pending = {"person": row[0], "line": row[1], "item": item, "amount": int(row[3]), "door": true}
 
 func on_new_day() -> void:
 	var clock: GameClock = get_parent().get_node("Clock") as GameClock
@@ -60,7 +85,8 @@ func read() -> void:
 	pending = {}
 	var person: String = str(letter["person"])
 	var who: String = Locale.t(person if person == "jassim" else person + "_name")
-	var lines: PackedStringArray = PackedStringArray([Locale.t("letter_from") % who, Locale.t(str(letter["line"]))])
+	var opening: String = "door_from" if bool(letter.get("door", false)) else "letter_from"
+	var lines: PackedStringArray = PackedStringArray([Locale.t(opening) % who, Locale.t(str(letter["line"]))])
 	var item: String = str(letter["item"])
 	var amount: int = int(letter["amount"])
 	if item != "" and amount > 0:
@@ -77,11 +103,12 @@ func read() -> void:
 	(get_parent().get_node("SaveGame") as SaveGame).write_now()
 
 func to_data() -> Dictionary:
-	return {"pending": pending.duplicate()}
+	return {"pending": pending.duplicate(), "door_count": door_count}
 
 func from_data(data: Dictionary) -> void:
 	var stored: Variant = data.get("pending", {})
 	pending = stored if stored is Dictionary and (stored as Dictionary).has("line") else {}
+	door_count = maxi(0, int(data.get("door_count", 0)))
 
 ## Nothing open, nobody busy: the letter will not cover something the player is doing.
 func _free() -> bool:

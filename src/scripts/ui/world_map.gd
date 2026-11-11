@@ -152,6 +152,9 @@ func task_places() -> Dictionary:
 		var person: String = str(friends.call("birthday_today"))
 		if person != "":
 			marks[PERSON_PLACES.get(person, "")] = true
+	var fairs: Node = systems.get_node_or_null("Festivals")
+	if fairs != null and bool(fairs.call("caravan_open")):
+		marks["Village"] = true
 	# A leaf over the farm when something there is ready to pick, unless someone already needs you there.
 	var farm: Node = systems.get_node_or_null("FarmField")
 	if farm != null and bool(farm.call("has_ripe")) and not marks.has("Home"):

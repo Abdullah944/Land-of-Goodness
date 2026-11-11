@@ -53,6 +53,11 @@ func catch_up() -> bool:
 	var activities: Activities = get_parent().get_node_or_null("Activities") as Activities
 	if activities != null:
 		activities.note = Locale.t("away_night")
+	# A neighbor came by while the boy was away: a small reason to be glad he came back.
+	var letters: Letters = get_parent().get_node_or_null("Letters") as Letters
+	if letters != null:
+		letters.leave_at_door()
+		write_now()
 	return true
 
 func backup_path() -> String:

@@ -1,5 +1,5 @@
 # src/scripts/farm/festivals.gd
-# Purpose: One village fair each season, on the fifth day: truffles in spring, the divers' return in summer,
+# Purpose: One village fair each season, on the fifth day, and the caravan on the last day: truffles in spring, the divers' return in summer,
 # the date harvest in autumn, and the winter camp. The square is dressed up and the elder hands out a gift.
 
 class_name Festivals
@@ -34,6 +34,9 @@ const SEASON_DECOR: Dictionary = {
 }
 
 var joined_day: int = -1
+## The caravan day the boy last bought on, and what he bought that day. Each thing is sold once a visit.
+var caravan_day: int = -1
+var caravan_bought: PackedStringArray = PackedStringArray()
 
 ## Today's fair, or an empty dictionary.
 func today() -> Dictionary:
@@ -74,6 +77,8 @@ func join() -> bool:
 func morning_note() -> String:
 	if not today().is_empty():
 		return Locale.t("fair_today") % Locale.t("fair_" + str(today()["id"]))
+	if caravan_open():
+		return Locale.t("caravan_today")
 	if not tomorrow().is_empty():
 		return Locale.t("fair_tomorrow") % Locale.t("fair_" + str(tomorrow()["id"]))
 	var friends: Friendship = get_parent().get_node_or_null("Friendship") as Friendship
@@ -88,8 +93,12 @@ func apply_place() -> void:
 		return
 	var fair: Dictionary = today()
 	for child: Node in place.get_children():
-		if str(child.name).begins_with("Fair"):
+		if str(child.name).begins_with("Fair") or str(child.name).begins_with("Caravan"):
 			child.queue_free()
+	# On caravan day its goods stand at the rim of the market square, off the walking way.
+	if _clock() != null and Caravan.is_day(_clock().day):
+		for piece: Dictionary in Caravan.PROPS:
+			PropPiece.add_to(place, piece)
 	if fair.is_empty():
 		return
 	var pieces: Array = DECOR.duplicate()
@@ -122,11 +131,57 @@ func _bunting(from: Vector2, to: Vector2) -> Node2D:
 	line.move_child(rope, 0)
 	return line
 
+## What the caravan still has for the boy today. Empty when it is not here or he bought it all.
+func caravan_today() -> Array[Dictionary]:
+	var left: Array[Dictionary] = []
+	var clock: GameClock = _clock()
+	if clock == null:
+		return left
+	for offer: Dictionary in Caravan.offers(clock.day):
+		if caravan_day != clock.day or not caravan_bought.has(str(offer["id"])):
+			left.append(offer)
+	return left
+
+func caravan_open() -> bool:
+	return not caravan_today().is_empty()
+
+## Buys one thing from the caravan. Returns what came of it: ok, item, amount and price. Empty when it is not for sale.
+func buy_caravan(offer_id: String) -> Dictionary:
+	var bag: Inventory = get_parent().get_node_or_null("Inventory") as Inventory
+	if bag == null:
+		return {}
+	for offer: Dictionary in caravan_today():
+		if str(offer["id"]) != offer_id:
+			continue
+		var price: int = int(offer["price"])
+		if bag.dinars < price:
+			return {"ok": false, "price": price}
+		var item: String = str(offer["item"])
+		var amount: int = int(offer["amount"])
+		if offer_id == Caravan.SACK:
+			var find: Dictionary = Caravan.sack_find(bag.found, _clock().day)
+			item = str(find["item"])
+			amount = int(find["amount"])
+		bag.dinars -= price
+		bag.add_item(item, amount)
+		if caravan_day != _clock().day:
+			caravan_day = _clock().day
+			caravan_bought = PackedStringArray()
+		caravan_bought.append(offer_id)
+		return {"ok": true, "item": item, "amount": amount, "price": price}
+	return {}
+
 func to_data() -> Dictionary:
-	return {"joined_day": joined_day}
+	return {"joined_day": joined_day, "caravan_day": caravan_day, "caravan_bought": Array(caravan_bought)}
 
 func from_data(data: Dictionary) -> void:
 	joined_day = int(data.get("joined_day", -1))
+	caravan_day = int(data.get("caravan_day", -1))
+	caravan_bought = PackedStringArray()
+	var bought: Variant = data.get("caravan_bought", [])
+	if bought is Array:
+		for offer_id: Variant in bought:
+			caravan_bought.append(str(offer_id))
 
 func _clock() -> GameClock:
 	return get_parent().get_node_or_null("Clock") as GameClock

@@ -379,7 +379,12 @@ func talk_role(role: String) -> void:
 		"merchant":
 			_shop = "menu"
 			var rows: PackedStringArray = _labeled(["sell_goods", "buy_seeds", "buy_feed", "give_food", "cancel"])
-			dialogue.offer(_with_request(_friend_line(role, _line("merchant")), role), _with_help(role, rows))
+			var hello: String = _line("merchant")
+			if _fairs() != null and _fairs().caravan_open():
+				# On caravan day its goods come first, and the merchant says so.
+				rows = _labeled(["caravan", "sell_goods", "buy_seeds", "buy_feed", "give_food", "cancel"])
+				hello = Locale.t("caravan_here")
+			dialogue.offer(_with_request(_friend_line(role, hello), role), _with_help(role, rows))
 		_:
 			_talk()
 
@@ -404,6 +409,12 @@ func _on_shop_choice(choice: String) -> void:
 		return
 	if _shop == "gift":
 		_give_gift(choice)
+		return
+	if choice == "caravan":
+		_offer_caravan()
+		return
+	if _shop == "caravan":
+		_buy_caravan(choice)
 		return
 	if _shop == "menu":
 		if choice == "sell_turnips" or choice == "Sell Turnips":
@@ -754,6 +765,41 @@ func _buy_seed(crop_id: String, crop: Dictionary) -> void:
 	note = Locale.t("bought") % seed_name
 	_dialogue().open_lines(PackedStringArray([note]))
 	_save()
+	_refresh()
+
+## What the caravan still has today, each with its price.
+func _offer_caravan() -> void:
+	var fairs: Festivals = _fairs()
+	var rows: PackedStringArray = PackedStringArray()
+	if fairs != null:
+		for offer: Dictionary in fairs.caravan_today():
+			rows.append("%s|%s" % [offer["id"], Caravan.label(offer)])
+	if rows.is_empty():
+		_shop = ""
+		return
+	rows.append("cancel|%s" % Locale.t("cancel"))
+	_shop = "caravan"
+	_dialogue().offer(Locale.t("caravan_which"), rows)
+
+func _buy_caravan(choice: String) -> void:
+	_shop = ""
+	var fairs: Festivals = _fairs()
+	if choice == "cancel" or fairs == null:
+		return
+	var got: Dictionary = fairs.buy_caravan(choice)
+	if got.is_empty():
+		return
+	if not bool(got["ok"]):
+		note = Locale.t("need_dinars") % int(got["price"])
+	else:
+		var key: String = "caravan_sack_open" if choice == Caravan.SACK else "caravan_bought"
+		note = Locale.t(key) % [int(got["amount"]), Locale.item(str(got["item"]))]
+		if not fairs.caravan_open():
+			note += "\n" + Locale.t("caravan_empty")
+		pop_item(str(got["item"]), int(got["amount"]))
+		_chime("coin")
+		_save()
+	_dialogue().open_lines(PackedStringArray([note]))
 	_refresh()
 
 func _seed_choices() -> PackedStringArray:

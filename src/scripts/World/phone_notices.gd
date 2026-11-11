@@ -70,7 +70,7 @@ static func plan_for(systems: Node, now: float, last_sent: float) -> Dictionary:
 		when = _gentle_time(_next_morning(when))
 	return {"text": text, "delay": int(when - now)}
 
-## After one night away, what will be true: ripe crops first, then a fair, then a birthday.
+## After one night away, what will be true: ripe crops first, then a fair, the caravan, then a birthday.
 static func _what_to_say(systems: Node) -> String:
 	var clock: GameClock = systems.get_node_or_null("Clock") as GameClock
 	var farm: FarmField = systems.get_node_or_null("FarmField") as FarmField
@@ -89,6 +89,8 @@ static func _what_to_say(systems: Node) -> String:
 	var fairs: Festivals = systems.get_node_or_null("Festivals") as Festivals
 	if fairs != null and not fairs.tomorrow().is_empty():
 		return Locale.t("notice_fair") % Locale.t("fair_" + str(fairs.tomorrow()["id"]))
+	if Caravan.is_day(clock.day + 1):
+		return Locale.t("notice_caravan")
 	var friends: Friendship = systems.get_node_or_null("Friendship") as Friendship
 	if friends != null:
 		var person: String = friends.birthday_on(clock.day + 1, next_season)
