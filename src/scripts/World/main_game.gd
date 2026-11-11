@@ -17,6 +17,8 @@ func _ready() -> void:
 	get_node("Systems").add_child(notices)
 	var save: SaveGame = get_node("Systems/SaveGame") as SaveGame
 	var loaded: bool = save.load_game()
+	if SaveGame.checking:
+		add_child((load("res://tests/phone_check.gd") as GDScript).new())
 	if loaded:
 		save.catch_up()
 	var farm: FarmField = get_node("Systems/FarmField") as FarmField

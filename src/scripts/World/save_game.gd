@@ -16,12 +16,40 @@ var recovered: bool = false
 const AWAY_NIGHT: float = 8.0 * 3600.0
 ## Seconds between the last save and this load.
 var away_seconds: float = 0.0
+## A debug build runs the phone check on its own save when this file is in the game's folder.
+## The file holds how many launches may still run the check. See tests/phone_check.gd.
+const CHECK_FLAG: String = "user://phone_check.txt"
+const CHECK_SAVE: String = "user://phone_check_save.json"
+static var checking: bool = false
+## True when this launch follows an earlier check launch that was cut short on purpose.
+static var check_resumes: bool = false
 var _paused_at: float = 0.0
+## The save file this session has itself read or written whole, so it need not be read again before each backup.
+var _good_path: String = ""
 
 func _ready() -> void:
 	var override_path: String = OS.get_environment("KHAIR_SAVE")
 	if override_path != "":
 		path = override_path
+	if OS.is_debug_build() and _take_check_turn():
+		checking = true
+		path = CHECK_SAVE
+		TitleMenu.dismissed = true
+
+## Counts one launch off the phone-check file and removes the file after the last one.
+func _take_check_turn() -> bool:
+	if not FileAccess.file_exists(CHECK_FLAG):
+		return false
+	var note: String = FileAccess.get_file_as_string(CHECK_FLAG).strip_edges()
+	check_resumes = note.ends_with("resume")
+	var left: int = maxi(1, int(note)) - 1
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(CHECK_FLAG))
+	if left > 0:
+		var flag: FileAccess = FileAccess.open(CHECK_FLAG, FileAccess.WRITE)
+		if flag != null:
+			flag.store_string("%d resume" % left)
+			flag.close()
+	return true
 
 ## A phone can close the game at any moment, so save when it goes to the background.
 func _notification(what: int) -> void:
@@ -113,15 +141,18 @@ func _write_safely(text: String) -> void:
 	file.close()
 	var global_path: String = ProjectSettings.globalize_path(path)
 	var global_temp: String = ProjectSettings.globalize_path(temp_path)
-	if FileAccess.file_exists(path) and _read_dictionary(path) != null:
+	if FileAccess.file_exists(path) and (_good_path == path or _read_dictionary(path) != null):
 		DirAccess.copy_absolute(global_path, ProjectSettings.globalize_path(backup_path()))
-	DirAccess.rename_absolute(global_temp, global_path)
+	_good_path = path if DirAccess.rename_absolute(global_temp, global_path) == OK else ""
 
 func load_game() -> bool:
 	recovered = false
 	var data: Variant = _read_dictionary(path)
-	if data == null and FileAccess.file_exists(path):
-		_keep_damaged_copy()
+	_good_path = path if data != null else ""
+	if data == null:
+		# A damaged save, or one that went missing, falls back to the last good copy.
+		if FileAccess.file_exists(path):
+			_keep_damaged_copy()
 		data = _read_dictionary(backup_path())
 		recovered = data != null
 	if data == null:
