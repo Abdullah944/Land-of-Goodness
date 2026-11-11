@@ -66,11 +66,13 @@ func _redraw_buttons() -> void:
 	_hero.position = Vector2(8.0, (view.y - _hero.size.y) * 0.5)
 	var top: float = (view.y - 200.0) * 0.5
 	var title: Label = Label.new()
+	# Wrapping is switched on before the words go in; otherwise a long line stretches the label past the window.
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.text = Locale.t("new_confirm") if _confirm else Locale.t("title")
 	title.position = Vector2(_window.position.x + 30.0, top + 36.0)
 	title.size = Vector2(240, 36)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color("3f2d27"))
 	title.add_theme_font_size_override("font_size", 12 if _confirm else 22)
 	Locale.apply_control(title)

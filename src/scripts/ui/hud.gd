@@ -1225,7 +1225,9 @@ func _show_prayer_banner(text: String) -> void:
 	Locale.apply_control(_prayer_text)
 	_prayer_banner.reset_size()
 	var view: Vector2 = get_viewport().get_visible_rect().size
-	_prayer_banner.position = Vector2((view.x - _prayer_banner.size.x) * 0.5, 10.0)
+	# In the middle of the screen, but never over the day and dinars in the corner.
+	var middle: float = (view.x - _prayer_banner.size.x) * 0.5
+	_prayer_banner.position = Vector2(minf(middle, _clock_panel.position.x - _prayer_banner.size.x - 4.0), 10.0)
 	_prayer_banner.visible = true
 	(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("level")
 	var token: String = _prayer_told

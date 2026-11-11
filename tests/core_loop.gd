@@ -140,6 +140,7 @@ func _run() -> void:
 	_check_ending_pages(main)
 	_check_hooks(main)
 	await _check_sound(main)
+	_check_choice_fit(main)
 	await _check_cave(main)
 	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
@@ -774,6 +775,22 @@ func _check_ending_pages(main: Node) -> void:
 	check(stead.after_text() == Locale.t("quest_free"), "with every story and the whole book done, the farm is simply the boy's to enjoy")
 	friends.stories = old_stories
 	bag.found = old_found
+
+## A long choice, like a building with its whole price, takes a full row in both languages and stays inside the window.
+func _check_choice_fit(main: Node) -> void:
+	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	var was: String = Locale.language
+	var fits: bool = true
+	var long_row: String = "house|%s: 30 %s, 20 %s, 1200 %s" % [Locale.t("house"), Locale.t("wood"), Locale.t("stone"), "dinars"]
+	for language: String in ["en", "ar"]:
+		Locale.language = language
+		dialogue.offer(Locale.t("build"), PackedStringArray(["coop|%s" % Locale.t("coop"), "expand|%s" % Locale.t("expand"), "tools|%s" % Locale.t("tools"), long_row, "cancel|x"]))
+		fits = fits and dialogue._offer_wide and dialogue._panel.position.y >= 0.0
+		for button: Button in dialogue._offer_buttons:
+			fits = fits and button.position.x >= 0.0 and button.position.x + button.size.x <= dialogue._panel.size.x
+		dialogue._pick("cancel")
+	Locale.language = was
+	check(fits, "a long choice gets a whole row and stays inside the window, in English and Arabic")
 
 ## Sound: every effect exists, the loud ones are turned down, the outdoors follows the place and the hour,
 ## and the actions that used to be silent now make a sound.

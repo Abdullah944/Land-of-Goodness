@@ -28,6 +28,8 @@ const MORE: String = "__more"
 var _text_extra: float = 0.0
 var _offer_all: PackedStringArray = []
 var _offer_page: int = 0
+## True when each choice takes a whole row; false when they sit in two columns.
+var _offer_wide: bool = true
 var _lines: PackedStringArray = []
 var _index: int = 0
 var _choosing: bool = false
@@ -254,36 +256,42 @@ func _show_offer_page() -> void:
 		var per_page: int = MAX_ROWS - 1
 		rows = body.slice(_offer_page * per_page, (_offer_page + 1) * per_page)
 		rows.append("%s|%s" % [MORE, Locale.t("more")])
-	_fit_actions(rows.size())
-	_place_speaker()
-	_close.visible = _offer_cancel != ""
-	_close.position = Vector2(_panel.size.x - 26.0, 4.0)
+	# The buttons are made first and measured, so a long row gets the whole width instead of running off the window.
+	var widest: float = 0.0
 	for i: int in rows.size():
 		var parts: PackedStringArray = _choice_parts(rows[i])
 		var button: Button = Button.new()
-		button.text = parts[1]
-		var spot: Rect2 = _offer_spot(i, rows.size())
-		button.position = spot.position
-		button.size = spot.size
 		button.focus_mode = Control.FOCUS_NONE
 		button.add_theme_font_size_override("font_size", 10)
-		button.icon = _choice_icon(parts[0])
 		button.expand_icon = false
 		button.add_theme_constant_override("h_separation", 4)
-		button.clip_text = true
-		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		UiStyle.button(button)
 		for state: String in ["normal", "hover", "focus", "pressed"]:
 			var look: StyleBox = button.get_theme_stylebox(state)
 			look.content_margin_top = 1.0
 			look.content_margin_bottom = 1.0
 		Locale.apply_control(button)
+		button.text = parts[1]
+		button.icon = _choice_icon(parts[0])
+		widest = maxf(widest, button.get_minimum_size().x)
+		# From here on the button keeps the size it is given, and trims words that still do not fit.
+		button.clip_text = true
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		if parts[0] == MORE:
 			button.pressed.connect(_next_offer_page)
 		else:
 			button.pressed.connect(_pick.bind(parts[0]))
 		_panel.add_child(button)
 		_offer_buttons.append(button)
+	_offer_wide = rows.size() <= 3 or widest > (OFFER_W - 22.0) * 0.5
+	_fit_actions(rows.size())
+	_place_speaker()
+	_close.visible = _offer_cancel != ""
+	_close.position = Vector2(_panel.size.x - 26.0, 4.0)
+	for i: int in _offer_buttons.size():
+		var spot: Rect2 = _offer_spot(i)
+		_offer_buttons[i].position = spot.position
+		_offer_buttons[i].size = spot.size
 
 ## The choices without the Cancel at the end; that one becomes the X.
 func _offer_body() -> PackedStringArray:
@@ -312,11 +320,15 @@ func _clear_offer_buttons() -> void:
 func _first_row() -> float:
 	return (58.0 if _heart_row.visible else 46.0) + (_text_extra if _offering else 0.0)
 
+## Many wide rows are a little shorter, so six of them still fit on the screen.
+func _row_step() -> float:
+	return 26.0 if _offer_wide and _offer_buttons.size() > 4 else ROW_STEP
+
 ## Short lists stay one wide row each; longer ones sit in two columns, so the panel never covers the screen.
-func _offer_spot(index: int, count: int) -> Rect2:
+func _offer_spot(index: int) -> Rect2:
 	var inner: float = OFFER_W - 16.0
-	if count <= 3:
-		return Rect2(8, _first_row() + ROW_STEP * index, inner, ROW_STEP - 3.0)
+	if _offer_wide:
+		return Rect2(8, _first_row() + _row_step() * index, inner, _row_step() - 3.0)
 	var width: float = (inner - 6.0) * 0.5
 	return Rect2(8.0 + (index % 2) * (width + 6.0), _first_row() + ROW_STEP * (index / 2), width, ROW_STEP - 3.0)
 
@@ -335,8 +347,8 @@ func _fit_actions(rows: int) -> void:
 			break
 	_text_extra = float(maxi(0, lines_used - 3)) * float(_label.get_line_height())
 	_label.size.y = 40.0 + _text_extra
-	var lines: int = rows if rows <= 3 else (rows + 1) / 2
-	var height: float = _first_row() + 8.0 + ROW_STEP * lines
+	var lines: int = rows if _offer_wide else (rows + 1) / 2
+	var height: float = _first_row() + 8.0 + _row_step() * lines
 	_panel.size = Vector2(OFFER_W, height)
 	_panel.position = Vector2((512.0 - OFFER_W) * 0.5, 288.0 - height - 6.0)
 
