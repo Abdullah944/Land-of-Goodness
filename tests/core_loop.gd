@@ -136,6 +136,7 @@ func _run() -> void:
 	_check_friends(main)
 	_check_stories(main.get_node("Systems"))
 	_check_first_steps(main)
+	await _check_feel(main)
 	await _check_cave(main)
 	await _check_book(main)
 	loader.go_to(load("res://src/scenes/world/harbor/Harbor.tscn") as PackedScene, "PlayerSpawn")
@@ -748,6 +749,49 @@ func _check_stories(systems: Node) -> void:
 	for item_id: String in ["copper", "eggs", "pearl"]:
 		bag.add_item(item_id, int(old[item_id]) - bag.count_of(item_id))
 	friends.from_data({})
+
+## The top bar plays a change out: dinars count to the new sum, Khair fills, and a finished step is marked.
+func _check_feel(main: Node) -> void:
+	var systems: Node = main.get_node("Systems")
+	var stead: Stead = systems.get_node("Stead") as Stead
+	var bag: Inventory = systems.get_node("Inventory") as Inventory
+	var farm: FarmField = systems.get_node("FarmField") as FarmField
+	var activities: Activities = systems.get_node("Activities") as Activities
+	var hud: Node = main.get_node("UI/HUD")
+	var old_dinars: int = bag.dinars
+	var old_done: bool = activities.quest_done
+	var old_plots: Dictionary = farm.plots.duplicate(true)
+	hud._live_after = 0
+	hud.refresh()
+	bag.dinars = old_dinars + 40
+	hud.refresh()
+	var mid: String = hud._gold.text
+	await create_timer(0.7).timeout
+	hud.refresh()
+	check(hud._gold.text == Locale.t("dinars") % (old_dinars + 40) and hud._dinars_seen == old_dinars + 40, "dinars count up to the new sum (%s then %s)" % [mid, hud._gold.text])
+	activities.quest_done = false
+	var before: int = stead.progress()
+	activities.quest_done = true
+	check(stead.progress() == before + 1, "a finished quest step raises the progress count")
+	activities.quest_done = old_done
+	farm.plots["90,90"] = {"tilled": true, "stage": 3, "watered": false, "crop": "turnip", "sprinkler": false}
+	farm.apply()
+	var dirt: TileMapLayer = farm._dirt()
+	var crops: Node = dirt.get_node_or_null("Crops") if dirt != null else null
+	var blinked: bool = false
+	for i: int in 150:
+		await process_frame
+		if crops != null:
+			for child: Node in crops.get_children():
+				if child is Polygon2D:
+					blinked = true
+		if blinked:
+			break
+	check(blinked or crops == null, "a ripe plant blinks")
+	farm.plots = old_plots
+	farm.apply()
+	bag.dinars = old_dinars
+	hud.refresh()
 
 func _check_first_steps(main: Node) -> void:
 	var systems: Node = main.get_node("Systems")

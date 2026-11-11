@@ -47,6 +47,9 @@ func _rested() -> bool:
 		return true
 	player.cancel_tap()
 	(systems.get_node("Activities") as Activities).note = Locale.t("tired")
+	var hud: Node = get_tree().current_scene.get_node_or_null("UI/HUD")
+	if hud != null and hud.has_method("nudge_hearts"):
+		hud.call("nudge_hearts")
 	return false
 
 func _chime() -> void:

@@ -69,6 +69,27 @@ func work(dirt: TileMapLayer, cell: Vector2i, watering_only: bool) -> void:
 	_bounce(dirt, cell)
 	_save()
 
+## A ripe plant blinks now and then, so the boy sees from afar what is ready to pick.
+const GLINT_EVERY: Vector2 = Vector2(0.5, 1.1)
+var _glint_left: float = 2.0
+
+func _process(delta: float) -> void:
+	_glint_left -= delta
+	if _glint_left > 0.0:
+		return
+	_glint_left = randf_range(GLINT_EVERY.x, GLINT_EVERY.y)
+	var ripe: Array[Sprite2D] = []
+	for key: String in _sprouts.keys():
+		var sprout: Variant = _sprouts[key]
+		if sprout == null or not is_instance_valid(sprout) or not plots.has(key):
+			continue
+		if int(plots[key]["stage"]) >= 0 and _is_ready(plots[key]):
+			ripe.append(sprout as Sprite2D)
+	if ripe.is_empty():
+		return
+	var pick: Sprite2D = ripe.pick_random()
+	Juice.glint(pick.get_parent(), pick.position + Vector2(randf_range(-4.0, 4.0), randf_range(-6.0, 1.0)))
+
 ## The pickaxe turns a tilled square with nothing planted back into grass, so a bed can be moved.
 func clear_soil(dirt: TileMapLayer, cell: Vector2i) -> bool:
 	if not _is_tilled(cell) or int(plots[_key(cell)]["stage"]) >= 0:

@@ -89,9 +89,21 @@ var _pickups: Array[Dictionary] = []
 const PICKUP_SECONDS: float = 2.6
 const PICKUP_MAX: int = 4
 var _picked_tool: String = "<none>"
+## What the top bar last showed, so a change can be played out and not just jump.
+var _live_after: int = 0
+var _dinars_seen: int = -1
+var _dinars_shown: float = 0.0
+var _count_tween: Tween
+var _khair_seen: int = -1
+var _hearts_seen: float = -1.0
+var _heart_pulse: Tween
+var _goal_id: String = ""
+var _progress_seen: int = -1
 var _seed_count: Label
 
 func _ready() -> void:
+	# The saved farm loads right after this, and its numbers should just be there, not count up.
+	_live_after = Time.get_ticks_msec() + 1200
 	var rain: ColorRect = ColorRect.new()
 	rain.name = "Rain"
 	rain.color = Color("55afc4")
@@ -257,6 +269,16 @@ func show_sale(item: String, quantity: int, earned: int, remaining: int, balance
 		Locale.apply_control(_sale_titles[row])
 	_sale_panel.visible = true
 	_sale_panel.move_to_front()
+	# The receipt pops in, and the sum earned counts up.
+	_sale_panel.pivot_offset = _sale_panel.size * 0.5
+	_sale_panel.scale = Vector2(0.8, 0.8)
+	_sale_panel.modulate.a = 0.0
+	var pop: Tween = _sale_panel.create_tween()
+	pop.tween_property(_sale_panel, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	pop.parallel().tween_property(_sale_panel, "modulate:a", 1.0, 0.12)
+	var count_up: Callable = func(value: float) -> void:
+		_sale_earned.text = Locale.t("dinars") % int(round(value))
+	pop.parallel().tween_method(count_up, 0.0, float(earned), 0.5).set_delay(0.1)
 	await get_tree().create_timer(3.0).timeout
 	if token != _sale_token:
 		return
@@ -304,14 +326,13 @@ func refresh() -> void:
 	if int(float(Time.get_ticks_msec()) / 500.0) % 2 == 1:
 		shown = shown.replace(":", " ")
 	_time.text = "%s %d   %s" % [Locale.t(clock.season), clock.day, shown]
-	_gold.text = Locale.t("dinars") % inventory.dinars
-	if _bag_money != null:
-		_bag_money.text = Locale.t("dinars") % inventory.dinars
+	_show_dinars(inventory.dinars)
 	var stead: Stead = systems.get_node_or_null("Stead") as Stead
 	if activities.display_note() != "":
 		_note.text = activities.display_note()
 	elif stead != null:
 		_note.text = stead.goal_text()
+		_mark_goal(_note.text, stead)
 	elif activities.quest_done:
 		_note.text = ""
 	else:
@@ -387,11 +408,100 @@ func refresh() -> void:
 	for i: int in _hearts.size():
 		_hearts[i].visible = float(i) < inventory.max_hearts
 		_hearts[i].modulate.a = clampf(inventory.hearts - float(i), 0.3, 1.0)
+	_show_hearts(inventory)
 	var kindness: Kindness = systems.get_node_or_null("Kindness") as Kindness
 	if kindness != null:
-		_khair_fill.size.x = (KHAIR_W - 2.0) * float(kindness.points) / float(Kindness.MAX_POINTS)
+		_show_khair(kindness.points)
 		_khair_label.text = "%s  %d" % [Locale.t("khair"), kindness.points]
 		Locale.apply_control(_khair_label)
+
+func _is_live() -> bool:
+	return Time.get_ticks_msec() > _live_after
+
+## Dinars count up or down to the new sum, and the change floats up beside them.
+func _show_dinars(now: int) -> void:
+	if now != _dinars_seen:
+		var change: int = now - _dinars_seen
+		var live: bool = _dinars_seen >= 0 and _is_live()
+		_dinars_seen = now
+		if _count_tween != null:
+			_count_tween.kill()
+		if live:
+			_count_tween = create_tween()
+			_count_tween.tween_method(_set_dinars, _dinars_shown, float(now), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			Juice.press(_gold)
+			var at: Vector2 = _clock_panel.position + Vector2(12.0, _clock_panel.size.y + 4.0)
+			Juice.float_text(self, at, "%+d" % change, Color("ffe08a") if change > 0 else Color("f2a48f"))
+		else:
+			_dinars_shown = float(now)
+	_set_dinars(_dinars_shown)
+
+func _set_dinars(value: float) -> void:
+	_dinars_shown = value
+	_gold.text = Locale.t("dinars") % int(round(value))
+	if _bag_money != null:
+		_bag_money.text = _gold.text
+
+## The Khair bar fills smoothly, and its number pops when Khair is earned.
+func _show_khair(points: int) -> void:
+	var width: float = (KHAIR_W - 2.0) * float(points) / float(Kindness.MAX_POINTS)
+	if points == _khair_seen:
+		return
+	var live: bool = _khair_seen >= 0 and _is_live()
+	var gained: bool = points > _khair_seen
+	_khair_seen = points
+	if not live:
+		_khair_fill.size.x = width
+		return
+	var fill: Tween = _khair_fill.create_tween()
+	fill.tween_property(_khair_fill, "size:x", width, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if gained:
+		_khair_fill.color = Color("fff3dc")
+		fill.parallel().tween_property(_khair_fill, "color", Color("d9a441"), 0.6)
+		Juice.press(_khair_label)
+
+## A heart pops when it is used up, and the last one beats slowly as a reminder to eat or sleep.
+func _show_hearts(inventory: Inventory) -> void:
+	var now: float = inventory.hearts
+	if _hearts_seen >= 0.0 and _is_live() and floorf(now + 0.001) < floorf(_hearts_seen + 0.001):
+		Juice.press(_hearts[clampi(int(floorf(now + 0.001)), 0, _hearts.size() - 1)])
+	_hearts_seen = now
+	var low: bool = now <= 1.0 and inventory.max_hearts >= 1.0
+	if low and _heart_pulse == null:
+		_hearts[0].pivot_offset = _hearts[0].size * 0.5
+		_heart_pulse = _hearts[0].create_tween().set_loops()
+		_heart_pulse.tween_property(_hearts[0], "scale", Vector2(1.25, 1.25), 0.3)
+		_heart_pulse.tween_property(_hearts[0], "scale", Vector2.ONE, 0.3)
+		_heart_pulse.tween_interval(0.5)
+	elif not low and _heart_pulse != null:
+		_heart_pulse.kill()
+		_heart_pulse = null
+		_hearts[0].scale = Vector2.ONE
+
+## The hearts shake their heads when the boy is too tired for another swing.
+func nudge_hearts() -> void:
+	for heart: TextureRect in _hearts:
+		if heart.visible:
+			Juice.wobble(heart)
+	Juice.tap(get_tree(), Juice.TAP_FIRM)
+
+## The line under the day pops when it changes, and a finished quest step gets a chime and a gold glow.
+func _mark_goal(goal: String, stead: Stead) -> void:
+	var id: String = goal.get_slice(". ", 0)
+	for digit: String in "0123456789":
+		id = id.replace(digit, "")
+	var progress: int = stead.progress()
+	var live: bool = _goal_id != "" and _is_live()
+	if live and progress > _progress_seen:
+		Juice.press(_note)
+		_note.modulate = Color(1.0, 0.82, 0.3)
+		_note.create_tween().tween_property(_note, "modulate", Color.WHITE, 1.4).set_delay(0.4)
+		(get_tree().current_scene.get_node("Systems/SoundBank") as SoundBank).play("level")
+		Juice.tap(get_tree(), Juice.TAP_STRONG)
+	elif live and id != _goal_id:
+		Juice.press(_note)
+	_goal_id = id
+	_progress_seen = progress
 
 func _refresh_settings(stead: Stead) -> void:
 	var labels: Dictionary = {_zoom_in: Locale.t("zoom_in"), _zoom_out: Locale.t("zoom_out"), _language: Locale.t("language"), _help_button: Locale.t("help_button")}

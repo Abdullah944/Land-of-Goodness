@@ -254,6 +254,21 @@ func goal_text() -> String:
 	var kindness: Kindness = get_parent().get_node_or_null("Kindness") as Kindness
 	return Locale.t("quest_khair") % (kindness.points if kindness != null else 0)
 
+## How many steps of the main quest line are behind the boy. It only goes up, so a rise means a step was just finished.
+func progress() -> int:
+	var activities: Node = get_parent().get_node_or_null("Activities")
+	var steps: Array[bool] = [
+		activities != null and bool(activities.get("quest_done")),
+		bool(flags.get("crafted_feed", false)),
+		coop,
+		bool(flags.get("got_egg", false)),
+		bool(visited.get("Harbor", false)),
+		bool(visited.get("Orchard", false)),
+		barn,
+		bool(flags.get("got_barn_product", false)),
+	]
+	return steps.count(true)
+
 ## What a quest step costs, so its line can say what is still missing. Empty for steps that cost nothing.
 func _step_costs(step_key: String) -> Dictionary:
 	match step_key:

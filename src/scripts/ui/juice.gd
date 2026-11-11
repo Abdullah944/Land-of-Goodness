@@ -118,6 +118,7 @@ static func break_away(spot: Node2D, kind: String) -> void:
 				burst(place, feet + Vector2(away * 26.0, -6.0), leaves, 22, 60.0, 0.8)
 				burst(place, feet + Vector2(away * 14.0, 0.0), DUST_BROWN, 10, 30.0, 0.5)
 				tap(tree, TAP_FIRM)
+				kick(tree, 3.0)
 			var fall: Tween = copy.create_tween()
 			fall.tween_property(copy, "rotation", -away * 0.06, 0.07)
 			fall.tween_property(copy, "rotation", away * 1.45, 0.42).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -133,6 +134,7 @@ static func break_away(spot: Node2D, kind: String) -> void:
 			crack.tween_callback(copy.queue_free)
 			burst(place, middle, STONE_GREY, 16, 70.0, 0.55, 2.5)
 			tap(tree, TAP_FIRM)
+			kick(tree, 2.0)
 		_:
 			var pop: Tween = copy.create_tween()
 			pop.tween_property(copy, "scale", copy.scale * 1.15, 0.07)
@@ -192,6 +194,68 @@ static func press(control: Control) -> void:
 	pop.tween_property(control, "scale", Vector2(0.85, 0.85), 0.05)
 	pop.tween_property(control, "scale", Vector2(1.18, 1.18), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	pop.tween_property(control, "scale", Vector2.ONE, 0.1)
+
+## The view gives one small jolt, for a tree that lands or a rock that breaks.
+static func kick(tree: SceneTree, strength: float = 2.0) -> void:
+	var scene: Node = tree.current_scene if tree != null else null
+	var player: Node = scene.find_child("Player", true, false) if scene != null else null
+	var cam: Camera2D = player.get_node_or_null("Camera2D") as Camera2D if player != null else null
+	if cam == null:
+		return
+	var jolt: Tween = cam.create_tween()
+	jolt.tween_property(cam, "offset", Vector2(0, strength), 0.04)
+	jolt.tween_property(cam, "offset", Vector2(0, -strength * 0.5), 0.05)
+	jolt.tween_property(cam, "offset", Vector2.ZERO, 0.07)
+
+## A small star that blinks on something ready to pick.
+static func glint(place: Node, at: Vector2) -> void:
+	if place == null:
+		return
+	var star: Polygon2D = Polygon2D.new()
+	star.polygon = PackedVector2Array([
+		Vector2(0, -4), Vector2(1, -1), Vector2(4, 0), Vector2(1, 1),
+		Vector2(0, 4), Vector2(-1, 1), Vector2(-4, 0), Vector2(-1, -1),
+	])
+	star.color = Color("fff6c8")
+	star.position = at
+	star.z_index = 3000
+	star.scale = Vector2(0.1, 0.1)
+	place.add_child(star)
+	var blink: Tween = star.create_tween()
+	blink.tween_property(star, "scale", Vector2(1.4, 1.4), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	blink.parallel().tween_property(star, "rotation", 0.8, 0.4)
+	blink.tween_property(star, "scale", Vector2(0.1, 0.1), 0.22)
+	blink.tween_callback(star.queue_free)
+
+## A number that floats up and fades, such as dinars earned.
+static func float_text(parent: Node, at: Vector2, text: String, color: Color) -> void:
+	if parent == null:
+		return
+	var label: Label = Label.new()
+	label.text = text
+	label.position = at
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_color_override("font_outline_color", Color("3f2d27"))
+	parent.add_child(label)
+	var rise: Tween = label.create_tween()
+	rise.tween_property(label, "position:y", at.y - 14.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	rise.parallel().tween_property(label, "modulate:a", 0.0, 0.35).set_delay(0.55)
+	rise.tween_callback(label.queue_free)
+
+## A UI piece that shakes its head, for "not now".
+static func wobble(control: Control, strength: float = 3.0) -> void:
+	if control == null or control.has_meta("wobbling"):
+		return
+	control.set_meta("wobbling", true)
+	var home: float = control.position.x
+	var shake_no: Tween = control.create_tween()
+	for i: int in 4:
+		shake_no.tween_property(control, "position:x", home + strength * (1.0 if i % 2 == 0 else -1.0), 0.04)
+	shake_no.tween_property(control, "position:x", home, 0.04)
+	shake_no.tween_callback(control.remove_meta.bind("wobbling"))
 
 static func _season(tree: SceneTree) -> String:
 	var clock: Node = tree.current_scene.get_node_or_null("Systems/Clock") if tree != null and tree.current_scene != null else null
