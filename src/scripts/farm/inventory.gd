@@ -27,9 +27,11 @@ var found: Dictionary = {}
 var book_paid: Dictionary = {}
 
 const TOOL_TIRE: float = 0.1
+## Crops added after the first four are counted in "extra", so older saves need no new fields.
+const LATER_CROPS: Array[String] = ["onion_seeds", "onions"]
 const STORED_GOODS: Array[String] = [
-	"seeds", "tomato_seeds", "wheat_seeds", "watermelon_seeds",
-	"turnips", "tomatoes", "wheat", "watermelons",
+	"seeds", "tomato_seeds", "wheat_seeds", "watermelon_seeds", "onion_seeds",
+	"turnips", "tomatoes", "wheat", "watermelons", "onions",
 	"wood", "stone", "fish", "dates", "forage",
 ]
 
@@ -233,7 +235,7 @@ func from_data(data: Dictionary) -> void:
 	var stored_extra: Variant = data.get("extra", {})
 	if stored_extra is Dictionary:
 		for key: Variant in stored_extra:
-			if GoodsCatalog.is_extra(str(key)):
+			if GoodsCatalog.is_extra(str(key)) or str(key) in LATER_CROPS:
 				extra[str(key)] = maxi(0, int(stored_extra[key]))
 	for item_id: String in all_stored_ids():
 		_set_item(item_id, maxi(0, count_of(item_id)))
@@ -287,5 +289,5 @@ func _set_item(item_id: String, amount: int) -> void:
 		"forage":
 			forage = amount
 		_:
-			if GoodsCatalog.is_extra(item_id):
+			if GoodsCatalog.is_extra(item_id) or item_id in LATER_CROPS:
 				extra[item_id] = maxi(0, amount)

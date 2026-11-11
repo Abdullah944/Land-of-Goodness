@@ -29,7 +29,7 @@ const HELPED: String = "helped"
 const THANKED: String = "thanked"
 const TASTES: Dictionary = {
 	"jassim": {"love": ["dates", "watermelons"], "like": ["tomatoes", "milk", "turnips"], "dislike": ["wood"]},
-	"elder": {"love": ["dates", "milk"], "like": ["eggs", "wheat", "forage"], "dislike": ["copper"]},
+	"elder": {"love": ["dates", "milk"], "like": ["eggs", "wheat", "forage", "onions"], "dislike": ["copper"]},
 	"merchant": {"love": ["pearl", "copper"], "like": ["tomatoes", "watermelons", "wool"], "dislike": ["forage"]},
 	"carpenter": {"love": ["copper", "wood"], "like": ["eggs", "fish", "milk"], "dislike": ["watermelons"]},
 	"fisherman": {"love": ["dates", "pearl"], "like": ["wheat", "eggs", "turnips"], "dislike": ["fish"]},

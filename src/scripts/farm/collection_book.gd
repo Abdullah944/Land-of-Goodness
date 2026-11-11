@@ -7,7 +7,7 @@ class_name CollectionBook
 extends RefCounted
 
 const PAGES: Array[Dictionary] = [
-	{"key": "book_farm", "items": ["turnips", "tomatoes", "wheat", "watermelons", "eggs", "milk", "wool"]},
+	{"key": "book_farm", "items": ["turnips", "tomatoes", "wheat", "watermelons", "onions", "eggs", "milk", "wool"]},
 	{"key": "book_land", "items": ["wood", "dates", "forage"]},
 	{"key": "book_sea", "items": ["fish", "maid", "sheim", "safi", "zubaidi", "hamour", "pearl"]},
 	{"key": "book_cave", "items": ["stone", "copper", "iron"]},

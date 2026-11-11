@@ -127,7 +127,7 @@ func _run() -> void:
 	var pictured: bool = not shop_box._offer_buttons.is_empty()
 	for button: Button in shop_box._offer_buttons:
 		pictured = pictured and button.icon != null
-	check(shop_box._panel.size.x <= 330.0 and shop_box._panel.size.y < 150.0 and pictured and shop_box._close.visible, "the seller's window is small, each seed has a picture, and X closes it")
+	check(shop_box._panel.size.x <= 330.0 and shop_box._panel.size.y < 170.0 and shop_box._offer_buttons.size() <= 3 and pictured and shop_box._close.visible, "the seller's window is small, each seed has a picture, and X closes it")
 	shop_box._pick("cancel")
 	var mosque: Node2D = _place(main).get_node("Mosque") as Node2D
 	var walls: CollisionShape2D = mosque.get_node("Block").get_child(0) as CollisionShape2D
@@ -876,7 +876,7 @@ func _check_hooks(main: Node) -> void:
 		var rows: Array[Dictionary] = Caravan.offers(day)
 		seeds_by_season.append(str(rows[0]["id"]))
 		fair_price = fair_price and rows.size() == 3 and int(rows[1]["price"]) >= GoodsCatalog.sell_price(str(rows[1]["item"])) * int(rows[1]["amount"])
-	check(seeds_by_season == PackedStringArray(["watermelon", "wheat", "wheat", "tomato"]), "the caravan brings seeds for the season that starts tomorrow (%s)" % ", ".join(seeds_by_season))
+	check(seeds_by_season == PackedStringArray(["watermelon", "wheat", "onion", "tomato"]), "the caravan brings seeds for the season that starts tomorrow (%s)" % ", ".join(seeds_by_season))
 	check(fair_price, "nothing from the caravan can be sold on for more than it cost")
 	var off_paths: bool = true
 	for piece: Dictionary in Caravan.PROPS:
@@ -1174,7 +1174,7 @@ func _check_book(main: Node) -> void:
 	var bag: Inventory = systems.get_node("Inventory") as Inventory
 	var kindness: Kindness = systems.get_node("Kindness") as Kindness
 	var save: SaveGame = systems.get_node("SaveGame") as SaveGame
-	check(CollectionBook.total() == 23 and CollectionBook.PAGES.size() == 5, "the book has five pages and 23 things")
+	check(CollectionBook.total() == 24 and CollectionBook.PAGES.size() == 5, "the book has five pages and 24 things")
 	var all_have_words: bool = true
 	for item_id: String in CollectionBook.all_items():
 		if Locale.t("about_" + item_id) == "about_" + item_id or GoodsCatalog.icon_path(item_id) == "":
@@ -1210,7 +1210,7 @@ func _check_book(main: Node) -> void:
 	await process_frame
 	var book: Control = hud.get("_book") as Control
 	var title: Label = hud.get("_book_title") as Label
-	check(book.visible and title.text.contains("/7"), "the book opens on the farm page from the journal")
+	check(book.visible and title.text.contains("/8"), "the book opens on the farm page from the journal")
 	hud.call("_turn_book", 3)
 	check(title.text.contains(Locale.t("book_cave")), "the arrows turn to the cave page")
 	hud.call("_turn_book", -3)
@@ -1472,6 +1472,17 @@ func _check_juice(main: Node) -> void:
 	hud.refresh()
 	var listed: Array = hud._bag_shown.map(func(row: Dictionary) -> String: return str(row["item"]))
 	check(not listed.has("watermelon_seeds") and listed.has("eggs") and listed.has("tomato_seeds"), "the bag lists only what the boy has")
+	var onion: Dictionary = CropCatalog.get_crop("onion")
+	var onions_before: int = bag.count_of("onions")
+	bag.add_item("onion_seeds", 3)
+	bag.add_item("onions", 2)
+	var kept: Inventory = Inventory.new()
+	kept.from_data(bag.to_data())
+	check(kept.count_of("onion_seeds") == 3 and kept.count_of("onions") == onions_before + 2 and bag.found.has("onions"), "onion seeds and onions are kept in the save and the book")
+	kept.free()
+	check(onion.get("seasons", []) == ["Winter"] and GoodsCatalog.sell_price("onions") == 45 and ResourceLoader.exists(GoodsCatalog.icon_path("onions")) and Locale.t("onions") != "onions", "the onion is a winter crop with a price, a picture and a name")
+	bag.take_item("onion_seeds", 3)
+	bag.take_item("onions", 2)
 	var map: WorldMap = hud._world_map
 	map.zoom_at(2.0)
 	var zoomed: float = map.zoom

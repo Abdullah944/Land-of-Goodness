@@ -809,9 +809,13 @@ func _buy_caravan(choice: String) -> void:
 	_dialogue().open_lines(PackedStringArray([note]))
 	_refresh()
 
+## The seller offers the seeds that grow this season, so nothing he sells is wasted and the window stays short.
 func _seed_choices() -> PackedStringArray:
 	var choices: PackedStringArray = []
+	var season: String = _season()
 	for crop_id: String in CropCatalog.ids():
+		if not (CropCatalog.get_crop(crop_id).get("seasons", []) as Array).has(season):
+			continue
 		choices.append("%s|%s" % [crop_id, _seed_label(CropCatalog.get_crop(crop_id))])
 	choices.append("cancel|%s" % Locale.t("cancel"))
 	return choices

@@ -8,10 +8,12 @@ const TURNIP: String = "turnip"
 const TOMATO: String = "tomato"
 const WHEAT: String = "wheat"
 const WATERMELON: String = "watermelon"
+const ONION: String = "onion"
 const PLANTS: Texture2D = preload("res://assets/farming/crops/turnip.png")
 const TOMATO_SHEET: Texture2D = preload("res://assets/farming/crops/tomato.png")
 const WHEAT_SHEET: Texture2D = preload("res://assets/farming/crops/wheat.png")
 const MELON_SHEET: Texture2D = preload("res://assets/farming/crops/watermelon.png")
+const ONION_SHEET: Texture2D = preload("res://assets/farming/crops/onion.png")
 
 const _CROPS: Dictionary = {
 	"turnip": {
@@ -90,10 +92,29 @@ const _CROPS: Dictionary = {
 			Rect2(128, 0, 32, 32),
 		],
 	},
+	## The winter crop: quicker than wheat, so winter is not a thin season.
+	"onion": {
+		"name": "Onion",
+		"seed_name": "Onion seed",
+		"seed_item": "onion_seeds",
+		"harvest_item": "onions",
+		"harvest_amount": 1,
+		"mature_stage": 3,
+		"seed_price": 20,
+		"sell_price": 45,
+		"seasons": ["Winter"],
+		"texture": ONION_SHEET,
+		"sprites": [
+			Rect2(0, 0, 32, 32),
+			Rect2(32, 0, 32, 32),
+			Rect2(64, 0, 32, 32),
+			Rect2(96, 0, 32, 32),
+		],
+	},
 }
 
 static func ids() -> PackedStringArray:
-	return PackedStringArray(["turnip", "tomato", "wheat", "watermelon"])
+	return PackedStringArray(["turnip", "tomato", "wheat", "watermelon", "onion"])
 
 static func has_crop(crop_id: String) -> bool:
 	return _CROPS.has(crop_id)

@@ -134,6 +134,16 @@
       "asset_id": "758ba1ac-f55b-4c7b-83ab-06ca5d1d00fa",
       "sha12": "c19f0baacdae",
       "label": "assets/farming/sprinkler.png"
+    },
+    {
+      "asset_id": "b2dfd2a0-b340-4838-8b01-425f12c57f2b",
+      "sha12": "40db6477bbd3",
+      "label": "style guide: turnip growth sheet (assets/farming/crops/turnip.png)"
+    },
+    {
+      "asset_id": "ce995f96-a778-43b9-af63-259cb58e1074",
+      "sha12": "8a60a2c7d932",
+      "label": "onion growth stages and bulb (cut into assets/farming/crops/onion.png and assets/items/goods/onions.png)"
     }
   ]
 }

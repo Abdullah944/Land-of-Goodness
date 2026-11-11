@@ -26,7 +26,7 @@ const _EXTRAS: Dictionary = {
 	"hamour": {"sell": 140, "icon": "res://assets/items/goods/hamour.png"},
 }
 
-const _CROP_ICONS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons"]
+const _CROP_ICONS: Array[String] = ["turnips", "tomatoes", "wheat", "watermelons", "onions"]
 
 static func extra_ids() -> PackedStringArray:
 	return PackedStringArray(["eggs", "milk", "wool", "feed", "copper", "pearl", "iron", "sprinkler", "toy_dhow", "maid", "sheim", "safi", "zubaidi", "hamour"])

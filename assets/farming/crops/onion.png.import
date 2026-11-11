@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://j6mlyhivnbuv"
+path="res://.godot/imported/onion.png-08a8b700002a9036cd149d6a33ff0823.res"
+
+[deps]
+
+source_file="res://assets/farming/crops/onion.png"
+dest_files=["res://.godot/imported/onion.png-08a8b700002a9036cd149d6a33ff0823.res"]
+
+[params]
+
+game_size=Vector2(128, 32)
