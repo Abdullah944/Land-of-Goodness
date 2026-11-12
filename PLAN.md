@@ -1,6 +1,6 @@
 # Land of Goodness — Plan
 
-Short status of the project. Updated 2026-11-11. The long design reference is `doc/LAND_OF_KHAIR_PLAN.md`; the store sheet is `doc/STORE.md`.
+Short status of the project. Updated 2026-11-12. The long design reference is `doc/LAND_OF_KHAIR_PLAN.md`; the store sheet is `doc/STORE.md`.
 
 ## Goal
 
@@ -20,19 +20,21 @@ No fighting, no ads, no purchases, nature sounds only.
 
 ## Now
 
-- Waiting for the owner: see "Waiting on me" on Trello
+- The game is finished. Waiting for the owner (3 cards in "Waiting on me" on Trello):
+  1. Play the latest build on the iPhone and note anything odd
+  2. Find a reviewer for the mosque and prayer reminder
+  3. Create the app in App Store Connect and give a privacy page link
 
 ## Next
 
-1. Reviewer for the mosque and prayer reminder (owner finds one)
-2. Owner reads the Arabic and picks the word for dhow
-3. Owner creates the app in App Store Connect and gives a privacy page address
-4. TestFlight upload, after the owner says yes
-5. Fix what the owner and testers report from the iPhone
+1. Fix what the owner reports from the iPhone
+2. Change anything the reviewer asks for
+3. TestFlight upload, after the owner says yes
 
 ## Ideas / later
 
-- Sea and wind recordings for the harbor and winter nights (needs the owner's OK to download)
+- Owner, no rush (Trello "Later"): pick the word for dhow, OK to download sea and wind sounds, SpriteCook credits
+
 - Footsteps and animal sounds
 - Replace pictures if any look wrong (needs SpriteCook credits; 0 left)
 - Remove 63 picture files the game never uses (19 MB)
