@@ -1,3 +1,5 @@
+Read PLAN.md before starting work.
+
 ## Trello tasks
 
 The owner tracks every project's tasks on the Trello board "All Projects" (https://trello.com/b/57ED1jPJ/all-projects), through the Trello connector. Lists: To do, In progress, Waiting on me, Done.
