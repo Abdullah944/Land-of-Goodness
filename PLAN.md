@@ -34,7 +34,6 @@ No fighting, no ads, no purchases, nature sounds only.
 ## Ideas / later
 
 - Owner, no rush (Trello "Later"): pick the word for dhow, OK to download sea and wind sounds, SpriteCook credits
-
 - Footsteps and animal sounds
 - Replace pictures if any look wrong (needs SpriteCook credits; 0 left)
 - Remove 63 picture files the game never uses (19 MB)
