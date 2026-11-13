@@ -2,6 +2,8 @@
 # Purpose: The Quran on the mosque's shelf, to listen to. A list of the 114 suras; tap one to hear it recited
 # by Mishary Alafasy. No Quran text is shown. Each sura is downloaded only when the player asks, once, and
 # then plays without internet (see QuranAudio). The last sura is remembered, so the list offers it next time.
+# The recitation keeps playing after the window is closed, so the player can listen while farming; a small
+# bar at the top of the screen shows the sura with pause and stop. It opens from the menu or the mosque shelf.
 
 class_name QuranReader
 extends CanvasLayer
@@ -15,6 +17,7 @@ const HEAD_H: float = 30.0
 const TOP: float = HEAD_H + 10.0
 const NAME_FONT: int = 24
 const BAR_W: float = 300.0
+const MINI_SIZE: Vector2 = Vector2(230, 30)
 ## A press that moves less than this is a tap, not a drag.
 const TAP_SLOP: float = 8.0
 
@@ -40,35 +43,50 @@ var _sura: int = 0
 var _downloading: int = 0
 ## Tests turn this off, so they never download anything.
 static var allow_network: bool = true
+## True while a recitation is playing; the nature sounds stay quiet meanwhile.
+static var reciting: bool = false
+var _mini: Panel
+var _mini_name: Button
+var _mini_pause: Button
 var _press_at: Vector2 = Vector2.INF
 var _scroll_at_press: int = 0
 var _moved: bool = false
 
 func _ready() -> void:
 	layer = 4
-	visible = false
 	_build()
+	_page.visible = false
 	get_viewport().size_changed.connect(_fit_screen)
 
 func is_open() -> bool:
-	return visible
+	return _page.visible
 
-## Opens the list of suras.
+## Opens the window: on the sura that is playing, or on the list of suras.
 func open() -> void:
-	visible = true
+	_page.visible = true
 	_hold(true)
-	_show_list()
+	if _sura != 0 and (_player.stream != null or is_downloading()):
+		listen(_sura)
+	else:
+		_show_list()
 
+## Closes the window. A recitation that is playing goes on.
 func close() -> void:
-	_stop()
-	visible = false
+	_page.visible = false
 	_hold(false)
+
+## Ends the recitation (the X on the small bar).
+func stop_listening() -> void:
+	_stop()
+	_sura = 0
 
 ## Opens one sura's page. It plays at once when it is on the phone; otherwise the player chooses to download it.
 func listen(index: int) -> void:
 	if QuranText.sura(index).is_empty():
 		return
-	_stop()
+	var same: bool = index == _sura and (_player.stream != null or is_downloading())
+	if not same:
+		_stop()
 	_sura = index
 	var stead: Node = _systems().get_node_or_null("Stead") if _systems() != null else null
 	if stead != null:
@@ -80,6 +98,7 @@ func listen(index: int) -> void:
 	_title.text = Locale.t("quran_title")
 	Locale.apply_control(_title)
 	_name.text = "سورة %s" % str(info["name"])
+	_mini_name.text = _name.text
 	_about.text = "%s   ·   %s" % [Locale.t("quran_verses") % int(info["ayas"]), Locale.t("quran_reciter")]
 	Locale.apply_control(_about)
 	_list_scroll.visible = false
@@ -88,6 +107,9 @@ func listen(index: int) -> void:
 	_back.visible = true
 	_back.text = "◀ " + Locale.t("quran_suras")
 	Locale.apply_control(_back)
+	if same:
+		_set_play(Locale.t("quran_play") if _player.stream_paused else Locale.t("quran_pause"))
+		return
 	_bar_fill.size.x = 0.0
 	if QuranAudio.has(index):
 		_start_playing()
@@ -105,8 +127,6 @@ func is_downloading() -> bool:
 	return _downloading != 0
 
 func _show_list() -> void:
-	_stop()
-	_sura = 0
 	_title.text = Locale.t("quran_title")
 	_title.remove_theme_font_override("font")
 	Locale.apply_control(_title)
@@ -226,6 +246,7 @@ func _build() -> void:
 	_player.bus = "Master"
 	_player.finished.connect(_on_finished)
 	add_child(_player)
+	_build_mini()
 	_fit_screen()
 
 func _line(at: Vector2, size: Vector2, font_size: int) -> Label:
@@ -271,7 +292,7 @@ func _on_downloaded(result: int, code: int, _headers: PackedStringArray, _body: 
 	var kept: bool = result == HTTPRequest.RESULT_SUCCESS and code == 200 and QuranAudio.keep(index)
 	if not kept:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuranAudio.part_path(index)))
-	if index != _sura or not visible:
+	if index != _sura:
 		return
 	if kept:
 		_start_playing()
@@ -284,6 +305,7 @@ func _start_playing() -> void:
 	var sound: AudioStreamMP3 = QuranAudio.stream(_sura)
 	if sound == null:
 		return
+	_mini_name.text = "سورة %s" % str(QuranText.sura(_sura)["name"])
 	_player.stream = sound
 	_player.stream_paused = false
 	_player.play()
@@ -305,7 +327,12 @@ func _stop() -> void:
 		_downloading = 0
 
 func _process(_delta: float) -> void:
-	if not visible or _sura == 0:
+	reciting = _player.playing and not _player.stream_paused
+	var active: bool = _sura != 0 and (_player.playing or is_downloading())
+	_mini.visible = active and not _page.visible and _world_shows()
+	if _mini.visible:
+		_mini_pause.text = "▶" if _player.stream_paused or is_downloading() else "II"
+	if _sura == 0:
 		return
 	if is_downloading():
 		var total: int = _http.get_body_size()
@@ -377,6 +404,43 @@ func _tap_list(local_position: Vector2) -> void:
 func _fit_screen() -> void:
 	var view: Vector2 = get_viewport().get_visible_rect().size
 	_window.position = (view - WINDOW_SIZE) * 0.5
+	_mini.position = Vector2((view.x - MINI_SIZE.x) * 0.5, 6.0)
+
+## The small bar at the top of the screen while a recitation plays and the window is closed.
+func _build_mini() -> void:
+	_mini = Panel.new()
+	_mini.size = MINI_SIZE
+	_mini.visible = false
+	_mini.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.CREAM, UiStyle.BROWN, 2))
+	add_child(_mini)
+	_mini_name = _mini_button(Vector2(4, 3), Vector2(MINI_SIZE.x - 72.0, MINI_SIZE.y - 6.0))
+	_mini_name.add_theme_font_override("font", Locale.arabic_face())
+	_mini_name.clip_text = true
+	_mini_name.pressed.connect(open)
+	_mini_pause = _mini_button(Vector2(MINI_SIZE.x - 66.0, 3), Vector2(30, MINI_SIZE.y - 6.0))
+	_mini_pause.pressed.connect(_on_play)
+	var stop: Button = _mini_button(Vector2(MINI_SIZE.x - 34.0, 3), Vector2(30, MINI_SIZE.y - 6.0))
+	stop.text = "X"
+	stop.pressed.connect(stop_listening)
+
+func _mini_button(at: Vector2, size: Vector2) -> Button:
+	var button: Button = Button.new()
+	button.position = at
+	button.size = size
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_size_override("font_size", 11)
+	UiStyle.button(button)
+	_mini.add_child(button)
+	return button
+
+## The small bar hides while the menu, a talk or another window covers the world.
+func _world_shows() -> bool:
+	var scene: Node = get_tree().current_scene
+	var hud: Node = scene.get_node_or_null("UI/HUD") if scene != null else null
+	if hud == null:
+		return true
+	var menu: Variant = hud.get("_menu")
+	return not (menu is Control and (menu as Control).visible)
 
 func _hold(on: bool) -> void:
 	var scene: Node = get_tree().current_scene

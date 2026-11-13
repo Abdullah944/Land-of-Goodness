@@ -46,8 +46,8 @@ var _zoom_in: Button
 var _language: Button
 var _sound: Button
 var _journal_tab: Button
-var _journal: Label
-var _journal2: Label
+## The quests page: rows rebuilt each time it is shown.
+var _quest_rows: Control
 var _pages_button: Button
 var _book_button: Button
 ## The collections book: one page at a time, its pictures, and the line about the picture tapped.
@@ -396,10 +396,8 @@ func refresh() -> void:
 		tab.add_theme_color_override("font_hover_color", UiStyle.CREAM if open else Color("3f2d27"))
 	_craft.text = Locale.t("craft_seeds")
 	Locale.apply_control(_craft)
-	if _journal != null:
+	if _quest_rows != null:
 		_quest_box.visible = _tab == "quests"
-		_journal.visible = _tab == "quests"
-		_journal2.visible = _tab == "quests"
 		_pages_button.visible = _tab == "quests"
 		_book_button.visible = _tab == "quests"
 		_book.visible = _tab == "book"
@@ -412,13 +410,8 @@ func refresh() -> void:
 		if page_systems != null:
 			_pages_button.text = Locale.t("pages") % [Journal.found(page_systems), Journal.PAGE_COUNT]
 			Locale.apply_control(_pages_button)
-		if _journal.visible:
-			var lines: PackedStringArray = _journal_text(stead).split("\n")
-			var half: int = int(ceil(lines.size() / 2.0))
-			_journal.text = "\n".join(lines.slice(0, half))
-			_journal2.text = "\n".join(lines.slice(half))
-			Locale.apply_control(_journal)
-			Locale.apply_control(_journal2)
+		if _quest_box.visible:
+			_fill_quests(stead)
 	var tool_now: String = _player().tool
 	for i: int in _slots.size():
 		_slots[i].modulate = Color("d9a441") if tool_now == TOOLS[i] and i != SEED_SLOT else Color.WHITE
@@ -698,9 +691,9 @@ func _build_menu() -> void:
 	page.add_child(window)
 	# MENU_INNER is the cream paper inside the wooden frame; everything sits in it with the same gaps.
 	var inner: Rect2 = MENU_INNER.grow(-MENU_PAD)
-	var tab_ids: Array[String] = ["bag", "settings", "quests", "map", "close"]
-	var tab_words: Array[String] = ["tab_bag", "tab_settings", "journal", "tab_map", "tab_close"]
-	var tab_w: float = (inner.size.x - MENU_GAP * 4.0) / 5.0
+	var tab_ids: Array[String] = ["bag", "quests", "map", "quran", "settings", "close"]
+	var tab_words: Array[String] = ["tab_bag", "journal", "tab_map", "tab_quran", "tab_settings", "tab_close"]
+	var tab_w: float = (inner.size.x - MENU_GAP * (tab_ids.size() - 1)) / float(tab_ids.size())
 	_tab_shut_box = UiStyle.box(UiStyle.BEIGE, UiStyle.BROWN, 1)
 	_tab_open_box = UiStyle.box(UiStyle.BROWN, UiStyle.DARK, 1)
 	for i: int in tab_ids.size():
@@ -710,6 +703,8 @@ func _build_menu() -> void:
 		tab.add_theme_font_size_override("font_size", 11)
 		if tab_ids[i] == "close":
 			tab.pressed.connect(_toggle_menu)
+		elif tab_ids[i] == "quran":
+			tab.pressed.connect(_open_quran)
 		else:
 			tab.pressed.connect(_show_tab.bind(tab_ids[i]))
 		_tab_keys[tab] = tab_words[i]
@@ -734,17 +729,11 @@ func _build_menu() -> void:
 	_quest_box = _nine(LIST_BOX, upper.position, upper.size, 11, 2)
 	_quest_box.visible = false
 	page.add_child(_quest_box)
-	var column_w: float = (upper.size.x - 30.0) * 0.5
-	_journal = _make_label(Vector2(10, 6), Color("3f2d27"))
-	_journal2 = _make_label(Vector2(20.0 + column_w, 6), Color("3f2d27"))
-	for column: Label in [_journal, _journal2]:
-		column.size = Vector2(column_w, upper.size.y - 12.0)
-		column.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		column.add_theme_font_size_override("font_size", 11)
-		column.add_theme_constant_override("line_spacing", -4)
-		column.clip_text = true
-		column.visible = false
-		_quest_box.add_child(column)
+	_quest_rows = Control.new()
+	_quest_rows.size = upper.size
+	_quest_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_quest_rows.clip_contents = true
+	_quest_box.add_child(_quest_rows)
 	var half_w: float = (lower.size.x - MENU_GAP) * 0.5
 	_pages_button = _tab_button("", lower.position)
 	_book_button = _tab_button("", Vector2(lower.position.x + half_w + MENU_GAP, lower.position.y))
@@ -1001,40 +990,155 @@ func _show_tab(tab: String) -> void:
 	_tab = tab
 	refresh()
 
-func _journal_text(stead: Stead) -> String:
+## The Quran tab closes the menu and opens the Quran window, which plays on while the boy farms.
+func _open_quran() -> void:
+	_toggle_menu()
+	var reader: Node = get_tree().current_scene.get_node_or_null("UI/QuranReader")
+	if reader != null:
+		reader.call("open")
+
+## The quests page. Left: the steps, the current one marked with a hint under it (or the village projects later).
+## Right, past a thin line: the village's Khair with a bar, today's request from a neighbor, and tomorrow's weather.
+func _fill_quests(stead: Stead) -> void:
+	for old: Node in _quest_rows.get_children():
+		_quest_rows.remove_child(old)
+		old.queue_free()
 	if stead == null:
-		return ""
-	var lines: PackedStringArray = PackedStringArray()
+		return
+	var box: Vector2 = _quest_rows.size
+	var right_to_left: bool = Locale.language == "ar"
+	var left_w: float = floor(box.x * 0.62)
+	var side_x: float = left_w + 8.0
+	var side_w: float = box.x - side_x - 8.0
+	var y: float = 6.0
 	var works: VillageWorks = get_tree().current_scene.get_node_or_null("Systems/VillageWorks") as VillageWorks
 	if stead.is_established() and works != null:
-		lines.append(Locale.t("journal_works"))
-		for project: Dictionary in VillageWorks.PROJECTS:
-			lines.append("%s %s" % ["[x]" if works.is_done(str(project["id"])) else "[  ]", Locale.t(str(project["id"]))])
+		# The village projects in two short columns, ticked when built.
+		var column_w: float = floor(left_w * 0.5)
+		for i: int in VillageWorks.PROJECTS.size():
+			var project: Dictionary = VillageWorks.PROJECTS[i]
+			var done: bool = works.is_done(str(project["id"]))
+			var row_y: float = 6.0 + (i % 3) * 22.0
+			_quest_row("done" if done else "next", Locale.t(str(project["id"])), row_y, column_w, right_to_left, false, (i / 3) * column_w)
 	else:
-		# Finished steps are ticked; only the current step and the one after it are shown ahead.
-		var ahead: int = 0
-		for step: Dictionary in stead.steps():
-			var done: bool = bool(step["done"])
-			if not done:
-				ahead += 1
-				if ahead > 2:
-					break
-			var mark: String = "[x]" if done else ("  >" if ahead == 1 else "[  ]")
-			lines.append("%s %s" % [mark, Locale.t(str(step["key"])).trim_prefix("Quest: ").trim_prefix("المهمة: ")])
-			if not done and ahead == 1 and stead.where_hint() != "":
-				lines.append(stead.where_hint())
+		# The current step on a light strip with its hint under it, then the step after it.
+		var all: Array[Dictionary] = stead.steps()
+		for i: int in all.size():
+			if bool(all[i]["done"]):
+				continue
+			y = _quest_row("now", _step_text(str(all[i]["key"])), y, left_w, right_to_left, true)
+			if stead.where_hint() != "":
+				y = _quest_note(stead.where_hint(), y - 1.0, left_w, right_to_left)
+			if i + 1 < all.size():
+				_quest_row("next", _step_text(str(all[i + 1]["key"])), y + 2.0, left_w, right_to_left, false)
+			break
+	# A thin line between the steps and the side column.
+	var line: ColorRect = ColorRect.new()
+	line.color = Color(UiStyle.BROWN, 0.35)
+	line.size = Vector2(1, box.y - 12.0)
+	line.position = Vector2(box.x - left_w - 1.0 if right_to_left else left_w, 6.0)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_quest_rows.add_child(line)
+	var side: float = box.x - side_x - side_w if right_to_left else side_x
+	var kindness: Kindness = get_tree().current_scene.get_node_or_null("Systems/Kindness") as Kindness
+	var side_y: float = 6.0
+	if kindness != null:
+		_quest_label(Locale.t("khair_line") % [kindness.points, Kindness.MAX_POINTS], Vector2(side, side_y - 3.0), Vector2(side_w, 15), 10, UiStyle.DARK, right_to_left)
+		side_y += 18.0
+		var bar: ColorRect = ColorRect.new()
+		bar.color = UiStyle.BEIGE
+		bar.position = Vector2(side, side_y)
+		bar.size = Vector2(side_w, 5)
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_quest_rows.add_child(bar)
+		var fill: ColorRect = ColorRect.new()
+		fill.color = Color("d9a441")
+		var share: float = clampf(float(kindness.points) / float(Kindness.MAX_POINTS), 0.0, 1.0)
+		fill.size = Vector2(side_w * share, 5)
+		fill.position = Vector2(side_w - fill.size.x if right_to_left else 0.0, 0.0)
+		bar.add_child(fill)
+		side_y += 7.0
 	if works != null and works.requests_open():
 		var wish: Dictionary = works.request_today()
 		if not bool(wish.get("done", false)):
 			var who: String = str(wish.get("person", ""))
-			lines.append(Locale.t("journal_request") % [Locale.t(who if who == "jassim" else who + "_name"), int(wish.get("amount", 0)), Locale.item(str(wish.get("item", "")))])
-	var kindness: Kindness = get_tree().current_scene.get_node_or_null("Systems/Kindness") as Kindness
-	if kindness != null:
-		lines.append(Locale.t("khair_line") % [kindness.points, Kindness.MAX_POINTS])
+			var request: String = Locale.t("journal_request") % [Locale.t(who if who == "jassim" else who + "_name"), int(wish.get("amount", 0)), Locale.item(str(wish.get("item", "")))]
+			var label: Label = _quest_label(request, Vector2(side, side_y), Vector2(side_w, 30), 10, UiStyle.DARK, right_to_left)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+			label.clip_text = false
+			label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+			label.add_theme_constant_override("line_spacing", -5)
+			side_y += 31.0
 	var clock: GameClock = get_tree().current_scene.get_node_or_null("Systems/Clock") as GameClock
 	if clock != null:
-		lines.append(clock.forecast_text())
-	return "\n".join(lines)
+		_quest_label(clock.forecast_text(), Vector2(side, side_y), Vector2(side_w, 16), 10, UiStyle.BROWN, right_to_left)
+
+## A step's words without the "Quest:" start, beginning with a capital letter in English.
+func _step_text(key: String) -> String:
+	var text: String = Locale.t(key).trim_prefix("Quest: ").trim_prefix("المهمة: ")
+	return text.left(1).to_upper() + text.substr(1) if Locale.language != "ar" else text
+
+## One row: a mark (done, now, next) and the words beside it. The current step sits on a light strip.
+func _quest_row(kind: String, text: String, y: float, width: float, right_to_left: bool, strong: bool, shift: float = 0.0) -> float:
+	var h: float = 21.0 if strong else 19.0
+	if strong:
+		var strip: ColorRect = ColorRect.new()
+		strip.color = Color(UiStyle.BEIGE, 0.7)
+		strip.size = Vector2(width - 8.0, h)
+		strip.position = Vector2(_quest_x(shift + 4.0, strip.size.x, right_to_left), y - 1.0)
+		strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_quest_rows.add_child(strip)
+	var mark: QuestMark = QuestMark.new()
+	mark.kind = kind
+	mark.size = Vector2(11, 11)
+	mark.position = Vector2(_quest_x(shift + 10.0, 11.0, right_to_left), y + (h - 11.0) * 0.5 - 1.0)
+	_quest_rows.add_child(mark)
+	var color: Color = UiStyle.BROWN if kind == "done" else UiStyle.DARK
+	_quest_label(text, Vector2(_quest_x(shift + 26.0, width - 30.0, right_to_left), y - 1.0), Vector2(width - 30.0, h), 12 if strong else 11, color, right_to_left)
+	return y + h + 2.0
+
+## The hint under the current step: where to find what is missing, on one line.
+func _quest_note(text: String, y: float, width: float, right_to_left: bool) -> float:
+	_quest_label(text, Vector2(_quest_x(26.0, width - 34.0, right_to_left), y), Vector2(width - 34.0, 15), 10, UiStyle.BROWN, right_to_left)
+	return y + 17.0
+
+## Arabic pages run from the right, so every x is measured from the other side.
+func _quest_x(x: float, width: float, right_to_left: bool) -> float:
+	return _quest_rows.size.x - x - width if right_to_left else x
+
+func _quest_label(text: String, at: Vector2, size: Vector2, font_size: int, color: Color, right_to_left: bool) -> Label:
+	var label: Label = _make_label(at, color)
+	label.size = size
+	label.text = text
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if right_to_left else HORIZONTAL_ALIGNMENT_LEFT
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.clip_text = true
+	_quest_rows.add_child(label)
+	Locale.apply_control(label)
+	label.add_theme_font_size_override("font_size", font_size)
+	return label
+
+## The small round mark in front of a step: a tick when done, gold now, an empty ring for later.
+class QuestMark extends Control:
+	var kind: String = "next"
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var middle: Vector2 = size * 0.5
+		var radius: float = size.x * 0.5
+		match kind:
+			"done":
+				draw_circle(middle, radius, UiStyle.BROWN)
+				draw_polyline(PackedVector2Array([middle + Vector2(-2.6, 0.2), middle + Vector2(-0.6, 2.2), middle + Vector2(2.8, -2.0)]), UiStyle.CREAM, 1.4, true)
+			"now":
+				draw_circle(middle, radius, Color("d9a441"))
+				draw_arc(middle, radius - 0.5, 0.0, TAU, 20, UiStyle.DARK, 1.0, true)
+			_:
+				draw_arc(middle, radius - 0.7, 0.0, TAU, 20, UiStyle.BROWN, 1.2, true)
 
 ## The book sits where the quest list is, with arrows to turn its four pages.
 func _build_book(page: Control, area: Rect2) -> void:

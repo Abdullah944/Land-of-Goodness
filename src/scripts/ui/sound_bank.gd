@@ -109,7 +109,8 @@ func _process(delta: float) -> void:
 	var level: int = _level("music_level")
 	var season: String = _clock_value("season", "Spring")
 	var now: Dictionary = mood(_place(), season, _clock_value("weather", "Clear") == "Rain", _minute())
-	var on: bool = level >= 1
+	# Nature sounds stay quiet while the Quran is recited.
+	var on: bool = level >= 1 and not QuranReader.reciting
 	_keep_loop(_rain, on and bool(now["rain"]), RAIN_FADE_SECONDS)
 	_keep_loop(_waterfall, on and bool(now["waterfall"]), FADE_SECONDS)
 	# Birds and crickets go quiet while it rains, and come back after the rain.

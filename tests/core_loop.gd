@@ -1407,6 +1407,8 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	check(not reader.is_downloading(), "the tests never download anything")
 	reader.close()
 	check(not reader.is_open() and not walker.busy, "closing the Quran lets the boy walk again")
+	var menu_tabs: Array = (main.get_node("UI/HUD").get("_tab_ids") as Dictionary).values()
+	check("quran" in menu_tabs and "quests" in menu_tabs, "the menu has a Quran tab")
 	check(map.current_key() == "Village", "the map shows the mosque inside the village")
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
 	for i: int in 3:
