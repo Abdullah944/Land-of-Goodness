@@ -39,10 +39,10 @@ No fighting, no ads, no purchases, nature sounds only.
 
 - Owner, no rush (Trello "Later"): pick the word for dhow, OK to download sea and wind sounds, SpriteCook credits
 - Footsteps and animal sounds
-- Replace pictures if any look wrong (SpriteCook: 44 credits left)
+- Replace pictures if any look wrong (SpriteCook: 8 credits left)
 - Quran recitation, each sura an optional download (owner picks a reciter first)
 - Remove 63 picture files the game never uses (19 MB)
-- Look into two short frame dips seen once on the iPhone
+- Short frame dips on the iPhone: one place now and then drops to 42-47 frames a second for a moment, in any place and any weather (simplest road included), so not the game's load. Checked twice on 2026-11-13 with the 44x24 field fully planted: the farm holds 59-60.
 - Android build
 
 ## Owner notes
