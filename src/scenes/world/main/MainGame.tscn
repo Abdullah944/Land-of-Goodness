@@ -25,6 +25,7 @@
 [ext_resource type="Script" path="res://src/scripts/farm/letters.gd" id="21_letters"]
 [ext_resource type="Script" path="res://src/scripts/World/world_life.gd" id="22_life"]
 [ext_resource type="Script" path="res://src/scripts/ui/quran_reader.gd" id="23_quran"]
+[ext_resource type="Script" path="res://src/scripts/World/jamaah.gd" id="24_jamaah"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -77,6 +78,9 @@ script = ExtResource("21_letters")
 
 [node name="WorldLife" type="Node" parent="Systems"]
 script = ExtResource("22_life")
+
+[node name="Jamaah" type="Node" parent="Systems"]
+script = ExtResource("24_jamaah")
 
 [node name="World" type="Node2D" parent="." unique_id=51229956]
 y_sort_enabled = true

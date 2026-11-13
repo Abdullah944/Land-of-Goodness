@@ -1442,6 +1442,35 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	for i: int in 3:
 		await process_frame
 	check(_place_name(main) == "Village", "the mosque door leads back out to the village")
+	# Prayer together: at prayer time the neighbors leave for the mosque, the boy is asked, prays, and they come back.
+	var systems: Node = main.get_node("Systems")
+	var jamaah: Jamaah = systems.get_node("Jamaah") as Jamaah
+	var village_merchant: Node = _place(main).get_node_or_null("Merchant")
+	var talk: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
+	talk.visible = false
+	(main.find_child("Player", true, false) as Player).busy = false
+	jamaah.begin("asr")
+	for i: int in 3:
+		await process_frame
+	check(jamaah.active and village_merchant != null and Activities.role_of(village_merchant) == "", "at prayer time the merchant goes to the mosque and cannot be talked to")
+	check(talk.visible, "the boy is asked whether he will pray with the neighbors")
+	talk.call("_pick", "jamaah_go")
+	for i: int in 8:
+		await process_frame
+	check(jamaah.praying and _place_name(main) == "MosqueInside" and (main.find_child("Player", true, false) as Player).busy, "joining takes the boy to the mosque to pray")
+	check(is_equal_approx(jamaah.left, Jamaah.LENGTH) or jamaah.left > Jamaah.LENGTH - 1.0, "the prayer lasts two minutes")
+	var khair_before: int = (systems.get_node("Kindness") as Kindness).points
+	jamaah.left = 0.01
+	for i: int in 3:
+		await process_frame
+	check(not jamaah.active and not jamaah.praying and (systems.get_node("Kindness") as Kindness).points > khair_before, "after the prayer the village's Khair grows")
+	check(talk.visible, "the elder says may Allah accept")
+	talk.visible = false
+	(main.find_child("Player", true, false) as Player).busy = false
+	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
+	for i: int in 3:
+		await process_frame
+	check(Activities.role_of(_place(main).get_node("Merchant")) == "merchant", "the merchant is back at his stall after the prayer")
 	check(_place(main).get_node_or_null("Carpenter") == null, "the carpenter works indoors, not out in the village")
 	loader.go_to(load("res://src/scenes/world/workshop/Workshop_inside.tscn") as PackedScene, "PlayerSpawn")
 	for i: int in 3:

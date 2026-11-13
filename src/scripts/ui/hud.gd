@@ -1381,7 +1381,12 @@ func _check_prayer() -> void:
 		var key: String = "%d-%d-%d %s" % [date["year"], date["month"], date["day"], name]
 		if now >= at and now < at + 15 and key != _prayer_told:
 			_prayer_told = key
-			_show_prayer_banner(Locale.t("prayer_now") % Locale.t(name))
+			# The neighbors go to the mosque and the boy is asked to join them; the banner is only a fallback.
+			var jamaah: Jamaah = get_tree().current_scene.get_node_or_null("Systems/Jamaah") as Jamaah
+			if jamaah != null:
+				jamaah.begin(name)
+			else:
+				_show_prayer_banner(Locale.t("prayer_now") % Locale.t(name))
 
 func _show_prayer_banner(text: String) -> void:
 	_prayer_text.text = text

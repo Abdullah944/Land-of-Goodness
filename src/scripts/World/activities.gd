@@ -1178,6 +1178,9 @@ func _gather_note(item: String) -> String:
 
 ## Markers and walls have no role at all, which is not the same as a person's role.
 static func role_of(mark: Node) -> String:
+	# A neighbor who has gone to the mosque for the prayer is not there to talk to.
+	if mark.has_meta("at_prayer"):
+		return ""
 	var role: Variant = mark.get("role")
 	return "" if role == null else str(role)
 
