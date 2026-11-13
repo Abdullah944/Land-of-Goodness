@@ -20,6 +20,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - Menu tidy: every tab fits inside the wooden frame, the open tab is marked (2026-11-13)
 - Every window has the menu's look; big talking portraits of the five neighbors in the talk box (2026-11-13)
 - Quran reading: the full Tanzil text, opened from the Quran shelf in the mosque (2026-11-13)
+- Art check 2: animals by the barn, clearer rain, seasonal grass and trees, a centerpiece for each festival (2026-11-13)
 
 ## Now
 
