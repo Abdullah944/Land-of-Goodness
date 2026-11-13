@@ -1,5 +1,6 @@
 # tools/quran_shots.gd
-# Purpose: Takes pictures of the Quran reader (the sura list in English and Arabic, and a few suras) to check the text.
+# Purpose: Takes pictures of the Quran window (the sura list in English and Arabic, and the listening page).
+# Only Al-Fatiha is ever downloaded; for every other sura the network is off.
 # Run from the project root, with a save path that is not the real one:
 #   KHAIR_SAVE=<scratch>/q_save.json KHAIR_SHOTS=<scratch>/q Godot --path . --resolution 1688x780 -s tools/quran_shots.gd --quit-after 12000
 
@@ -50,15 +51,32 @@ func _run() -> void:
 		await _shot("list_" + lang)
 		reader.close()
 	reader.open()
-	for sura: int in [1, 2, 9, 95, 112]:
-		reader.read(sura)
-		await create_timer(0.6).timeout
-		await _shot("sura_%d" % sura)
-	reader.read(2)
-	await create_timer(0.3).timeout
-	(reader.get("_read_scroll") as ScrollContainer).scroll_vertical = 3000
+	QuranReader.allow_network = false
+	reader.listen(2)
+	await create_timer(0.6).timeout
+	await _shot("sura_2_not_saved")
+	reader.call("_on_play")
 	await create_timer(0.4).timeout
-	await _shot("sura_2_middle")
+	await _shot("sura_2_offline")
+	QuranReader.allow_network = true
+	for lang: String in ["en", "ar"]:
+		Locale.language = lang
+		reader.listen(1)
+		await create_timer(0.4).timeout
+		if not QuranAudio.has(1):
+			reader.call("_on_play")
+			await create_timer(0.3).timeout
+			await _shot("fatiha_downloading_" + lang)
+			for i: int in 60:
+				if not reader.is_downloading():
+					break
+				await create_timer(0.5).timeout
+		await create_timer(3.0).timeout
+		print("FATIHA saved=", QuranAudio.has(1), " playing=", reader.is_playing(), " bytes=", FileAccess.get_file_as_bytes(QuranAudio.file_path(1)).size())
+		await _shot("fatiha_playing_" + lang)
+		reader.call("_on_play")
+		await create_timer(0.3).timeout
+		await _shot("fatiha_paused_" + lang)
 	reader.close()
 	reader.open()
 	await create_timer(0.4).timeout

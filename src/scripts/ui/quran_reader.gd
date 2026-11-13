@@ -1,8 +1,7 @@
 # src/scripts/ui/quran_reader.gd
-# Purpose: The Quran on the mosque's shelf. A list of the 114 suras; tap one to read it.
-# The text is shown exactly as in the Tanzil file (see QuranText), in the Naskh font, right to left.
-# The last sura read is remembered, so the list offers "Continue" next time.
-# Recitation is not part of this yet: it will be an optional download for each sura, once a reciter is chosen.
+# Purpose: The Quran on the mosque's shelf, to listen to. A list of the 114 suras; tap one to hear it recited
+# by Mishary Alafasy. No Quran text is shown. Each sura is downloaded only when the player asks, once, and
+# then plays without internet (see QuranAudio). The last sura is remembered, so the list offers it next time.
 
 class_name QuranReader
 extends CanvasLayer
@@ -14,7 +13,8 @@ const GAP: float = 4.0
 ## The top row: title, the back button and the X. Everything else starts below it.
 const HEAD_H: float = 30.0
 const TOP: float = HEAD_H + 10.0
-const VERSE_FONT: int = 15
+const NAME_FONT: int = 24
+const BAR_W: float = 300.0
 ## A press that moves less than this is a tap, not a drag.
 const TAP_SLOP: float = 8.0
 
@@ -28,11 +28,18 @@ var _list_body: Control
 var _list_buttons: Array[Button] = []
 var _continue: Button
 var _credit: Label
-var _read_scroll: ScrollContainer
-var _read_body: VBoxContainer
-var _basmala: Label
-var _verses: Label
+var _listen: Control
+var _name: Label
+var _about: Label
+var _status: Label
+var _play: Button
+var _bar_fill: ColorRect
+var _http: HTTPRequest
+var _player: AudioStreamPlayer
 var _sura: int = 0
+var _downloading: int = 0
+## Tests turn this off, so they never download anything.
+static var allow_network: bool = true
 var _press_at: Vector2 = Vector2.INF
 var _scroll_at_press: int = 0
 var _moved: bool = false
@@ -53,13 +60,15 @@ func open() -> void:
 	_show_list()
 
 func close() -> void:
+	_stop()
 	visible = false
 	_hold(false)
 
-## Opens one sura at its start.
-func read(index: int) -> void:
+## Opens one sura's page. It plays at once when it is on the phone; otherwise the player chooses to download it.
+func listen(index: int) -> void:
 	if QuranText.sura(index).is_empty():
 		return
+	_stop()
 	_sura = index
 	var stead: Node = _systems().get_node_or_null("Stead") if _systems() != null else null
 	if stead != null:
@@ -68,33 +77,41 @@ func read(index: int) -> void:
 		if save != null:
 			save.call("write_now")
 	var info: Dictionary = QuranText.sura(index)
-	_title.text = "سورة %s" % str(info["name"])
-	_title.add_theme_font_override("font", Locale.arabic_face())
-	_basmala.visible = QuranText.has_basmala(index)
-	var parts: PackedStringArray = PackedStringArray()
-	var count: int = QuranText.verses(index).size()
-	for number: int in range(1, count + 1):
-		parts.append("%s ﴿%s﴾" % [QuranText.shown_verse(index, number), QuranText.arabic_number(number)])
-	_verses.text = " ".join(parts)
+	_title.text = Locale.t("quran_title")
+	Locale.apply_control(_title)
+	_name.text = "سورة %s" % str(info["name"])
+	_about.text = "%s   ·   %s" % [Locale.t("quran_verses") % int(info["ayas"]), Locale.t("quran_reciter")]
+	Locale.apply_control(_about)
 	_list_scroll.visible = false
 	_continue.visible = false
-	_credit.visible = false
-	_read_scroll.visible = true
+	_listen.visible = true
 	_back.visible = true
 	_back.text = "◀ " + Locale.t("quran_suras")
 	Locale.apply_control(_back)
-	_read_scroll.scroll_vertical = 0
+	_bar_fill.size.x = 0.0
+	if QuranAudio.has(index):
+		_start_playing()
+	else:
+		_set_status(Locale.t("quran_once"))
+		_set_play(Locale.t("quran_get"))
 
 func showing_sura() -> int:
-	return _sura if _read_scroll.visible else 0
+	return _sura if _listen.visible else 0
+
+func is_playing() -> bool:
+	return _player.playing and not _player.stream_paused
+
+func is_downloading() -> bool:
+	return _downloading != 0
 
 func _show_list() -> void:
+	_stop()
 	_sura = 0
 	_title.text = Locale.t("quran_title")
 	_title.remove_theme_font_override("font")
 	Locale.apply_control(_title)
 	_back.visible = false
-	_read_scroll.visible = false
+	_listen.visible = false
 	_list_scroll.visible = true
 	_credit.visible = true
 	_credit.text = Locale.t("quran_credit")
@@ -146,7 +163,7 @@ func _build() -> void:
 	_close = _button("X", Vector2(WINDOW_SIZE.x - 36.0, 4), Vector2(30, HEAD_H))
 	_close.pressed.connect(close)
 	_continue = _button("", Vector2(8, TOP), Vector2(WINDOW_SIZE.x - 16.0, ROW_H))
-	_continue.pressed.connect(func() -> void: read(_last_read()))
+	_continue.pressed.connect(func() -> void: listen(_last_read()))
 	_list_scroll = _scroller()
 	_window.add_child(_list_scroll)
 	_list_body = Control.new()
@@ -171,38 +188,141 @@ func _build() -> void:
 	_credit.add_theme_font_size_override("font_size", 8)
 	_credit.add_theme_color_override("font_color", UiStyle.BROWN)
 	_window.add_child(_credit)
-	_read_scroll = _scroller()
-	_read_scroll.position = Vector2(8, TOP)
-	_read_scroll.size = Vector2(WINDOW_SIZE.x - 16.0, WINDOW_SIZE.y - TOP - 8.0)
-	_window.add_child(_read_scroll)
-	_read_body = VBoxContainer.new()
-	_read_body.custom_minimum_size = Vector2(WINDOW_SIZE.x - 24.0, 0)
-	_read_body.mouse_filter = Control.MOUSE_FILTER_STOP
-	_read_body.add_theme_constant_override("separation", 4)
-	_read_body.gui_input.connect(_on_drag.bind(_read_scroll, false))
-	_read_scroll.add_child(_read_body)
-	_basmala = _quran_label(VERSE_FONT + 2)
-	_basmala.text = QuranText.basmala()
-	_basmala.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_read_body.add_child(_basmala)
-	_verses = _quran_label(VERSE_FONT)
-	# Lines are filled by widening the spaces only. Stretching letters (kashida) would change how the words look.
-	_verses.horizontal_alignment = HORIZONTAL_ALIGNMENT_FILL
-	_verses.justification_flags = TextServer.JUSTIFICATION_WORD_BOUND | TextServer.JUSTIFICATION_SKIP_LAST_LINE
-	_read_body.add_child(_verses)
+	_listen = Control.new()
+	_listen.position = Vector2(8, TOP)
+	_listen.size = Vector2(WINDOW_SIZE.x - 16.0, WINDOW_SIZE.y - TOP - 26.0)
+	_listen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_listen.visible = false
+	_window.add_child(_listen)
+	var wide: float = _listen.size.x
+	_name = _line(Vector2(0, 8), Vector2(wide, 40), NAME_FONT)
+	_name.add_theme_font_override("font", Locale.arabic_face())
+	_about = _line(Vector2(0, 52), Vector2(wide, 18), 11)
+	_about.add_theme_color_override("font_color", UiStyle.BROWN)
+	var bar: ColorRect = ColorRect.new()
+	bar.color = UiStyle.BEIGE
+	bar.position = Vector2((wide - BAR_W) * 0.5, 84)
+	bar.size = Vector2(BAR_W, 6)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_listen.add_child(bar)
+	_bar_fill = ColorRect.new()
+	_bar_fill.color = UiStyle.BROWN
+	_bar_fill.size = Vector2(0, 6)
+	_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(_bar_fill)
+	_status = _line(Vector2(0, 96), Vector2(wide, 18), 10)
+	_status.add_theme_color_override("font_color", UiStyle.BROWN)
+	_play = _button("", Vector2(0, 0), Vector2(180, 34))
+	_play.reparent(_listen)
+	_play.position = Vector2((wide - 180.0) * 0.5, 126)
+	_play.add_theme_font_size_override("font_size", 13)
+	_play.pressed.connect(_on_play)
+	_http = HTTPRequest.new()
+	_http.use_threads = true
+	_http.timeout = 60.0
+	_http.request_completed.connect(_on_downloaded)
+	add_child(_http)
+	_player = AudioStreamPlayer.new()
+	_player.bus = "Master"
+	_player.finished.connect(_on_finished)
+	add_child(_player)
 	_fit_screen()
 
-func _quran_label(font_size: int) -> Label:
+func _line(at: Vector2, size: Vector2, font_size: int) -> Label:
 	var label: Label = Label.new()
-	label.custom_minimum_size = Vector2(WINDOW_SIZE.x - 24.0, 0)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.text_direction = Control.TEXT_DIRECTION_RTL
-	label.add_theme_font_override("font", Locale.arabic_face())
+	label.position = at
+	label.size = size
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_constant_override("line_spacing", 6)
 	label.add_theme_color_override("font_color", UiStyle.DARK)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_listen.add_child(label)
 	return label
+
+## The one big button: download, play, pause, or play again.
+func _on_play() -> void:
+	if _sura == 0 or is_downloading():
+		return
+	if not QuranAudio.has(_sura):
+		_download()
+	elif _player.stream == null or not _player.playing:
+		_start_playing()
+	else:
+		_player.stream_paused = not _player.stream_paused
+		_set_play(Locale.t("quran_play") if _player.stream_paused else Locale.t("quran_pause"))
+
+func _download() -> void:
+	if not allow_network:
+		_set_status(Locale.t("quran_failed"))
+		return
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(QuranAudio.FOLDER))
+	_http.download_file = QuranAudio.part_path(_sura)
+	if _http.request(QuranAudio.url(_sura)) != OK:
+		_set_status(Locale.t("quran_failed"))
+		return
+	_downloading = _sura
+	_set_status(Locale.t("quran_loading") % 0)
+	_set_play("...")
+
+func _on_downloaded(result: int, code: int, _headers: PackedStringArray, _body: PackedByteArray) -> void:
+	var index: int = _downloading
+	_downloading = 0
+	var kept: bool = result == HTTPRequest.RESULT_SUCCESS and code == 200 and QuranAudio.keep(index)
+	if not kept:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuranAudio.part_path(index)))
+	if index != _sura or not visible:
+		return
+	if kept:
+		_start_playing()
+	else:
+		_bar_fill.size.x = 0.0
+		_set_status(Locale.t("quran_failed"))
+		_set_play(Locale.t("quran_get"))
+
+func _start_playing() -> void:
+	var sound: AudioStreamMP3 = QuranAudio.stream(_sura)
+	if sound == null:
+		return
+	_player.stream = sound
+	_player.stream_paused = false
+	_player.play()
+	_set_status(Locale.t("quran_saved"))
+	_set_play(Locale.t("quran_pause"))
+
+func _on_finished() -> void:
+	_bar_fill.size.x = BAR_W
+	_set_play(Locale.t("quran_again"))
+
+## Stops the recitation and any download, so nothing plays or loads after the page is left.
+func _stop() -> void:
+	if _player != null:
+		_player.stop()
+		_player.stream = null
+	if is_downloading():
+		_http.cancel_request()
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuranAudio.part_path(_downloading)))
+		_downloading = 0
+
+func _process(_delta: float) -> void:
+	if not visible or _sura == 0:
+		return
+	if is_downloading():
+		var total: int = _http.get_body_size()
+		var share: float = float(_http.get_downloaded_bytes()) / float(total) if total > 0 else 0.0
+		_bar_fill.size.x = BAR_W * clampf(share, 0.0, 1.0)
+		_set_status(Locale.t("quran_loading") % int(share * 100.0))
+	elif _player.playing and _player.stream != null:
+		var length: float = _player.stream.get_length()
+		_bar_fill.size.x = BAR_W * clampf(_player.get_playback_position() / length, 0.0, 1.0) if length > 0.0 else 0.0
+
+func _set_status(text: String) -> void:
+	_status.text = text
+	Locale.apply_control(_status)
+
+func _set_play(text: String) -> void:
+	_play.text = text
+	Locale.apply_control(_play)
 
 func _scroller() -> ScrollContainer:
 	var scroll: ScrollContainer = ScrollContainer.new()
@@ -251,7 +371,7 @@ func _tap_list(local_position: Vector2) -> void:
 	for i: int in _list_buttons.size():
 		if Rect2(_list_buttons[i].position, _list_buttons[i].size).has_point(local_position):
 			Juice.press(_list_buttons[i])
-			read(i + 1)
+			listen(i + 1)
 			return
 
 func _fit_screen() -> void:

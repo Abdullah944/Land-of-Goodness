@@ -54,7 +54,7 @@ Five neighbors each have a story. Help them, bring them food, and give to the vi
 
 ## Privacy answers (App Store Connect → App Privacy)
 
-- **Data collected:** none. The game has no accounts, no analytics, no ads and makes no network calls. The save file stays on the phone.
+- **Data collected:** none. The game has no accounts, no analytics and no ads. The save file stays on the phone. The only network use: when the player chooses a sura in the mosque, the game downloads that recitation once from cdn.islamic.network (Mishary Alafasy) and keeps it on the phone. Nothing about the player is sent.
 - **Tracking:** no.
 - **Privacy policy link:** Apple asks for one even when nothing is collected. A one-page text saying the above is enough; it needs a web address the owner controls.
 - **Notifications:** local only, at most one a day between 8 AM and 9 PM, and they can be turned off in Settings. Prayer times are worked out on the phone for Kuwait City; the game does not read the phone's location.

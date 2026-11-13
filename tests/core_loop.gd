@@ -1392,22 +1392,19 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	check(dialogue.visible and activities._shop == "mosque", "by the mihrab inside, the boy can sit quietly")
 	dialogue._pick("cancel")
 	# The Quran: the full Tanzil text, read from the shelf in the mosque.
-	check(QuranText.suras().size() == 114 and QuranText.total_verses() == 6236 and QuranText.verses(1).size() == 7 and QuranText.verses(2).size() == 286 and QuranText.verses(114).size() == 6, "the Quran has 114 suras and 6236 verses")
-	var whole: bool = true
-	for sura: Dictionary in QuranText.suras():
-		whole = whole and QuranText.verses(int(sura["index"])).size() == int(sura["ayas"])
-	check(whole, "every sura has as many verses as the sura list says")
-	var basmala_ok: bool = not QuranText.has_basmala(1) and not QuranText.has_basmala(9) and QuranText.shown_verse(1, 1) == QuranText.basmala()
-	for sura: int in range(2, 115):
-		if sura != 9:
-			basmala_ok = basmala_ok and not QuranText.shown_verse(sura, 1).begins_with("بِسْمِ") and not QuranText.shown_verse(sura, 1).begins_with("بِّسْمِ") and QuranText.shown_verse(sura, 1).length() < QuranText.verses(sura)[0].length()
-	check(basmala_ok and QuranText.shown_verse(9, 1) == QuranText.verses(9)[0], "the basmala is a heading above each sura but At-Tawba, and verse 1 of Al-Fatiha")
+	check(QuranText.suras().size() == 114 and QuranText.total_verses() == 6236 and int(QuranText.sura(1)["ayas"]) == 7 and str(QuranText.sura(114)["tname"]) == "An-Naas", "the sura list has 114 suras and 6236 verses")
+	check(QuranAudio.url(1).begins_with("https://") and QuranAudio.url(114).ends_with("/114.mp3") and QuranAudio.file_path(7).ends_with("alafasy_007.mp3"), "each sura has its own recitation file to download and keep")
+	check(not ResourceLoader.exists("res://assets/quran/quran-uthmani.txt") and not FileAccess.file_exists("res://assets/quran/quran-uthmani.txt"), "the Quran is listened to only; no Quran text ships with the game")
 	check(mosque.get_node_or_null("QuranShelf") != null and str(mosque.get_node("QuranShelf").get("role")) == "quran", "the mosque has a Quran shelf the boy can tap")
 	var reader: QuranReader = main.get_node("UI/QuranReader") as QuranReader
 	activities.talk_role("quran")
 	check(reader.is_open() and walker.busy, "tapping the shelf opens the Quran and the boy stands still")
-	reader.read(18)
-	check(reader.showing_sura() == 18 and stead.flags.get("quran_sura", 0) == 18, "a sura opens and is remembered for next time")
+	QuranReader.allow_network = false
+	reader.listen(18)
+	check(reader.showing_sura() == 18 and stead.flags.get("quran_sura", 0) == 18 and not reader.is_playing(), "a sura opens and is remembered for next time")
+	check(QuranAudio.has(18) or str(reader.get("_play").text) == Locale.t("quran_get"), "a sura not on the phone waits for the player to choose to download it")
+	reader.call("_on_play")
+	check(not reader.is_downloading(), "the tests never download anything")
 	reader.close()
 	check(not reader.is_open() and not walker.busy, "closing the Quran lets the boy walk again")
 	check(map.current_key() == "Village", "the map shows the mosque inside the village")
