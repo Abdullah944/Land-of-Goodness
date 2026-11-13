@@ -21,13 +21,15 @@ No fighting, no ads, no purchases, nature sounds only.
 - Every window has the menu's look; big talking portraits of the five neighbors in the talk box (2026-11-13)
 - Quran listening: the 114 suras recited by Mishary Alafasy, from the Quran shelf in the mosque; each sura downloads once when the player asks, no text shown (2026-11-14)
 - Art check 2: animals by the barn, clearer rain, seasonal grass and trees, a centerpiece for each festival (2026-11-13)
+- App Store Connect listing filled, not submitted (2026-11-14): Arabic and English text, 7 pictures per language, age rating 4+, Data Not Collected, free in all countries, Games / Simulation and Family
+- Android debug APK (2026-11-14): build/android/LandOfKhair-debug.apk on the ASUS, copy on the NAS; not run yet (no emulator image or Android phone); notifications are iPhone only
 
 ## Now
 
 - The game is finished. Waiting for the owner (3 cards in "Waiting on me" on Trello):
   1. Play the latest build on the iPhone and note anything odd
   2. Find a reviewer for the mosque and prayer reminder
-  3. Create the app in App Store Connect and give a privacy page link
+  3. App Store Connect: say yes to publishing the privacy and support pages (docs/, GitHub Pages), then the support and privacy links go in; set up Content Rights (the recitation is third-party content); a game rating number (RCN) is needed for South Korea
 
 ## Next
 
@@ -40,9 +42,8 @@ No fighting, no ads, no purchases, nature sounds only.
 - Owner, no rush (Trello "Later"): pick the word for dhow, OK to download sea and wind sounds, SpriteCook credits
 - Footsteps and animal sounds
 - Replace pictures if any look wrong (SpriteCook: 8 credits left)
-- Remove 63 picture files the game never uses (19 MB)
 - Short frame dips on the iPhone: one place now and then drops to 42-47 frames a second for a moment, in any place and any weather (simplest road included), so not the game's load. Checked twice on 2026-11-13 with the 44x24 field fully planted: the farm holds 59-60.
-- Android build
+- Android: run the APK on a phone or emulator; notifications need the plugin's Android files and a Gradle build
 
 ## Owner notes
 
