@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://src/scripts/ui/fish_game.gd" id="20_fish"]
 [ext_resource type="Script" path="res://src/scripts/farm/letters.gd" id="21_letters"]
 [ext_resource type="Script" path="res://src/scripts/World/world_life.gd" id="22_life"]
+[ext_resource type="Script" path="res://src/scripts/ui/quran_reader.gd" id="23_quran"]
 
 [node name="MainGame" type="Node" unique_id=159932284]
 process_mode = 1
@@ -105,6 +106,10 @@ script = ExtResource("20_fish")
 process_mode = 3
 layer = 2
 script = ExtResource("14_title")
+
+[node name="QuranReader" type="CanvasLayer" parent="UI"]
+process_mode = 3
+script = ExtResource("23_quran")
 
 [node name="Ending" type="CanvasLayer" parent="UI"]
 process_mode = 3

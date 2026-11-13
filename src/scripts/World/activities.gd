@@ -349,6 +349,10 @@ func talk_role(role: String) -> void:
 	var dialogue: DialogueBox = _dialogue()
 	if dialogue.visible:
 		return
+	if role == "quran":
+		# The Quran shelf in the mosque opens the reader straight away.
+		_open_quran()
+		return
 	_listen(dialogue)
 	_gift_to = role
 	_greet(role)
@@ -363,7 +367,7 @@ func talk_role(role: String) -> void:
 				_enter_mosque()
 				return
 			_shop = "mosque"
-			dialogue.offer(Locale.t("mosque_line"), _labeled(["pray", "cancel"]))
+			dialogue.offer(Locale.t("mosque_line"), _labeled(["pray", "read_quran", "cancel"]))
 		"workbench":
 			_shop = "work"
 			dialogue.offer(Locale.t("workbench"), _labeled(["craft", "build", "animals", "quests", "cancel"]))
@@ -452,6 +456,8 @@ func _on_shop_choice(choice: String) -> void:
 		_shop = ""
 		if choice == "pray":
 			_pray()
+		elif choice == "read_quran":
+			_open_quran()
 		return
 	if _shop == "craft" or _shop == "build" or _shop == "animals" or _shop == "supplies":
 		_work_action(choice)
@@ -827,6 +833,11 @@ func _menu_choices() -> PackedStringArray:
 	return _labeled(["sell_turnips", "sell_goods", "buy_seeds", "give_food", "cancel"])
 
 ## A quiet moment in the mosque. Once a day it also brings back one heart.
+func _open_quran() -> void:
+	var reader: Node = get_tree().current_scene.get_node_or_null("UI/QuranReader")
+	if reader != null:
+		reader.call("open")
+
 func _pray() -> void:
 	var stead: Stead = get_parent().get_node_or_null("Stead") as Stead
 	var inventory: Inventory = get_parent().get_node("Inventory") as Inventory

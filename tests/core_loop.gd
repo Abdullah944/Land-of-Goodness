@@ -1384,11 +1384,30 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 		await physics_frame
 	check(_place_name(main) == "MosqueInside" and not walker.has_tapped_cell, "stepping inside stops the old walk, so the boy doesn't bounce back out")
 	var mosque: Node = _place(main)
-	check(_place_name(main) == "MosqueInside" and mosque.get_node_or_null("Decor") != null and mosque.get_node_or_null("Room_minbar_2") != null and mosque.get_node_or_null("Room_shoe_rack_10") != null and mosque.find_children("*fountain*", "", false).is_empty(), "the mosque has an open prayer hall with a carpet, a minbar, and shoe racks by the door")
+	check(_place_name(main) == "MosqueInside" and mosque.get_node_or_null("Decor") != null and mosque.get_node_or_null("Room_minbar_2") != null and mosque.get_node_or_null("Room_shoe_rack_9") != null and mosque.find_children("*fountain*", "", false).is_empty(), "the mosque has an open prayer hall with a carpet, a minbar, and shoe racks by the door")
 	var dialogue: DialogueBox = main.get_node("UI/Dialogue") as DialogueBox
 	activities.talk_role("mosque")
 	check(dialogue.visible and activities._shop == "mosque", "by the mihrab inside, the boy can sit quietly")
 	dialogue._pick("cancel")
+	# The Quran: the full Tanzil text, read from the shelf in the mosque.
+	check(QuranText.suras().size() == 114 and QuranText.total_verses() == 6236 and QuranText.verses(1).size() == 7 and QuranText.verses(2).size() == 286 and QuranText.verses(114).size() == 6, "the Quran has 114 suras and 6236 verses")
+	var whole: bool = true
+	for sura: Dictionary in QuranText.suras():
+		whole = whole and QuranText.verses(int(sura["index"])).size() == int(sura["ayas"])
+	check(whole, "every sura has as many verses as the sura list says")
+	var basmala_ok: bool = not QuranText.has_basmala(1) and not QuranText.has_basmala(9) and QuranText.shown_verse(1, 1) == QuranText.basmala()
+	for sura: int in range(2, 115):
+		if sura != 9:
+			basmala_ok = basmala_ok and not QuranText.shown_verse(sura, 1).begins_with("بِسْمِ") and not QuranText.shown_verse(sura, 1).begins_with("بِّسْمِ") and QuranText.shown_verse(sura, 1).length() < QuranText.verses(sura)[0].length()
+	check(basmala_ok and QuranText.shown_verse(9, 1) == QuranText.verses(9)[0], "the basmala is a heading above each sura but At-Tawba, and verse 1 of Al-Fatiha")
+	check(mosque.get_node_or_null("QuranShelf") != null and str(mosque.get_node("QuranShelf").get("role")) == "quran", "the mosque has a Quran shelf the boy can tap")
+	var reader: QuranReader = main.get_node("UI/QuranReader") as QuranReader
+	activities.talk_role("quran")
+	check(reader.is_open() and walker.busy, "tapping the shelf opens the Quran and the boy stands still")
+	reader.read(18)
+	check(reader.showing_sura() == 18 and stead.flags.get("quran_sura", 0) == 18, "a sura opens and is remembered for next time")
+	reader.close()
+	check(not reader.is_open() and not walker.busy, "closing the Quran lets the boy walk again")
 	check(map.current_key() == "Village", "the map shows the mosque inside the village")
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
 	for i: int in 3:

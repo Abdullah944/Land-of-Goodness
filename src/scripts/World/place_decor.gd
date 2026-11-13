@@ -180,14 +180,14 @@ const MOSQUE_WALL: Array[String] = ["wall", "wall_window", "wall", "wall_window"
 const MOSQUE_CARPET: Rect2 = Rect2(-158, 10, 348, 142)
 ## The qibla wall carries the decoration: the mihrab in the middle (it is in the scene, so it can be tapped),
 ## carved screens on each side, the minbar to its right, and lamps hung evenly along it.
-## Shelves of the Quran stand in the two back corners, two columns hold the roof, and shoe racks wait by the door.
+## The Quran shelf stands in the back-left corner (it is in the scene, so it can be tapped to read),
+## two columns hold the roof, and shoe racks wait by the door.
 ## Washing for prayer happens outside, at the fountain beside the mosque.
 const MOSQUE_FURNITURE: Array = [
 	["wall_lattice", Vector2(-23, 10), Vector2.ZERO], ["wall_lattice", Vector2(55, 10), Vector2.ZERO],
 	["minbar", Vector2(92, 30), Vector2(38, 10)],
 	["hanging_lamp", Vector2(-120, 4), Vector2.ZERO], ["hanging_lamp", Vector2(-56, 4), Vector2.ZERO],
 	["hanging_lamp", Vector2(136, 4), Vector2.ZERO], ["hanging_lamp", Vector2(172, 4), Vector2.ZERO],
-	["bookcase", Vector2(-132, 28), Vector2(46, 8)],
 	["pillar", Vector2(-92, 104), Vector2(14, 6)], ["pillar", Vector2(124, 104), Vector2(14, 6)],
 	["shoe_rack", Vector2(-44, 174), Vector2(36, 8)], ["shoe_rack", Vector2(76, 174), Vector2(36, 8)],
 ]

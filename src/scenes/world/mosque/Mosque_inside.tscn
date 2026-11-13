@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://src/scripts/house/door.gd" id="2_door"]
 [ext_resource type="Script" path="res://src/scripts/World/spot_mark.gd" id="3_mark"]
 [ext_resource type="Texture2D" path="res://assets/building/Mosque/room/mihrab.png" id="4_mihrab"]
+[ext_resource type="Texture2D" path="res://assets/building/Mosque/room/bookcase.png" id="5_shelf"]
 
 [sub_resource type="RectangleShape2D" id="Rect_exit"]
 size = Vector2(48, 17)
@@ -34,3 +35,11 @@ person = ExtResource("4_mihrab")
 stand_on_feet = true
 role = "mosque"
 block_size = Vector2(48, 10)
+
+[node name="QuranShelf" type="Node2D" parent="."]
+position = Vector2(-132, 28)
+script = ExtResource("3_mark")
+person = ExtResource("5_shelf")
+stand_on_feet = true
+role = "quran"
+block_size = Vector2(46, 8)

@@ -164,6 +164,12 @@ const _EN: Dictionary = {
 	"map_pond": "Pond",
 	"nothing_stored": "Nothing in the bag or the chest.",
 	"pray": "Pray",
+	"read_quran": "Read the Quran",
+	"quran_title": "The Holy Quran",
+	"quran_suras": "Suras",
+	"quran_continue": "Continue: %s",
+	"quran_verses": "%d verses",
+	"quran_credit": "Quran text: Tanzil Project (tanzil.net)",
 	"prayed": "You prayed with the neighbors. Your heart feels calm.",
 	"quests_body": "Keep going. The note under the day shows the next step.",
 	"dinars": "%d dinars",
@@ -654,6 +660,12 @@ const _AR: Dictionary = {
 	"map_pond": "البركة",
 	"nothing_stored": "لا شيء في الحقيبة ولا في الصندوق.",
 	"pray": "صلِّ",
+	"read_quran": "قراءة القرآن",
+	"quran_title": "القرآن الكريم",
+	"quran_suras": "السور",
+	"quran_continue": "تابع: %s",
+	"quran_verses": "%d آية",
+	"quran_credit": "نص القرآن: مشروع تنزيل (tanzil.net)",
 	"prayed": "صليت مع الجيران. قلبك مطمئن.",
 	"quests_body": "تابع. السطر تحت اليوم يريك الخطوة التالية.",
 	"dinars": "%d دينار",
@@ -1004,6 +1016,10 @@ static var _arabic_face: FontVariation
 static func font() -> Font:
 	if language != "ar":
 		return null
+	return arabic_face()
+
+## The Arabic font, whatever the game's language (the Quran is always shown in it).
+static func arabic_face() -> Font:
 	if _arabic_face != null:
 		return _arabic_face
 	if not ResourceLoader.exists(FONT_PATH):
