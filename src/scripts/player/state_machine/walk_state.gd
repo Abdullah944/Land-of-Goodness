@@ -7,6 +7,9 @@ extends NodeState
 @export var animated_sprite_2d: AnimatedSprite2D
 
 var _blocked: float = 0.0
+## The way around obstacles to the current goal, and the goal it was found for.
+var _path: PackedVector2Array = PackedVector2Array()
+var _path_goal: Vector2 = Vector2.INF
 
 func _on_physics_process(_delta: float) -> void:
 	var keys: Vector2 = player.get_move_direction()
@@ -30,6 +33,7 @@ func _give_up_when_blocked(delta: float, direction: Vector2) -> void:
 	_blocked += delta
 	if _blocked > 0.4:
 		_blocked = 0.0
+		_path_goal = Vector2.INF
 		player.cancel_tap()
 
 func _set_facing(direction: Vector2, from_keys: bool) -> void:
@@ -49,8 +53,10 @@ func _move_direction() -> Vector2:
 	var keys: Vector2 = player.get_move_direction()
 	if keys != Vector2.ZERO:
 		player.cancel_tap()
+		_path_goal = Vector2.INF
 		return keys
 	if player.busy or not player.has_tapped_cell:
+		_path_goal = Vector2.INF
 		return Vector2.ZERO
 	if player.walking_indoors:
 		return _indoor_direction()
@@ -62,20 +68,31 @@ func _move_direction() -> Vector2:
 		if player.reached_walk_spot(dirt) or player.distance_to_cell(dirt, player.tapped_cell) <= 8.0:
 			player.cancel_tap()
 			return Vector2.ZERO
-		return player.direction_to_cell(dirt, player.tapped_cell)
+		return _toward(dirt.to_global(dirt.map_to_local(player.tapped_cell)))
 	if player.is_within_reach(dirt):
 		player.face_cell(dirt, player.tapped_cell)
 		player.ask_for_tool()
 		return Vector2.ZERO
-	return player.direction_to_cell(dirt, player.tapped_cell)
+	return _toward(dirt.to_global(dirt.map_to_local(player.tapped_cell)))
 
 func _indoor_direction() -> Vector2:
 	if player.reached_indoor_point():
 		player.arrive_indoors()
 		player.cancel_tap()
 		return Vector2.ZERO
-	var feet: Vector2 = player.global_position + Vector2(0, 20)
-	return feet.direction_to(player.tapped_point)
+	return _toward(player.tapped_point)
+
+## The direction to walk now: along the way around obstacles when there is one, else straight to the goal.
+func _toward(goal: Vector2) -> Vector2:
+	var feet: Vector2 = player.global_position + WalkPath.FEET
+	if _path_goal == Vector2.INF or _path_goal.distance_to(goal) > 1.0:
+		_path_goal = goal
+		_path = WalkPath.find(player, goal)
+	while _path.size() > 1 and feet.distance_to(_path[0]) < 4.0:
+		_path.remove_at(0)
+	if _path.size() > 1:
+		return feet.direction_to(_path[0])
+	return (player.global_position + Vector2(0, 20)).direction_to(goal)
 
 func _on_next_transitions() -> void:
 	if player.wants_water:

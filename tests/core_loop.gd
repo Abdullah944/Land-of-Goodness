@@ -1420,6 +1420,24 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	var menu_tabs: Array = (main.get_node("UI/HUD").get("_tab_ids") as Dictionary).values()
 	check("quran" in menu_tabs and "quests" in menu_tabs, "the menu has a Quran tab")
 	check(map.current_key() == "Village", "the map shows the mosque inside the village")
+	# Walking: a far tap finds the way around the forest's lake, and passing a fishing spot does not start fishing.
+	loader.go_to(load("res://src/scenes/world/forest/Forest.tscn") as PackedScene, "PlayerSpawn")
+	for i: int in 4:
+		await physics_frame
+	var hiker: Player = main.find_child("Player", true, false) as Player
+	hiker.global_position = Vector2(200, 297)
+	for i: int in 2:
+		await physics_frame
+	var way: PackedVector2Array = WalkPath.find(hiker, Vector2(-600, 258))
+	check(way.size() >= 2 and way[way.size() - 1].distance_to(Vector2(-600, 258)) < 12.0, "a far tap finds the way around the lake (%d turns)" % way.size())
+	var fishing: Area2D = _place(main).get_node("FishingSpot") as Area2D
+	hiker.walking_indoors = true
+	hiker.has_tapped_cell = true
+	hiker.tapped_point = Vector2(-600, 258)
+	fishing.call("_on_body_entered", hiker)
+	var fish_window: FishGame = main.get_node("UI/FishGame") as FishGame
+	check(not fish_window.is_open(), "walking past a fishing spot on the way elsewhere does not start fishing")
+	hiker.cancel_tap()
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
 	for i: int in 3:
 		await process_frame
