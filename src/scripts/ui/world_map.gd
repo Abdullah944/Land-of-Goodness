@@ -29,16 +29,18 @@ const TAP_SLOP: float = 6.0
 const NOTE_TIME: int = 2200
 ## Small spots that show their names once the map is zoomed in this far.
 const DETAIL_ZOOM: float = 1.6
+## The size the land, places and roads below are drawn for.
+const WORLD: Vector2 = Vector2(429, 142)
 
 ## key: [spot on the map, picture, name]
 const PLACES: Dictionary = {
 	"Home": [Vector2(74, 76), "res://assets/building/house/Desert Adobe Rooftop House Sprite.png", "to_home"],
 	"Cave": [Vector2(28, 28), "res://assets/building/Cave/Sandstone Cave Entrance.png", "to_cave"],
 	"Road": [Vector2(176, 56), "res://assets/props/stall_produce.png", "to_road"],
-	"Forest": [Vector2(112, 114), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
-	"Village": [Vector2(276, 66), "res://assets/building/Mosque/mosque.png", "to_village"],
+	"Forest": [Vector2(112, 104), "res://assets/nature/Leafy 16-Bit Farm Tree Sprite.png", "to_forest"],
+	"Village": [Vector2(276, 62), "res://assets/building/Mosque/mosque.png", "to_village"],
 	"Orchard": [Vector2(250, 18), "res://assets/nature/Date palm.png", "to_orchard"],
-	"Harbor": [Vector2(296, 108), "res://assets/building/harbor/Dhow.png", "to_harbor"],
+	"Harbor": [Vector2(320, 104), "res://assets/building/harbor/Dhow.png", "to_harbor"],
 }
 const LINKS: Array = [
 	["Home", "Road"], ["Road", "Village"], ["Home", "Forest"], ["Forest", "Village"], ["Village", "Orchard"], ["Village", "Harbor"], ["Home", "Cave"],
@@ -123,7 +125,7 @@ func zoom_at(factor: float, screen_point: Vector2 = Vector2.INF) -> void:
 func center_on_you() -> void:
 	if zoom < 1.5:
 		zoom = 2.0
-	offset = size * 0.5 - current_spot() * zoom
+	offset = size * 0.5 - current_spot() * _fit() * zoom
 	_keep_in_view()
 
 ## True when the boy may travel to this place from the map: home always, other places once walked to.
@@ -253,7 +255,7 @@ func _touch_middle() -> Vector2:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), SEA)
-	draw_set_transform(offset, 0.0, Vector2(zoom, zoom))
+	draw_set_transform(offset, 0.0, _fit() * zoom)
 	_draw_land()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	# Names, icons, and the boy's mark keep their size on screen, so zooming in shows more room between them.
@@ -286,7 +288,11 @@ func _near_place(at: Vector2) -> bool:
 	return false
 
 func _screen(map_point: Vector2) -> Vector2:
-	return offset + map_point * zoom
+	return offset + map_point * _fit() * zoom
+
+## The land is drawn on a WORLD-sized sheet; this stretches it to fill the map box, whatever its size.
+func _fit() -> Vector2:
+	return Vector2(size.x / WORLD.x, size.y / WORLD.y) if size.x > 0.0 and size.y > 0.0 else Vector2.ONE
 
 func _draw_land() -> void:
 	_wave_lines()

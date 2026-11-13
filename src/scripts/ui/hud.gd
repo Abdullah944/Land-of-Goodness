@@ -18,6 +18,12 @@ const ICONS: Array[String] = [
 const SEED_SLOT: int = 5
 const HEART_ICON: String = "res://assets/ui/Terracotta pixel heart icon.png"
 const KHAIR_W: float = 78.0
+## The cream paper inside the wooden menu frame, measured on the frame picture at the menu's size.
+const MENU_INNER: Rect2 = Rect2(20, 19, 420, 153)
+const MENU_PAD: float = 4.0
+const MENU_GAP: float = 4.0
+const MENU_TAB_H: float = 22.0
+const LIST_BOX: String = "res://assets/ui/menu/Empty tall pixel-art list box.png"
 
 var _time: Label
 var _gold: Label
@@ -77,6 +83,11 @@ var _music_button: Button
 var _help_button: Button
 var _eat: Button
 var _tab_keys: Dictionary = {}
+var _tab_ids: Dictionary = {}
+var _settings_box: Panel
+var _tab_open_box: StyleBoxFlat
+var _tab_shut_box: StyleBoxFlat
+var _quest_box: Panel
 var _world_map: WorldMap
 var _prayer_button: Button
 var _prayer_next: Label
@@ -365,16 +376,28 @@ func refresh() -> void:
 	_craft.visible = _tab == "bag"
 	_world_map.visible = _tab == "map"
 	_eat.visible = _tab == "bag"
-	_eat.size = Vector2(60, 24)
 	_eat.text = Locale.t("eat")
 	Locale.apply_control(_eat)
+	# A bigger Arabic letter must not make the button grow out of its row.
+	_eat.size = Vector2(80, _bar.size.y)
+	_craft.size = Vector2(140, _bar.size.y)
 	_refresh_settings(stead)
+	_settings_box.visible = _tab == "settings"
+	# The open tab is dark with light letters, so it is clear which page is showing. The book belongs to Quests.
+	var open_tab: String = "quests" if _tab == "book" else _tab
 	for tab: Button in _tab_keys:
 		tab.text = Locale.t(_tab_keys[tab])
 		Locale.apply_control(tab)
+		var open: bool = _tab_ids[tab] == open_tab
+		var look: StyleBox = _tab_open_box if open else _tab_shut_box
+		for state: String in ["normal", "hover", "focus"]:
+			tab.add_theme_stylebox_override(state, look)
+		tab.add_theme_color_override("font_color", UiStyle.CREAM if open else Color("3f2d27"))
+		tab.add_theme_color_override("font_hover_color", UiStyle.CREAM if open else Color("3f2d27"))
 	_craft.text = Locale.t("craft_seeds")
 	Locale.apply_control(_craft)
 	if _journal != null:
+		_quest_box.visible = _tab == "quests"
 		_journal.visible = _tab == "quests"
 		_journal2.visible = _tab == "quests"
 		_pages_button.visible = _tab == "quests"
@@ -673,70 +696,98 @@ func _build_menu() -> void:
 	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	window.size = page.size
 	page.add_child(window)
-	var inner: Rect2 = Rect2(20, 22, 429, 170)
-	var bag_tab: Button = _tab_button("", Vector2(inner.position.x, inner.position.y))
-	var settings_tab: Button = _tab_button("", Vector2(inner.position.x + 84.0, inner.position.y))
-	var journal_tab: Button = _tab_button("", Vector2(inner.position.x + 168.0, inner.position.y))
-	var map_tab: Button = _tab_button("", Vector2(inner.position.x + 252.0, inner.position.y))
-	map_tab.pressed.connect(_show_tab.bind("map"))
-	var close_tab: Button = _tab_button("", Vector2(inner.end.x - 78.0, inner.position.y))
-	bag_tab.pressed.connect(_show_tab.bind("bag"))
-	settings_tab.pressed.connect(_show_tab.bind("settings"))
-	journal_tab.pressed.connect(_show_tab.bind("quests"))
-	close_tab.pressed.connect(_toggle_menu)
-	_tab_keys = {bag_tab: "tab_bag", settings_tab: "tab_settings", journal_tab: "journal", map_tab: "tab_map", close_tab: "tab_close"}
+	# MENU_INNER is the cream paper inside the wooden frame; everything sits in it with the same gaps.
+	var inner: Rect2 = MENU_INNER.grow(-MENU_PAD)
+	var tab_ids: Array[String] = ["bag", "settings", "quests", "map", "close"]
+	var tab_words: Array[String] = ["tab_bag", "tab_settings", "journal", "tab_map", "tab_close"]
+	var tab_w: float = (inner.size.x - MENU_GAP * 4.0) / 5.0
+	_tab_shut_box = _slot_box(Color("e7c99a"))
+	_tab_shut_box.border_color = Color("7a4f32")
+	_tab_shut_box.set_border_width_all(1)
+	_tab_open_box = _slot_box(Color("7a4f32"))
+	_tab_open_box.border_color = Color("3f2d27")
+	_tab_open_box.set_border_width_all(1)
+	for i: int in tab_ids.size():
+		var tab: Button = _tab_button("", Vector2(inner.position.x + i * (tab_w + MENU_GAP), inner.position.y))
+		tab.size = Vector2(tab_w, MENU_TAB_H)
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.add_theme_font_size_override("font_size", 11)
+		if tab_ids[i] == "close":
+			tab.pressed.connect(_toggle_menu)
+		else:
+			tab.pressed.connect(_show_tab.bind(tab_ids[i]))
+		_tab_keys[tab] = tab_words[i]
+		_tab_ids[tab] = tab_ids[i]
+		page.add_child(tab)
+		if tab_ids[i] == "quests":
+			_journal_tab = tab
+	# The page under the tabs: one paper box for every tab, so they all look alike.
+	var body: Rect2 = Rect2(inner.position.x, inner.position.y + MENU_TAB_H + MENU_GAP, inner.size.x, inner.end.y - inner.position.y - MENU_TAB_H - MENU_GAP)
+	var bottom_h: float = 28.0
+	var upper: Rect2 = Rect2(body.position, Vector2(body.size.x, body.size.y - bottom_h - MENU_GAP))
+	var lower: Rect2 = Rect2(body.position.x, body.end.y - bottom_h, body.size.x, bottom_h)
 	_world_map = WorldMap.new()
-	_world_map.position = Vector2(inner.position.x, 48)
-	_world_map.size = Vector2(inner.size.x, 142)
+	_world_map.position = body.position
+	_world_map.size = body.size
 	_world_map.visible = false
 	_world_map.place_chosen.connect(_travel_to)
 	page.add_child(_world_map)
-	for tab: Button in _tab_keys:
-		tab.size = Vector2(78, 24)
-		tab.focus_mode = Control.FOCUS_NONE
-		page.add_child(tab)
-	_journal_tab = journal_tab
-	var column_w: float = (inner.size.x - 30.0) * 0.5
-	_journal = _make_label(Vector2(inner.position.x + 10.0, 52), Color("3f2d27"))
-	_journal2 = _make_label(Vector2(inner.position.x + 20.0 + column_w, 52), Color("3f2d27"))
+	_settings_box = _nine(LIST_BOX, body.position, body.size, 11, 2)
+	_settings_box.visible = false
+	page.add_child(_settings_box)
+	_quest_box = _nine(LIST_BOX, upper.position, upper.size, 11, 2)
+	_quest_box.visible = false
+	page.add_child(_quest_box)
+	var column_w: float = (upper.size.x - 30.0) * 0.5
+	_journal = _make_label(Vector2(10, 6), Color("3f2d27"))
+	_journal2 = _make_label(Vector2(20.0 + column_w, 6), Color("3f2d27"))
 	for column: Label in [_journal, _journal2]:
-		column.size = Vector2(column_w, 104)
+		column.size = Vector2(column_w, upper.size.y - 12.0)
 		column.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		column.add_theme_font_size_override("font_size", 11)
 		column.add_theme_constant_override("line_spacing", -4)
+		column.clip_text = true
 		column.visible = false
-		page.add_child(column)
-	_pages_button = _tab_button("", Vector2(inner.position.x + 10.0, 160))
-	var half_w: float = (inner.size.x - 26.0) * 0.5
-	_pages_button.size = Vector2(half_w, 26)
-	_pages_button.focus_mode = Control.FOCUS_NONE
-	_pages_button.add_theme_font_size_override("font_size", 12)
-	_pages_button.visible = false
+		_quest_box.add_child(column)
+	var half_w: float = (lower.size.x - MENU_GAP) * 0.5
+	_pages_button = _tab_button("", lower.position)
+	_book_button = _tab_button("", Vector2(lower.position.x + half_w + MENU_GAP, lower.position.y))
+	for button: Button in [_pages_button, _book_button]:
+		button.size = Vector2(half_w, lower.size.y)
+		button.focus_mode = Control.FOCUS_NONE
+		button.add_theme_font_size_override("font_size", 12)
+		button.visible = false
+		page.add_child(button)
 	_pages_button.pressed.connect(_read_pages)
-	page.add_child(_pages_button)
-	_book_button = _tab_button("", Vector2(inner.position.x + 16.0 + half_w, 160))
-	_book_button.size = Vector2(half_w, 26)
-	_book_button.focus_mode = Control.FOCUS_NONE
-	_book_button.add_theme_font_size_override("font_size", 12)
-	_book_button.visible = false
 	_book_button.pressed.connect(_open_book)
-	page.add_child(_book_button)
-	_build_book(page, Rect2(inner.position.x, 48, inner.size.x, 142))
-	var list: Panel = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", Vector2(inner.position.x, 48), Vector2(inner.size.x, 108), 11, 2)
+	_build_book(page, body)
+	var list: Panel = _nine(LIST_BOX, upper.position, upper.size, 11, 2)
 	page.add_child(list)
 	_list = list
 	_build_bag_rows(list)
-	var bar: Panel = _nine("res://assets/ui/menu/Empty Beige Pixel Game Bar.png", Vector2(inner.position.x, 160), Vector2(inner.size.x, 30), 8, 2)
+	# The bag's bottom row lines up with the Quests buttons: two buttons, then the purse on the right.
+	var bar: Control = Control.new()
+	bar.position = lower.position
+	bar.size = lower.size
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page.add_child(bar)
 	_bar = bar
-	var craft: Button = _tab_button("", Vector2(6, 3))
-	craft.size = Vector2(96, 24)
+	var button_h: float = bar.size.y
+	var craft: Button = _tab_button("", Vector2.ZERO)
+	craft.size = Vector2(140, button_h)
+	craft.add_theme_font_size_override("font_size", 12)
 	craft.focus_mode = Control.FOCUS_NONE
 	craft.pressed.connect(_on_craft)
 	bar.add_child(craft)
 	_craft = craft
-	_bag_money = _make_label(Vector2(180, 0), Color("3f2d27"))
-	_bag_money.size = Vector2(bar.size.x - 192, bar.size.y)
+	_eat = _tab_button(Locale.t("eat"), Vector2(craft.size.x + MENU_GAP, 0))
+	_eat.size = Vector2(80, button_h)
+	_eat.focus_mode = Control.FOCUS_NONE
+	_eat.add_theme_font_size_override("font_size", 12)
+	_eat.pressed.connect(_on_eat)
+	bar.add_child(_eat)
+	_bag_money = _make_label(Vector2(_eat.position.x + _eat.size.x + MENU_GAP, 0), Color("3f2d27"))
+	_bag_money.size = Vector2(bar.size.x - _bag_money.position.x - 6.0, bar.size.y)
 	_bag_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_bag_money.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bag_money.add_theme_font_size_override("font_size", 12)
@@ -749,27 +800,43 @@ func _build_menu() -> void:
 	_help_button = _settings_button(2, 1, _show_help)
 	_prayer_button = _settings_button(0, 2, _toggle_prayer)
 	_notice_button = _settings_button(2, 2, _toggle_notices)
-	_prayer_next = _make_label(Vector2(20.0 + 146.0, 54.0 + 2 * 39.0), UiStyle.DARK)
-	_prayer_next.size = Vector2(136, 36)
+	var spot: Rect2 = _settings_spot(1, 2)
+	_prayer_next = _make_label(spot.position, UiStyle.DARK)
+	_prayer_next.size = spot.size
 	_prayer_next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_prayer_next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prayer_next.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_prayer_next.add_theme_font_size_override("font_size", 12)
-	_menu.add_child(_prayer_next)
-	_eat = _tab_button(Locale.t("eat"), Vector2(108, 3))
-	_eat.size = Vector2(60, 24)
-	_eat.focus_mode = Control.FOCUS_NONE
-	_eat.pressed.connect(_on_eat)
-	bar.add_child(_eat)
+	_settings_box.add_child(_prayer_next)
+
+## Where a setting sits in the settings box: three across, three down, with the same gaps as the rest of the menu.
+func _settings_spot(column: int, row: int) -> Rect2:
+	var pad: float = 6.0
+	var w: float = (_settings_box.size.x - pad * 2.0 - MENU_GAP * 2.0) / 3.0
+	var h: float = (_settings_box.size.y - pad * 2.0 - MENU_GAP * 2.0) / 3.0
+	return Rect2(pad + column * (w + MENU_GAP), pad + row * (h + MENU_GAP), w, h)
 
 func _settings_button(column: int, row: int, action: Callable) -> Button:
-	# Three across, so seven settings fit inside the wooden window.
-	var button: Button = _tab_button("", Vector2(20.0 + column * 146.0, 54.0 + row * 39.0))
-	button.size = Vector2(136, 34)
+	var spot: Rect2 = _settings_spot(column, row)
+	var button: Button = _tab_button("", spot.position)
+	button.size = spot.size
 	button.add_theme_font_size_override("font_size", 12)
 	button.focus_mode = Control.FOCUS_NONE
 	button.pressed.connect(action)
-	_menu.add_child(button)
+	_settings_box.add_child(button)
+	return button
+
+func _arrow_button(sign: String, at: Vector2) -> Button:
+	var button: Button = _tab_button("", at)
+	button.size = Vector2(34, 22)
+	var mark: Label = _make_label(Vector2.ZERO, Color("3f2d27"))
+	mark.text = sign
+	mark.size = button.size
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mark.add_theme_font_size_override("font_size", 10)
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(mark)
 	return button
 
 func _picture_button(path: String, height_px: int) -> Button:
@@ -984,7 +1051,7 @@ func _journal_text(stead: Stead) -> String:
 
 ## The book sits where the quest list is, with arrows to turn its four pages.
 func _build_book(page: Control, area: Rect2) -> void:
-	_book = _nine("res://assets/ui/menu/Empty tall pixel-art list box.png", area.position, area.size, 11, 2)
+	_book = _nine(LIST_BOX, area.position, area.size, 11, 2)
 	_book.visible = false
 	page.add_child(_book)
 	_book_title = _make_label(Vector2(40, 6), UiStyle.DARK)
@@ -992,13 +1059,13 @@ func _build_book(page: Control, area: Rect2) -> void:
 	_book_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_book_title.add_theme_font_size_override("font_size", 13)
 	_book.add_child(_book_title)
-	var back: Button = _tab_button("◀", Vector2(8, 5))
-	back.size = Vector2(30, 20)
+	# The arrows sit beside the title, above the pictures. Their sign is a label, so the
+	# button keeps its small size (the arrow letter alone would make it taller and cover a picture).
+	var back: Button = _arrow_button("◀", Vector2(8, 4))
 	back.focus_mode = Control.FOCUS_NONE
 	back.pressed.connect(_turn_book.bind(-1))
 	_book.add_child(back)
-	var on: Button = _tab_button("▶", Vector2(area.size.x - 38.0, 5))
-	on.size = Vector2(30, 20)
+	var on: Button = _arrow_button("▶", Vector2(area.size.x - 42.0, 4))
 	on.focus_mode = Control.FOCUS_NONE
 	on.pressed.connect(_turn_book.bind(1))
 	_book.add_child(on)
@@ -1009,8 +1076,8 @@ func _build_book(page: Control, area: Rect2) -> void:
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	for i: int in most:
 		var cell: Button = Button.new()
-		cell.position = Vector2(8.0 + i * cell_w, 38)
-		cell.size = Vector2(cell_w, 36)
+		cell.position = Vector2(8.0 + i * cell_w, 31)
+		cell.size = Vector2(cell_w, 32)
 		cell.flat = true
 		cell.expand_icon = false
 		cell.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1032,20 +1099,20 @@ func _build_book(page: Control, area: Rect2) -> void:
 		cell.add_child(mark)
 		_book_marks.append(mark)
 		# A name may run a little past its own cell, so a long one like "Watermelon" is not cut on an eight-item page.
-		var name_label: Label = _make_label(Vector2(8.0 + i * cell_w - 6.0, 74), UiStyle.DARK)
+		var name_label: Label = _make_label(Vector2(8.0 + i * cell_w - 6.0, 63), UiStyle.DARK)
 		name_label.size = Vector2(cell_w + 12.0, 14)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.add_theme_font_size_override("font_size", 9)
 		name_label.clip_text = true
 		_book.add_child(name_label)
 		_book_names.append(name_label)
-	_book_deepest = _make_label(Vector2(10, 90), UiStyle.DARK)
+	_book_deepest = _make_label(Vector2(10, 78), UiStyle.DARK)
 	_book_deepest.size = Vector2(area.size.x - 20.0, 14)
 	_book_deepest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_book_deepest.add_theme_font_size_override("font_size", 10)
 	_book.add_child(_book_deepest)
-	_book_about = _make_label(Vector2(12, 104), UiStyle.DARK)
-	_book_about.size = Vector2(area.size.x - 24.0, 34)
+	_book_about = _make_label(Vector2(12, 90), UiStyle.DARK)
+	_book_about.size = Vector2(area.size.x - 24.0, area.size.y - 93.0)
 	_book_about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_book_about.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_book_about.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1072,6 +1139,10 @@ func _refresh_book(bag: Inventory, stead: Stead) -> void:
 		_book_names[i].visible = shown
 		if not shown:
 			continue
+		# A page with fewer things keeps its row in the middle.
+		var start: float = 8.0 + (_book_cells.size() - items.size()) * cell.size.x * 0.5
+		cell.position.x = start + i * cell.size.x
+		_book_names[i].position.x = cell.position.x - 6.0
 		var item_id: String = str(items[i])
 		var have: bool = bag.found.has(item_id)
 		cell.icon = _book_icon(item_id)
