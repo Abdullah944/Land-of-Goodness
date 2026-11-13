@@ -268,6 +268,10 @@ func _snap_indoor(world_position: Vector2) -> Vector2:
 	var chest: Node = place.get_node_or_null("Chest")
 	if chest != null and chest.has_method("covers_point") and bool(chest.call("covers_point", world_position)):
 		return chest.call("foot_point")
+	# A tap anywhere on a tree's or rock's picture walks to it and works it.
+	var on_picture: Node2D = Activities.picture_at(place, world_position)
+	if on_picture != null:
+		return on_picture.global_position + _talk_from(on_picture)
 	for child: Node in place.get_children():
 		if not child is Node2D:
 			continue

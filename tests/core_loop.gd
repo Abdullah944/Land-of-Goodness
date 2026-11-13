@@ -607,6 +607,16 @@ func _check_debris(main: Node, loader: LevelLoader, activities: Activities) -> v
 	var wood: int = inventory.wood
 	check(activities.chop_at(dirt, cell) and inventory.wood == wood + 1, "clearing twigs gives wood")
 	check(not activities.chop_at(dirt, cell) and inventory.wood == wood + 1, "cleared twigs pay once")
+	# A tap on a tree's leaves, well above its foot, chooses that tree and the axe.
+	for tree_name: String in ["Tree", "Tree2"]:
+		var tree: Node2D = place.get_node(tree_name) as Node2D
+		var leaves: Rect2 = tree.call("_sprite_rect")
+		var tree_cell: Vector2i = dirt.local_to_map(dirt.to_local(tree.global_position))
+		var on_leaves: bool = true
+		for spot: Vector2 in [Vector2(0.5, 0.2), Vector2(0.3, 0.4), Vector2(0.7, 0.5), Vector2(0.5, 0.8)]:
+			var tapped: Vector2i = activities.snap_cell(dirt, dirt.local_to_map(dirt.to_local(leaves.position + leaves.size * spot)))
+			on_leaves = on_leaves and tapped == tree_cell and activities.tool_for_cell(dirt, tapped) == "axe"
+		check(on_leaves, "tapping anywhere on %s's leaves picks the axe for that tree" % tree_name)
 	var stones: Node2D = place.get_node("Debris7") as Node2D
 	var stone_cell: Vector2i = dirt.local_to_map(dirt.to_local(stones.global_position))
 	check(activities.tool_for_cell(dirt, stone_cell) == "pick", "stones ask for the pickaxe")

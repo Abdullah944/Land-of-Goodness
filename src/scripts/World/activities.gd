@@ -62,6 +62,10 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 	var place: Node = _place()
 	if place == null:
 		return cell
+	# A tap on a tree's, rock's or bush's picture means that thing, the one in front when they overlap.
+	var on_picture: Node2D = picture_at(place, dirt.to_global(dirt.map_to_local(cell)))
+	if on_picture != null:
+		return dirt.local_to_map(dirt.to_local(on_picture.global_position))
 	var best: Vector2i = cell
 	var best_distance: int = 99
 	for mark: Node in place.get_children():
@@ -85,6 +89,24 @@ func snap_cell(dirt: TileMapLayer, cell: Vector2i) -> Vector2i:
 		if close and distance < best_distance:
 			best = mark_cell
 			best_distance = distance
+	return best
+
+## Things the boy can cut, mine or pick by tapping anywhere on their picture.
+const TAP_PICTURE_GROUPS: Array[String] = ["tree", "rock", "ore", "date", "forage"]
+
+## The front-most cuttable, mineable or pickable thing whose picture covers this point, or null.
+static func picture_at(place: Node, point: Vector2) -> Node2D:
+	var best: Node2D = null
+	for mark: Node in place.get_children():
+		if not mark is Node2D or not mark.has_method("covers_tap"):
+			continue
+		var grouped: bool = false
+		for group_name: String in TAP_PICTURE_GROUPS:
+			grouped = grouped or mark.is_in_group(group_name)
+		if not grouped or not bool(mark.call("covers_tap", point)):
+			continue
+		if best == null or (mark as Node2D).global_position.y > best.global_position.y:
+			best = mark as Node2D
 	return best
 
 func tool_for_cell(dirt: TileMapLayer, cell: Vector2i) -> String:

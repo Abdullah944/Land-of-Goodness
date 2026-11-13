@@ -373,6 +373,15 @@ func _draw_talk_mark() -> void:
 		return
 	UiStyle.draw_bubble(self, to_local(player.global_position + Vector2(0, -28)))
 
+## True when a tap at this point lands on the picture itself: the middle of its width, top to feet.
+## A tap on a tree's leaves then chops that tree, not only a tap at its foot.
+func covers_tap(point: Vector2) -> bool:
+	if _picture == null or not is_visible_in_tree():
+		return false
+	var box: Rect2 = _sprite_rect()
+	var inner: Rect2 = Rect2(box.position + Vector2(box.size.x * 0.15, box.size.y * 0.05), Vector2(box.size.x * 0.7, box.size.y * 0.95 + 6.0))
+	return inner.has_point(point)
+
 func _sprite_rect() -> Rect2:
 	var size: Vector2 = _picture.get_size()
 	if fit_pixels == 0:
