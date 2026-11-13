@@ -1,6 +1,6 @@
 # Land of Goodness — Store sheet
 
-Written 2026-11-11. Everything here is a draft for the owner to read and change. Nothing has been sent to Apple.
+Written 2026-11-11, updated 2026-11-14. This text is filled into App Store Connect for the owner to read; nothing is submitted to Apple without the owner's yes.
 
 ## App facts
 
@@ -20,7 +20,7 @@ Written 2026-11-11. Everything here is a draft for the owner to read and change.
 - **Name (30 letters at most):** Land of Goodness
 - **Subtitle (30 at most):** A quiet farm by the Gulf
 - **Promotional line:** Bring your grandfather's farm back to life, and the village with it.
-- **Keywords (100 at most):** farm,farming,village,kuwait,gulf,cozy,calm,fishing,dhow,harvest,family,arabic,offline,kids
+- **Keywords (100 at most):** farm,farming,village,kuwait,gulf,cozy,calm,fishing,harvest,family,arabic,quran,offline,kids
 - **Description:**
 
 Your grandfather left you a small farm at the edge of a village by the sea. The well is dry, the market is quiet, and the neighbors are waiting to see what you will do.
@@ -30,7 +30,8 @@ Dig, plant and water. Grow turnips, tomatoes, wheat, watermelons and winter onio
 Five neighbors each have a story. Help them, bring them food, and give to the village works: the well, the palm grove, the market, the dock and the diwaniya. When the last one is finished, the whole village comes together for a festival.
 
 - A calm game: no fighting, no timers that punish you, no ads and no purchases
-- Works without the internet
+- Listen to the Quran, recited by Mishary Alafasy, while you farm
+- Works without the internet; only the Quran recitation downloads each sura once, when you choose it
 - Arabic and English
 - Nature sounds only: rain, wind, birds and the sea
 - A collections book to fill, a caravan at the end of each season, and letters from the neighbors
@@ -39,6 +40,8 @@ Five neighbors each have a story. Help them, bring them food, and give to the vi
 
 - **الاسم:** أرض الخير
 - **العنوان الفرعي:** مزرعة هادئة على ساحل الخليج
+- **النص الترويجي:** أعد الحياة إلى مزرعة جدّك، ومعها القرية كلها.
+- **الكلمات المفتاحية (100 حرف على الأكثر):** مزرعة,زراعة,قرية,الكويت,الخليج,هادئة,صيد,حصاد,عائلة,قرآن,لؤلؤ,أطفال,بدون إنترنت
 - **الوصف:**
 
 ترك لك جدّك مزرعة صغيرة على طرف قرية قرب البحر. البئر جافة، والسوق هادئ، والجيران ينتظرون ما ستفعله.
@@ -48,7 +51,8 @@ Five neighbors each have a story. Help them, bring them food, and give to the vi
 لكل جار من الجيران الخمسة قصة. ساعدهم، وقدّم لهم الطعام، وشارك في أعمال القرية: البئر وبستان النخيل والسوق والمرسى والديوانية. وحين يكتمل آخرها تجتمع القرية كلها في مهرجان.
 
 - لعبة هادئة: لا قتال ولا إعلانات ولا مشتريات
-- تعمل بلا إنترنت
+- استمع إلى القرآن الكريم بصوت مشاري العفاسي وأنت تعمل في المزرعة
+- تعمل بلا إنترنت، إلا تلاوة القرآن: تُحمَّل كل سورة مرة واحدة حين تختارها
 - بالعربية والإنجليزية
 - أصوات الطبيعة فقط: المطر والريح والطيور والبحر
 
@@ -69,7 +73,7 @@ The game shows a mosque and a prayer reminder. Step 11 of the plan (a reviewer f
 ## Pictures
 
 - **Icon:** `assets/appIcon/icon_1024.png` (1024 x 1024, set in both iPhone presets).
-- **Screenshots:** Apple needs the 6.9-inch size, 2868 x 1320 in landscape, 3 to 10 pictures for each language. `tools/store_shots.gd` takes six in English and six in Arabic (farm, village, merchant, harbor, book, map) into `build/store_screenshots/` on the Mac. They were taken on 2026-11-11 from the Mac, not from a phone, so the clock's colon can look different from the phone's.
+- **Screenshots:** Apple needs the 6.9-inch size, 2868 x 1320 in landscape, 3 to 10 pictures for each language. `tools/store_shots.gd` takes seven in English and seven in Arabic (farm, village, merchant, harbor, book, map, Quran) into `build/store_screenshots/` on the Mac. Retaken on 2026-11-14 with the bigger field, the new quests page and the Quran window. They come from the Mac, not a phone, so the clock's colon can look different from the phone's.
 
 ## How to make the store build (on the Mac)
 

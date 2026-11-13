@@ -1,5 +1,5 @@
 # tools/store_shots.gd
-# Purpose: Takes the App Store pictures (farm, village, merchant, harbor, book, map) in English and Arabic.
+# Purpose: Takes the App Store pictures (farm, village, merchant, harbor, book, map, Quran) in English and Arabic.
 # Run on the Mac from the project root, with a save path that is not the real one:
 #   KHAIR_SAVE=<scratch>/store_save.json Godot --path . --resolution 2868x1320 -s tools/store_shots.gd --quit-after 12000
 # The pictures land in build/store_screenshots/ at the size Apple asks for (6.9 inch, landscape).
@@ -115,5 +115,17 @@ func _run() -> void:
 		await create_timer(0.8).timeout
 		await _shot("map_" + lang)
 		hud.call("_toggle_menu")
+		await create_timer(0.3).timeout
+		# The mosque, listening to the Quran (Al-Fatiha, already on this Mac; nothing is downloaded).
+		loader.go_to(load("res://src/scenes/world/mosque/Mosque_inside.tscn") as PackedScene, "PlayerSpawn")
+		await create_timer(1.2).timeout
+		var reader: QuranReader = current_scene.get_node("UI/QuranReader") as QuranReader
+		QuranReader.allow_network = false
+		reader.open()
+		reader.listen(1)
+		await create_timer(2.5).timeout
+		await _shot("quran_" + lang)
+		reader.stop_listening()
+		reader.close()
 		await create_timer(0.3).timeout
 	quit()
