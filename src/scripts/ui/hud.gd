@@ -117,9 +117,9 @@ func _ready() -> void:
 	_live_after = Time.get_ticks_msec() + 1200
 	var rain: ColorRect = ColorRect.new()
 	rain.name = "Rain"
-	rain.color = Color("55afc4")
+	rain.color = Color("2e4058")
 	rain.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rain.modulate.a = 0.18
+	rain.modulate.a = 0.16
 	rain.visible = false
 	add_child(rain)
 	rain.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

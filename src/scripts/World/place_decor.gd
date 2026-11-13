@@ -365,6 +365,7 @@ static func _lay_ground(place: Node, place_name: String) -> void:
 		paint = ShaderMaterial.new()
 		paint.shader = load("res://src/shaders/water_shimmer.gdshader") as Shader
 	paint.set_shader_parameter("grass_tint", Vector3(tint.r, tint.g, tint.b))
+	paint.set_shader_parameter("grass_grey", WorldShapes.season_grey(str(clock.get("season"))) if clock != null else 0.0)
 	ground.material = paint
 	place.add_child(ground)
 	place.move_child(ground, 0)

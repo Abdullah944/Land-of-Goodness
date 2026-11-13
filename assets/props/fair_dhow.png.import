@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://4hbpsryy6hc4"
+path="res://.godot/imported/fair_dhow.png-4814b855d4e2ea11fd2b60e254b473ab.res"
+
+[deps]
+
+source_file="res://assets/props/fair_dhow.png"
+dest_files=["res://.godot/imported/fair_dhow.png-4814b855d4e2ea11fd2b60e254b473ab.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://37osf02dvneb"
+path="res://.godot/imported/fair_truffles.png-b9f766e3a4349fec49e934e24522fb6d.res"
+
+[deps]
+
+source_file="res://assets/props/fair_truffles.png"
+dest_files=["res://.godot/imported/fair_truffles.png-b9f766e3a4349fec49e934e24522fb6d.res"]
+
+[params]
+
+game_size=Vector2(32, 32)

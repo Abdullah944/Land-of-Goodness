@@ -632,6 +632,8 @@ func _check_debris(main: Node, loader: LevelLoader, activities: Activities) -> v
 	clock.minute = 22.0 * 60.0
 	clock._paint_sky()
 	check(lamp != null and lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color != Color.WHITE, "lamps glow at night")
+	# A rainy day is darker on purpose, so the daylight check uses a clear day.
+	clock.weather = "Clear"
 	clock.minute = 10.0 * 60.0
 	clock._paint_sky()
 	check(not lamp.enabled and (main.get_node("NightTint") as CanvasModulate).color.r > 0.9, "lamps rest in daylight")

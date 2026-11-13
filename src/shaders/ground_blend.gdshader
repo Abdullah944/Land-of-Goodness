@@ -20,6 +20,12 @@ uniform sampler2D forest : filter_linear_mipmap, repeat_enable;
 uniform vec2 world_size = vec2(1000.0);
 uniform float tile = 160.0;
 uniform vec3 grass_tint = vec3(1.0);
+// How much the grass loses its color: dry summers and cool winters are less green than spring.
+uniform float grass_grey = 0.0;
+
+vec3 seasonal(vec3 c) {
+	return mix(c, vec3(dot(c, vec3(0.3, 0.59, 0.11))), grass_grey) * grass_tint;
+}
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -63,13 +69,13 @@ void fragment() {
 	lawn *= vec3(0.86, 0.9, 0.78) * (0.92 + noise(world * 0.004) * 0.16);
 	vec3 sea = (texture(water, at * 0.8 + drift).rgb + texture(water, at * 0.6 - drift * 1.3 + 0.5).rgb) * 0.5;
 	sea *= mix(1.0, 0.72, c.b);
-	vec3 color = lawn * grass_tint * shares[0]
+	vec3 color = seasonal(lawn) * shares[0]
 		+ texture(dirt, at).rgb * shares[1]
 		+ texture(sand, at).rgb * shares[2]
 		+ texture(road, at * 1.3).rgb * shares[3]
 		+ texture(cobble, at * 1.6).rgb * shares[4]
 		+ sea * shares[5]
 		+ texture(planks, at * 1.6).rgb * shares[6]
-		+ texture(forest, at).rgb * grass_tint * 0.82 * shares[7];
+		+ seasonal(texture(forest, at).rgb) * 0.82 * shares[7];
 	COLOR = vec4(color / max(total, 0.001), 1.0);
 }

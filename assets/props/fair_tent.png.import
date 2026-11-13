@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://b0li864dlviji"
+path="res://.godot/imported/fair_tent.png-554a1eed3eceb38491c3dc2fb85eadbb.res"
+
+[deps]
+
+source_file="res://assets/props/fair_tent.png"
+dest_files=["res://.godot/imported/fair_tent.png-554a1eed3eceb38491c3dc2fb85eadbb.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

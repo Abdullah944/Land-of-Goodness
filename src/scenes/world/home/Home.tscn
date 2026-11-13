@@ -713,7 +713,7 @@ z_index = 1
 [node name="Pen" type="Node2D" parent="."]
 script = ExtResource("17_pen")
 coop_area = Rect2(280, 236, 80, 40)
-barn_area = Rect2(390, 348, 110, 44)
+barn_area = Rect2(335, 298, 58, 30)
 
 [node name="ForestReturn" type="Marker2D" parent="."]
 position = Vector2(0, 450)

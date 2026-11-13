@@ -89,23 +89,51 @@ const PLACES: Dictionary = {
 }
 
 ## A tree's picture for this season. Gulf winters bring bare branches, not snow.
+## Flowering bushes bloom in spring and summer; in autumn and winter they are plain green bushes.
 static func seasonal_picture(path: String, season: String) -> String:
 	if season == "Autumn" and (path.ends_with("plants/ghaf.png") or path.ends_with("plants/sidr.png")):
 		return path.replace(".png", "_autumn.png")
 	if season == "Winter" and path.ends_with("plants/ghaf.png"):
 		return path.replace(".png", "_winter.png")
+	if (season == "Autumn" or season == "Winter") and (path.ends_with("plants/bush_pink.png") or path.ends_with("plants/bush_white.png")):
+		return path.get_base_dir().path_join("bush.png")
 	return path
+
+## Leaves that have no picture of their own for a season are tinted instead: sun-dried in summer,
+## turning in autumn, dull in winter. Date palms stay green all year.
+const SEASON_LEAVES: Array[String] = ["plants/leafy.png", "plants/acacia.png", "plants/tamarisk.png", "plants/bush.png",
+	"plants/sapling.png", "plants/sidr.png", "Leafy 16-Bit Farm Tree Sprite.png"]
+
+static func season_leaves(path: String, season: String) -> Color:
+	var leafy: bool = false
+	for end: String in SEASON_LEAVES:
+		if path.ends_with(end):
+			leafy = true
+	if not leafy:
+		return Color.WHITE
+	match season:
+		"Summer":
+			return Color(1.06, 1.02, 0.84)
+		"Autumn":
+			return Color(1.16, 0.94, 0.68)
+		"Winter":
+			return Color(0.9, 0.94, 0.9)
+	return Color.WHITE
 
 ## How green ground shifts with the season.
 static func season_grass(season: String) -> Color:
 	match season:
 		"Summer":
-			return Color(1.08, 1.0, 0.78)
+			return Color(1.12, 1.02, 0.74)
 		"Autumn":
-			return Color(1.22, 0.94, 0.62)
+			return Color(1.26, 0.95, 0.6)
 		"Winter":
-			return Color(1.0, 0.96, 0.78)
+			return Color(0.97, 1.0, 0.98)
 	return Color.WHITE
+
+## How much of the grass color fades with the season (0 is the full spring green).
+static func season_grey(season: String) -> float:
+	return {"Summer": 0.18, "Autumn": 0.12, "Winter": 0.32}.get(season, 0.0)
 
 static func has_place(place: String) -> bool:
 	return PLACES.has(place)

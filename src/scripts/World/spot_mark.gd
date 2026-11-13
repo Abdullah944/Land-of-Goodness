@@ -96,9 +96,12 @@ func _use_season_picture() -> void:
 	var clock: Node = scene.get_node_or_null("Systems/Clock") if scene != null else null
 	if clock == null or person.resource_path == "":
 		return
-	var path: String = WorldShapes.seasonal_picture(person.resource_path, str(clock.get("season")))
+	var season: String = str(clock.get("season"))
+	var path: String = WorldShapes.seasonal_picture(person.resource_path, season)
 	if path != person.resource_path:
 		person = load(path) as Texture2D
+	# Only the picture is tinted, not its shadow.
+	self_modulate = WorldShapes.season_leaves(person.resource_path, season)
 
 ## Cuts a sheet of eight idle frames, with one crop for all so the feet never jump.
 func _load_idle(path: String) -> void:
@@ -341,7 +344,7 @@ func picture_copy() -> Sprite2D:
 	copy.offset = Vector2(0, -copy.texture.get_size().y * 0.5) if stand_on_feet else Vector2.ZERO
 	copy.position = position
 	copy.z_index = z_index
-	copy.modulate = Color(modulate.r, modulate.g, modulate.b, 1.0)
+	copy.modulate = Color(modulate.r * self_modulate.r, modulate.g * self_modulate.g, modulate.b * self_modulate.b, 1.0)
 	return copy
 
 ## Houses, shops and the mosque: big solid pictures that stand on the ground.

@@ -194,6 +194,21 @@
       "asset_id": "881f644e-78f3-4386-bbf7-e34718fec6fa",
       "sha12": "d0a9d2e982d8",
       "label": "assets/characters/portraits/fisherman.png (talking portrait, resized to 256)"
+    },
+    {
+      "asset_id": "66fb91a7-3932-4578-83f3-72f26f41b856",
+      "sha12": "23e0b2737aa1",
+      "label": "assets/props/fair_tent.png (256px)"
+    },
+    {
+      "asset_id": "2d585f12-fb12-40b7-a171-8765f21dafc0",
+      "sha12": "b953145d7736",
+      "label": "assets/props/fair_dhow.png (256px)"
+    },
+    {
+      "asset_id": "e7f44b40-dda1-46db-b6c6-c45af51c16e3",
+      "sha12": "7d9461fe2a59",
+      "label": "assets/props/fair_truffles.png (256px)"
     }
   ]
 }

@@ -10,7 +10,7 @@ const BUTTERFLIES: int = 4
 const FIREFLIES: int = 16
 const LEAVES: int = 14
 const PETALS: int = 9
-const RAIN_DROPS: int = 70
+const RAIN_DROPS: int = 130
 ## Birds lift off when the boy is this close, and come back somewhere else after a while.
 const SCARE_PIXELS: float = 48.0
 const BIRD_RETURN: Vector2 = Vector2(12, 30)
@@ -280,8 +280,11 @@ class SkyLife extends Node2D:
 		var bit: Dictionary = {"at": at, "seed": randf() * 100.0, "spin": randf() * TAU}
 		match _kind:
 			"rain":
-				bit["speed"] = randf_range(260.0, 340.0)
-				bit["length"] = randf_range(5.0, 9.0)
+				bit["speed"] = randf_range(280.0, 360.0)
+				bit["length"] = randf_range(8.0, 14.0)
+				# Where the drop hits the ground and leaves a small splash.
+				bit["land"] = randf_range(view.position.y + view.size.y * 0.15, view.end.y)
+				bit["splash"] = -1.0
 			"leaves":
 				bit["color"] = WorldLife.LEAF_COLORS[randi() % WorldLife.LEAF_COLORS.size()]
 				bit["speed"] = randf_range(14.0, 24.0)
@@ -297,7 +300,14 @@ class SkyLife extends Node2D:
 		var t: float = _clock + float(bit["seed"])
 		match _kind:
 			"rain":
-				at += Vector2(-0.25, 1.0) * float(bit["speed"]) * delta
+				if float(bit["splash"]) >= 0.0:
+					bit["splash"] = float(bit["splash"]) + delta
+					if float(bit["splash"]) > 0.22:
+						at.y = view.end.y + 100.0
+				else:
+					at += Vector2(-0.25, 1.0) * float(bit["speed"]) * delta
+					if at.y >= float(bit["land"]):
+						bit["splash"] = 0.0
 			"leaves", "petals":
 				at += Vector2(10.0 + sin(t * 1.7) * 14.0, float(bit["speed"])) * delta
 				bit["spin"] = float(bit["spin"]) + delta * 2.4
@@ -318,7 +328,12 @@ class SkyLife extends Node2D:
 			var at: Vector2 = bit["at"]
 			match _kind:
 				"rain":
-					draw_line(at, at + Vector2(-0.25, 1.0) * float(bit["length"]), Color(0.78, 0.88, 0.95, 0.45), 0.8)
+					var splash: float = float(bit["splash"])
+					if splash >= 0.0:
+						var grow: float = splash / 0.22
+						draw_arc(at, 1.5 + grow * 3.0, PI, TAU, 8, Color(0.86, 0.93, 1.0, 0.7 * (1.0 - grow)), 0.8)
+					else:
+						draw_line(at, at + Vector2(-0.25, 1.0) * float(bit["length"]), Color(0.86, 0.93, 1.0, 0.72), 1.1)
 				"leaves", "petals":
 					var spin: float = float(bit["spin"])
 					var color: Color = Color(bit["color"]) * tint

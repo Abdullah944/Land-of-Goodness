@@ -27,10 +27,10 @@ const DECOR: Array[Dictionary] = [
 	{"name": "FairCushions2", "path": "res://assets/building/house/room/cushions.png", "at": Vector2(60, 20)},
 ]
 const SEASON_DECOR: Dictionary = {
-	"Spring": [{"name": "FairBasket", "path": "res://assets/props/basket.png", "at": Vector2(-40, -60)}, {"name": "FairFlowers", "path": "res://assets/nature/plants/bush_pink.png", "at": Vector2(200, 90), "fit": 30}],
-	"Summer": [{"name": "FairFish", "path": "res://assets/props/crate_fish.png", "at": Vector2(-40, -60)}, {"name": "FairPots", "path": "res://assets/props/pot_big.png", "at": Vector2(200, 90)}],
+	"Spring": [{"name": "FairTruffles", "path": "res://assets/props/fair_truffles.png", "at": Vector2(-40, -56), "fit": 34}, {"name": "FairFlowers", "path": "res://assets/nature/plants/bush_pink.png", "at": Vector2(200, 90), "fit": 30}],
+	"Summer": [{"name": "FairDhow", "path": "res://assets/props/fair_dhow.png", "at": Vector2(-40, -52), "fit": 60, "block": Vector2(40, 10)}, {"name": "FairPots", "path": "res://assets/props/pot_big.png", "at": Vector2(200, 90)}],
 	"Autumn": [{"name": "FairDates", "path": "res://assets/building/house/room/dates_bowl.png", "at": Vector2(-40, -60)}, {"name": "FairSacks", "path": "res://assets/props/sack.png", "at": Vector2(200, 90)}],
-	"Winter": [{"name": "FairGreenRug", "path": "res://assets/building/house/room/rug_green.png", "at": Vector2(-120, 20), "flat": true}, {"name": "FairJar", "path": "res://assets/building/house/room/jar.png", "at": Vector2(200, 90)}],
+	"Winter": [{"name": "FairTent", "path": "res://assets/props/fair_tent.png", "at": Vector2(-40, -52), "fit": 60, "block": Vector2(40, 10)}, {"name": "FairGreenRug", "path": "res://assets/building/house/room/rug_green.png", "at": Vector2(-120, 20), "flat": true}, {"name": "FairJar", "path": "res://assets/building/house/room/jar.png", "at": Vector2(200, 90)}],
 }
 
 var joined_day: int = -1
