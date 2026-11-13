@@ -19,7 +19,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - Store preparation: store text, privacy and age answers, store build setting, 12 store pictures (step 12, the part that needs no owner)
 - Menu tidy: every tab fits inside the wooden frame, the open tab is marked (2026-11-13)
 - Every window has the menu's look; big talking portraits of the five neighbors in the talk box (2026-11-13)
-- Quran reading: the full Tanzil text, opened from the Quran shelf in the mosque (2026-11-13)
+- Quran listening: the 114 suras recited by Mishary Alafasy, from the Quran shelf in the mosque; each sura downloads once when the player asks, no text shown (2026-11-14)
 - Art check 2: animals by the barn, clearer rain, seasonal grass and trees, a centerpiece for each festival (2026-11-13)
 
 ## Now
@@ -40,7 +40,6 @@ No fighting, no ads, no purchases, nature sounds only.
 - Owner, no rush (Trello "Later"): pick the word for dhow, OK to download sea and wind sounds, SpriteCook credits
 - Footsteps and animal sounds
 - Replace pictures if any look wrong (SpriteCook: 8 credits left)
-- Quran recitation, each sura an optional download (owner picks a reciter first)
 - Remove 63 picture files the game never uses (19 MB)
 - Short frame dips on the iPhone: one place now and then drops to 42-47 frames a second for a moment, in any place and any weather (simplest road included), so not the game's load. Checked twice on 2026-11-13 with the 44x24 field fully planted: the farm holds 59-60.
 - Android build
