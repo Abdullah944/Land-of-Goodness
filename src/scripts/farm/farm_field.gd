@@ -10,12 +10,13 @@ const SOIL_WET: Texture2D = preload("res://assets/farming/soil_wet.png")
 
 ## The fenced farm land below the house. The boy hoes any square inside it, so he lays out his own beds and paths.
 ## It starts here and grows right and down with each larger-field project.
-@export var farm_origin: Vector2i = Vector2i(-29, -9)
-@export var farm_size: Vector2i = Vector2i(24, 14)
-const LARGER_SIZE: Vector2i = Vector2i(32, 18)
-const LARGEST_SIZE: Vector2i = Vector2i(40, 22)
+@export var farm_origin: Vector2i = Vector2i(-31, -9)
+@export var farm_size: Vector2i = START_SIZE
+const START_SIZE: Vector2i = Vector2i(28, 16)
+const LARGER_SIZE: Vector2i = Vector2i(36, 20)
+const LARGEST_SIZE: Vector2i = Vector2i(44, 24)
 ## The gate in the top fence, counted in fence rails from the left. It faces the house door.
-const GATE_RAIL: int = 2
+const GATE_RAIL: int = 3
 const FIELD_SOIL: Script = preload("res://src/scripts/farm/field_soil.gd")
 const FENCE_RAIL: String = "res://assets/props/fence/rail.png"
 const FENCE_POST: String = "res://assets/props/fence/post.png"

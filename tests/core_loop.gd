@@ -95,7 +95,7 @@ func _run() -> void:
 	inventory.stone = 8
 	inventory.dinars = 100
 	var old_size: Vector2i = farm.farm_size
-	check(stead.build("expand") and farm.farm_size == FarmField.LARGER_SIZE and old_size == Vector2i(24, 14), "the field grows larger")
+	check(stead.build("expand") and farm.farm_size == FarmField.LARGER_SIZE and old_size == FarmField.START_SIZE, "the field grows larger")
 	inventory.add_item("copper", 3)
 	inventory.dinars = 120
 	check(stead.build("tools") and stead.tool_level == 1, "copper upgrades the watering can")

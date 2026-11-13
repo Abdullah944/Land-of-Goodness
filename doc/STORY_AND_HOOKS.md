@@ -17,7 +17,7 @@ One game day is about 14 real minutes.
 
 | # | Gap | Why it hurts | Fix |
 |---|---|---|---|
-| 1 | The field is big (24×14), but every square is watered by hand and costs hearts | A bigger field means more chores, not more fun, so players stop planting | **Sprinklers** made from copper (water the squares around them every morning) |
+| 1 | The field is big (28×16), but every square is watered by hand and costs hearts | A bigger field means more chores, not more fun, so players stop planting | **Sprinklers** made from copper (water the squares around them every morning) |
 | 2 | The story only happens at the very start and the very end | The middle feels like paying bills to the elder | **Story chapters** tied to the five projects (section 2) |
 | 3 | Nothing brings the player back after they close the game | Game time stops when the app is closed | **Hooks** (section 3) |
 | 4 | Winter has only wheat | One season in four is thin | A winter crop (e.g. **onions** or **radish**) and the winter fair |

@@ -30,7 +30,7 @@ const PLACES: Dictionary = {
 		"water": [], "lakes": [], "planks": [],
 		"dirt": [],
 		# The farm land is plain grass, so only the squares the boy hoes look like soil.
-		"lawn": [Rect2(-470, -150, 652, 366)],
+		"lawn": [Rect2(-506, -150, 712, 386)],
 		"exits": [Rect2(380, 6, 400, 68), Rect2(-34, 320, 68, 320)],
 	},
 	"Road": {

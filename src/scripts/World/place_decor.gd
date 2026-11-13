@@ -39,7 +39,7 @@ const OBJECT_CUTS: Dictionary = {
 }
 
 ## The fenced farm land below the house at its largest. Nothing else grows or lies inside it.
-const FIELD_ROOM: Rect2 = Rect2(-484, -164, 680, 392)
+const FIELD_ROOM: Rect2 = Rect2(-516, -164, 728, 408)
 
 const LAYOUTS: Dictionary = {
 	"Home": {
@@ -140,7 +140,7 @@ const FARM_TREES: Array[Vector2] = [
 	Vector2(480, -30), Vector2(-40, -330), Vector2(60, -320), Vector2(170, -330),
 ]
 ## Palms stand in a row along the farm land's left side, and two on the north lawn.
-const FARM_PALMS: Array[Vector2] = [Vector2(-510, -40), Vector2(-510, 70), Vector2(-510, 180), Vector2(560, 120), Vector2(-60, -215)]
+const FARM_PALMS: Array[Vector2] = [Vector2(-548, -40), Vector2(-548, 70), Vector2(-548, 180), Vector2(560, 120), Vector2(-60, -215)]
 ## Extra ponds, as in a real clearing. [spot, width, solid footprint]
 const FARM_PONDS: Array = [
 	[Vector2(-360, 330), 170, Vector2(144, 120)],
