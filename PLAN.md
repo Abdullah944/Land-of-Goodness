@@ -1,6 +1,6 @@
 # Land of Goodness — Plan
 
-Short status of the project. Updated 2026-11-12. The long design reference is `doc/LAND_OF_KHAIR_PLAN.md`; the store sheet is `doc/STORE.md`.
+Short status of the project. Updated 2026-11-13. The long design reference is `doc/LAND_OF_KHAIR_PLAN.md`; the store sheet is `doc/STORE.md`.
 
 ## Goal
 
@@ -17,6 +17,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - iPhone check on the 16e: 60 frames a second, safe saves (step 10)
 - Art check: nothing out of style in 10 places (step 6)
 - Store preparation: store text, privacy and age answers, store build setting, 12 store pictures (step 12, the part that needs no owner)
+- Menu tidy: every tab fits inside the wooden frame, the open tab is marked (2026-11-13)
 
 ## Now
 
