@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://b1eygr5iib4uw"
+path="res://.godot/imported/carpenter.png-455937daaa91c74fe9f5da454e48b4b0.res"
+
+[deps]
+
+source_file="res://assets/characters/portraits/carpenter.png"
+dest_files=["res://.godot/imported/carpenter.png-455937daaa91c74fe9f5da454e48b4b0.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://c8xt10ic0mrg0"
+path="res://.godot/imported/elder.png-47707a4f6da1ab978c3970fe27debe1c.res"
+
+[deps]
+
+source_file="res://assets/characters/portraits/elder.png"
+dest_files=["res://.godot/imported/elder.png-47707a4f6da1ab978c3970fe27debe1c.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

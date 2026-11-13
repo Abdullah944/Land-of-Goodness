@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://b3s6uyxwscd1e"
+path="res://.godot/imported/fisherman.png-47dab969e8cf73937aa1f9a45425c85d.res"
+
+[deps]
+
+source_file="res://assets/characters/portraits/fisherman.png"
+dest_files=["res://.godot/imported/fisherman.png-47dab969e8cf73937aa1f9a45425c85d.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

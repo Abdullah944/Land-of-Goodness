@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://1wjkdrvy3hi2"
+path="res://.godot/imported/merchant.png-a9bc642da835372d87e5a3f1009bd1c6.res"
+
+[deps]
+
+source_file="res://assets/characters/portraits/merchant.png"
+dest_files=["res://.godot/imported/merchant.png-a9bc642da835372d87e5a3f1009bd1c6.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

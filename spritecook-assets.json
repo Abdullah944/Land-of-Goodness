@@ -144,6 +144,56 @@
       "asset_id": "ce995f96-a778-43b9-af63-259cb58e1074",
       "sha12": "8a60a2c7d932",
       "label": "onion growth stages and bulb (cut into assets/farming/crops/onion.png and assets/items/goods/onions.png)"
+    },
+    {
+      "asset_id": "eb3d81ea-530a-4d50-849f-0b1c1066c16c",
+      "sha12": "083ed8643805",
+      "label": "assets/characters/NPC/Kind Kuwaiti Elder Sprite JASSEM.png (uploaded 2026-11-13)"
+    },
+    {
+      "asset_id": "722ca577-14a5-4316-816d-34caf0875790",
+      "sha12": "c8b1117d5c10",
+      "label": "assets/characters/portraits/jassim.png (talking portrait, resized to 256)"
+    },
+    {
+      "asset_id": "11ad1572-389a-4de0-8143-3bf72a5e20ec",
+      "sha12": "d3624b81c8ce",
+      "label": "assets/characters/village/Elder.png (uploaded 2026-11-13)"
+    },
+    {
+      "asset_id": "ff0feadf-53d1-40b7-8bad-2c0a1a8aa9d1",
+      "sha12": "e6cf8640f53a",
+      "label": "assets/characters/portraits/elder.png (talking portrait, resized to 256)"
+    },
+    {
+      "asset_id": "83d7926c-00e8-4862-a3ee-684a58f5173c",
+      "sha12": "a3847d43e2f4",
+      "label": "assets/characters/village/Merchant.png (uploaded 2026-11-13)"
+    },
+    {
+      "asset_id": "a5d43693-9c00-4b01-9257-e4503b73a010",
+      "sha12": "09219e6ef61b",
+      "label": "assets/characters/portraits/merchant.png (talking portrait, resized to 256)"
+    },
+    {
+      "asset_id": "6a385e41-21d8-4d6a-b366-07811193f925",
+      "sha12": "bc4ce3a6f54b",
+      "label": "assets/characters/village/Carpenter.png (uploaded 2026-11-13)"
+    },
+    {
+      "asset_id": "cebf4691-2781-4016-9b06-14c7498ce2d8",
+      "sha12": "389ce5a6ac50",
+      "label": "assets/characters/portraits/carpenter.png (talking portrait, resized to 256)"
+    },
+    {
+      "asset_id": "5bd29524-5209-4622-b61b-ae085b2d00e3",
+      "sha12": "419c2efd258a",
+      "label": "assets/characters/village/Fisherman.png (uploaded 2026-11-13)"
+    },
+    {
+      "asset_id": "881f644e-78f3-4386-bbf7-e34718fec6fa",
+      "sha12": "d0a9d2e982d8",
+      "label": "assets/characters/portraits/fisherman.png (talking portrait, resized to 256)"
     }
   ]
 }

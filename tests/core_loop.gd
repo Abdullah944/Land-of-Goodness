@@ -127,7 +127,7 @@ func _run() -> void:
 	var pictured: bool = not shop_box._offer_buttons.is_empty()
 	for button: Button in shop_box._offer_buttons:
 		pictured = pictured and button.icon != null
-	check(shop_box._panel.size.x <= 330.0 and shop_box._panel.size.y < 170.0 and shop_box._offer_buttons.size() <= 3 and pictured and shop_box._close.visible, "the seller's window is small, each seed has a picture, and X closes it")
+	check(shop_box._panel.size.x <= DialogueBox.OFFER_W + DialogueBox.COLUMN + 10.0 and shop_box._panel.size.y < 170.0 and shop_box._offer_buttons.size() <= 3 and pictured and shop_box._close.visible, "the seller's window is small, each seed has a picture, and X closes it")
 	shop_box._pick("cancel")
 	var mosque: Node2D = _place(main).get_node("Mosque") as Node2D
 	var walls: CollisionShape2D = mosque.get_node("Block").get_child(0) as CollisionShape2D

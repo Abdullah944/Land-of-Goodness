@@ -1,0 +1,15 @@
+[remap]
+
+importer="khair_hd"
+type="ImageTexture"
+uid="uid://bk53gubtrpcur"
+path="res://.godot/imported/jassim.png-004b163efc9100652aeaf6c316c95060.res"
+
+[deps]
+
+source_file="res://assets/characters/portraits/jassim.png"
+dest_files=["res://.godot/imported/jassim.png-004b163efc9100652aeaf6c316c95060.res"]
+
+[params]
+
+game_size=Vector2(64, 64)

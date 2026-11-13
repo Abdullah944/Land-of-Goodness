@@ -52,7 +52,20 @@ var _typing: Tween
 var _heart_row: HBoxContainer
 var _heart_marks: Array[TextureRect] = []
 
-const FACE_W: float = 44.0
+## The speaker's portrait sits framed in the box's left corner, with the name and hearts under it.
+const PORTRAIT_PX: float = 64.0
+## How far the words and buttons move right to make room for the portrait.
+const COLUMN: float = 72.0
+## A box with a portrait is at least this tall, so the name and hearts fit under the face.
+const PORTRAIT_BOX_H: float = 112.0
+## Big talking pictures, head and shoulders, one per neighbor.
+const PORTRAITS: Dictionary = {
+	"jassim": "res://assets/characters/portraits/jassim.png",
+	"elder": "res://assets/characters/portraits/elder.png",
+	"merchant": "res://assets/characters/portraits/merchant.png",
+	"carpenter": "res://assets/characters/portraits/carpenter.png",
+	"fisherman": "res://assets/characters/portraits/fisherman.png",
+}
 const SPEAKERS: Dictionary = {
 	"jassim": "res://assets/characters/NPC/Kind Kuwaiti Elder Sprite JASSEM.png",
 	"elder": "res://assets/characters/village/Elder.png",
@@ -103,9 +116,9 @@ func _ready() -> void:
 
 func _build_portrait() -> void:
 	_portrait_box = Panel.new()
-	_portrait_box.position = Vector2(8, 6)
-	_portrait_box.size = Vector2(FACE_W - 6.0, 25)
-	_portrait_box.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.CREAM, UiStyle.WOOD_DARK, 1))
+	_portrait_box.position = Vector2(8, 8)
+	_portrait_box.size = Vector2(PORTRAIT_PX, PORTRAIT_PX)
+	_portrait_box.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.BEIGE, UiStyle.BROWN, 2))
 	_portrait_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_portrait_box)
 	_portrait = TextureRect.new()
@@ -116,18 +129,18 @@ func _build_portrait() -> void:
 	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_portrait_box.add_child(_portrait)
 	_speaker_name = Label.new()
-	_speaker_name.position = Vector2(4, 27)
-	_speaker_name.size = Vector2(FACE_W + 4.0, 11)
+	_speaker_name.position = Vector2(4, 8.0 + PORTRAIT_PX + 2.0)
+	_speaker_name.size = Vector2(PORTRAIT_PX + 8.0, 14)
 	_speaker_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_speaker_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_speaker_name.add_theme_font_size_override("font_size", 8)
+	_speaker_name.add_theme_font_size_override("font_size", 10)
 	_speaker_name.add_theme_color_override("font_color", UiStyle.DARK)
 	_speaker_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_speaker_name)
 	# Five small hearts: how close the boy is to this neighbor.
 	_heart_row = HBoxContainer.new()
-	_heart_row.position = Vector2(5, 48)
-	_heart_row.size = Vector2(FACE_W, 6)
+	_heart_row.position = Vector2(8.0 + (PORTRAIT_PX - 44.0) * 0.5, 8.0 + PORTRAIT_PX + 20.0)
+	_heart_row.size = Vector2(44, 8)
 	_heart_row.add_theme_constant_override("separation", 1)
 	_heart_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_heart_row)
@@ -135,7 +148,7 @@ func _build_portrait() -> void:
 	for i: int in Friendship.MAX_HEARTS:
 		var heart: TextureRect = TextureRect.new()
 		heart.texture = heart_picture
-		heart.custom_minimum_size = Vector2(7, 7)
+		heart.custom_minimum_size = Vector2(8, 8)
 		heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -161,16 +174,27 @@ func _place_speaker() -> void:
 	_speaker_name.visible = shown
 	if not shown:
 		_heart_row.visible = false
-	_label.position.x = 8.0 + (FACE_W + 4.0 if shown else 0.0)
-	_label.size.x = _panel.size.x - 16.0 - (FACE_W + 4.0 if shown else 0.0) - (24.0 if _offering else 0.0)
+	_label.position.x = 8.0 + _column()
+	_label.size.x = _panel.size.x - 16.0 - _column() - (24.0 if _offering else 0.0)
+	if not _offering and not _choosing:
+		# Spoken lines: Next sits under the words, beside the portrait.
+		_next.position.x = 8.0 + _column()
+		_next.size.x = _panel.size.x - 16.0 - _column()
 	if shown:
 		_portrait.texture = _face(_speaker)
 		_speaker_name.text = Locale.t("name_" + _speaker)
 		Locale.apply_control(_speaker_name)
 
-## The head and shoulders of the person's picture.
+## Room the portrait takes on the left, or none when nobody is speaking.
+func _column() -> float:
+	return COLUMN if _speaker != "" else 0.0
+
+## The person's talking picture; a crop of their walking picture if they have none.
 func _face(person: String) -> Texture2D:
 	if _faces.has(person):
+		return _faces[person]
+	if PORTRAITS.has(person) and ResourceLoader.exists(str(PORTRAITS[person])):
+		_faces[person] = load(str(PORTRAITS[person])) as Texture2D
 		return _faces[person]
 	var image: Image = UiStyle.pixels_of(load(str(SPEAKERS[person])) as Texture2D)
 	var used: Rect2i = image.get_used_rect()
@@ -318,7 +342,7 @@ func _clear_offer_buttons() -> void:
 
 ## Buttons start lower when a neighbor's hearts show under the face.
 func _first_row() -> float:
-	return (58.0 if _heart_row.visible else 46.0) + (_text_extra if _offering else 0.0)
+	return 46.0 + (_text_extra if _offering else 0.0)
 
 ## Many wide rows are a little shorter, so six of them still fit on the screen.
 func _row_step() -> float:
@@ -328,15 +352,15 @@ func _row_step() -> float:
 func _offer_spot(index: int) -> Rect2:
 	var inner: float = OFFER_W - 16.0
 	if _offer_wide:
-		return Rect2(8, _first_row() + _row_step() * index, inner, _row_step() - 3.0)
+		return Rect2(8.0 + _column(), _first_row() + _row_step() * index, inner, _row_step() - 3.0)
 	var width: float = (inner - 6.0) * 0.5
-	return Rect2(8.0 + (index % 2) * (width + 6.0), _first_row() + ROW_STEP * (index / 2), width, ROW_STEP - 3.0)
+	return Rect2(8.0 + _column() + (index % 2) * (width + 6.0), _first_row() + ROW_STEP * (index / 2), width, ROW_STEP - 3.0)
 
 func _fit_actions(rows: int) -> void:
 	_label.size = Vector2(OFFER_W - 16.0, 40)
 	_label.add_theme_font_size_override("font_size", 12)
 	# Measure at the offer's own width, not the width of the last talk box.
-	_panel.size.x = OFFER_W
+	_panel.size.x = OFFER_W + _column()
 	_place_speaker()
 	# A long line gets a smaller font, and if it still does not fit, the buttons move down so no words are cut off.
 	var lines_used: int = 0
@@ -349,8 +373,11 @@ func _fit_actions(rows: int) -> void:
 	_label.size.y = 40.0 + _text_extra
 	var lines: int = rows if _offer_wide else (rows + 1) / 2
 	var height: float = _first_row() + 8.0 + _row_step() * lines
-	_panel.size = Vector2(OFFER_W, height)
-	_panel.position = Vector2((512.0 - OFFER_W) * 0.5, 288.0 - height - 6.0)
+	if _speaker != "":
+		height = maxf(height, PORTRAIT_BOX_H)
+	var width: float = OFFER_W + _column()
+	_panel.size = Vector2(width, height)
+	_panel.position = Vector2((512.0 - width) * 0.5, 288.0 - height - 6.0)
 
 ## A small picture for a choice: the item itself, a crop's seeds, or the thing a menu row is about.
 func _choice_icon(key: String) -> Texture2D:
