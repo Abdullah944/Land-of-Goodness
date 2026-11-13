@@ -22,19 +22,25 @@ static func box(fill: Color, border: Color, width: int = 2) -> StyleBoxFlat:
 	style.set_content_margin_all(2)
 	return style
 
+## Every window: cream paper with a brown edge, like the paper inside the menu's wooden frame.
 static func panel(control: Control) -> void:
-	control.add_theme_stylebox_override("panel", box(WOOD_LIGHT, WOOD_DARK, 3))
+	control.add_theme_stylebox_override("panel", box(CREAM, BROWN, 3))
 
+## Every button: beige with a thin brown edge; it turns brown with light letters while pressed.
+## The menu's tabs and the chest's buttons use the same colors.
 static func button(target: Button) -> void:
-	var normal: StyleBoxFlat = box(WOOD, WOOD_DARK, 2)
+	var normal: StyleBoxFlat = box(BEIGE, BROWN, 1)
 	target.add_theme_stylebox_override("normal", normal)
 	target.add_theme_stylebox_override("hover", normal)
 	target.add_theme_stylebox_override("focus", normal)
-	target.add_theme_stylebox_override("pressed", box(WOOD_DARK, DARK, 2))
+	target.add_theme_stylebox_override("pressed", box(BROWN, DARK, 1))
+	var faded: StyleBoxFlat = box(Color(BEIGE, 0.55), Color(BROWN, 0.55), 1)
+	target.add_theme_stylebox_override("disabled", faded)
 	target.add_theme_color_override("font_color", DARK)
 	target.add_theme_color_override("font_hover_color", DARK)
 	target.add_theme_color_override("font_focus_color", DARK)
 	target.add_theme_color_override("font_pressed_color", CREAM)
+	target.add_theme_color_override("font_disabled_color", Color(DARK, 0.5))
 	if not target.button_down.is_connected(Juice.press):
 		target.button_down.connect(Juice.press.bind(target))
 
@@ -157,3 +163,33 @@ static func draw_bubble(canvas: CanvasItem, at: Vector2) -> void:
 	for x: float in [-3.0, 0.0, 3.0]:
 		canvas.draw_circle(Vector2(x, 0.0), 1.0, DARK)
 	canvas.draw_set_transform(Vector2.ZERO)
+
+static var _seed_pictures: Dictionary = {}
+
+## A seed bag with the crop's fruit in its corner, so each kind of seed is easy to tell apart.
+## The bag and the chest both use it, so a seed looks the same everywhere.
+static func seed_picture(crop_id: String) -> Texture2D:
+	if _seed_pictures.has(crop_id):
+		return _seed_pictures[crop_id]
+	var bag: Image = _trimmed("res://assets/farming/Six Pixel Farm Seeds.png")
+	var crop: Dictionary = CropCatalog.get_crop(crop_id)
+	var path: String = GoodsCatalog.icon_path(str(crop.get("harvest_item", "")))
+	if path != "":
+		var fruit: Image = _trimmed(path)
+		var side: float = float(bag.get_width()) * 0.6
+		var shrink: float = side / float(maxi(fruit.get_width(), fruit.get_height()))
+		fruit.resize(maxi(1, int(fruit.get_width() * shrink)), maxi(1, int(fruit.get_height() * shrink)), Image.INTERPOLATE_NEAREST)
+		var at: Vector2i = bag.get_size() - fruit.get_size()
+		bag.blend_rect(fruit, Rect2i(Vector2i.ZERO, fruit.get_size()), at)
+	var longest: float = float(maxi(bag.get_width(), bag.get_height()))
+	var picture: Texture2D = hd_texture(bag, Vector2(bag.get_size()) * 16.0 / longest)
+	_seed_pictures[crop_id] = picture
+	return picture
+
+static func _trimmed(path: String) -> Image:
+	var image: Image = pixels_of(load(path) as Texture2D).duplicate() as Image
+	if image.is_compressed():
+		image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	var used: Rect2i = image.get_used_rect()
+	return image.get_region(used) if used.size != Vector2i.ZERO else image

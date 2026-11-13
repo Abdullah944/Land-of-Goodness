@@ -58,26 +58,6 @@ func _redraw_buttons() -> void:
 		if child.has_meta("title_item"):
 			child.queue_free()
 	var view: Vector2 = get_viewport().get_visible_rect().size
-	var side: float = (view.x - _window.size.x) * 0.5
-	var show_hero: bool = side >= 90.0
-	_hero.visible = show_hero
-	_window.position = Vector2(side + (side * 0.5 if show_hero else 0.0), (view.y - _window.size.y) * 0.5)
-	_hero.size = Vector2(_window.position.x - 16.0, minf(view.y - 24.0, _window.position.x - 16.0))
-	_hero.position = Vector2(8.0, (view.y - _hero.size.y) * 0.5)
-	var top: float = (view.y - 200.0) * 0.5
-	var title: Label = Label.new()
-	# Wrapping is switched on before the words go in; otherwise a long line stretches the label past the window.
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.text = Locale.t("new_confirm") if _confirm else Locale.t("title")
-	title.position = Vector2(_window.position.x + 30.0, top + 36.0)
-	title.size = Vector2(240, 36)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color("3f2d27"))
-	title.add_theme_font_size_override("font_size", 12 if _confirm else 22)
-	Locale.apply_control(title)
-	title.set_meta("title_item", true)
-	_page.add_child(title)
 	var rows: Array = []
 	if _confirm:
 		rows = [["yes", _start_new], ["no", _cancel_confirm]]
@@ -87,9 +67,31 @@ func _redraw_buttons() -> void:
 			rows.append(["continue", _continue])
 		rows.append(["new_game", _ask_new])
 		rows.append(["language", _toggle_language])
+	# The window grows with its rows, so a third button (Continue) stays on the paper.
+	_window.size.y = 136.0 + 32.0 * rows.size()
+	var side: float = (view.x - _window.size.x) * 0.5
+	var show_hero: bool = side >= 90.0
+	_hero.visible = show_hero
+	_window.position = Vector2(side + (side * 0.5 if show_hero else 0.0), (view.y - _window.size.y) * 0.5)
+	_hero.size = Vector2(_window.position.x - 16.0, minf(view.y - 24.0, _window.position.x - 16.0))
+	_hero.position = Vector2(8.0, (view.y - _hero.size.y) * 0.5)
+	var top: float = _window.position.y
+	var title: Label = Label.new()
+	# Wrapping is switched on before the words go in; otherwise a long line stretches the label past the window.
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.text = Locale.t("new_confirm") if _confirm else Locale.t("title")
+	title.position = Vector2(_window.position.x + 30.0, top + 30.0)
+	title.size = Vector2(240, 36)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color("3f2d27"))
+	title.add_theme_font_size_override("font_size", 12 if _confirm else 22)
+	Locale.apply_control(title)
+	title.set_meta("title_item", true)
+	_page.add_child(title)
 	var version: Label = Label.new()
 	version.text = "v%s" % str(ProjectSettings.get_setting("application/config/version", ""))
-	version.position = Vector2(_window.position.x + 30.0, top + 150.0)
+	version.position = Vector2(_window.position.x + 30.0, top + 74.0 + 32.0 * rows.size())
 	version.size = Vector2(240, 12)
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	version.add_theme_font_size_override("font_size", 8)
@@ -99,7 +101,7 @@ func _redraw_buttons() -> void:
 	for i: int in rows.size():
 		var button: Button = Button.new()
 		button.text = Locale.t(str(rows[i][0]))
-		button.position = Vector2(_window.position.x + 50.0, top + 80.0 + 32.0 * i)
+		button.position = Vector2(_window.position.x + 50.0, top + 72.0 + 32.0 * i)
 		button.size = Vector2(200, 28)
 		button.focus_mode = Control.FOCUS_NONE
 		button.add_theme_font_size_override("font_size", 12)

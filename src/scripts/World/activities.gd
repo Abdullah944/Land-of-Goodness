@@ -418,12 +418,12 @@ func _on_shop_choice(choice: String) -> void:
 		_buy_caravan(choice)
 		return
 	if _shop == "menu":
-		if choice == "sell_turnips" or choice == "Sell Turnips":
+		if choice == "sell_turnips" or choice == "Sell turnips":
 			_sell_to_jassim()
-		elif choice == "sell_goods" or choice == "Sell Goods":
+		elif choice == "sell_goods" or choice == "Sell goods":
 			_shop = "sell"
 			_offer_sell()
-		elif choice == "buy_seeds" or choice == "Buy Seeds":
+		elif choice == "buy_seeds" or choice == "Buy seeds":
 			_shop = "seeds"
 			_dialogue().offer(Locale.t("which_seed"), _seed_choices())
 		elif choice == "buy_feed":

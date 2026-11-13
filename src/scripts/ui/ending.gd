@@ -153,6 +153,8 @@ func _build() -> void:
 	_label.size = Vector2(372, 90)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# Centered, so a page reads the same in English and Arabic.
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.add_theme_color_override("font_color", UiStyle.DARK)
 	_label.add_theme_font_size_override("font_size", 14)
 	_panel.add_child(_label)

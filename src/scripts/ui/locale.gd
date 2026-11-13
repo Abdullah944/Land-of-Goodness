@@ -9,9 +9,9 @@ const FONT_PATH: String = "res://assets/fonts/NotoNaskhArabic-Regular.ttf"
 static var language: String = "ar"
 
 const _EN: Dictionary = {
-	"sell_turnips": "Sell Turnips",
-	"sell_goods": "Sell Goods",
-	"buy_seeds": "Buy Seeds",
+	"sell_turnips": "Sell turnips",
+	"sell_goods": "Sell goods",
+	"buy_seeds": "Buy seeds",
 	"cancel": "Cancel",
 	"more": "More",
 	"khair": "Khair",
@@ -1020,4 +1020,7 @@ static func apply_control(control: Control) -> void:
 	var face: Font = font()
 	if face != null:
 		control.add_theme_font_override("font", face)
+	else:
+		# Back in English the Arabic face must come off again, or the English letters keep the Arabic font's look.
+		control.remove_theme_font_override("font")
 	control.text_direction = Control.TEXT_DIRECTION_RTL if language == "ar" else Control.TEXT_DIRECTION_LTR

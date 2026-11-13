@@ -701,12 +701,8 @@ func _build_menu() -> void:
 	var tab_ids: Array[String] = ["bag", "settings", "quests", "map", "close"]
 	var tab_words: Array[String] = ["tab_bag", "tab_settings", "journal", "tab_map", "tab_close"]
 	var tab_w: float = (inner.size.x - MENU_GAP * 4.0) / 5.0
-	_tab_shut_box = _slot_box(Color("e7c99a"))
-	_tab_shut_box.border_color = Color("7a4f32")
-	_tab_shut_box.set_border_width_all(1)
-	_tab_open_box = _slot_box(Color("7a4f32"))
-	_tab_open_box.border_color = Color("3f2d27")
-	_tab_open_box.set_border_width_all(1)
+	_tab_shut_box = UiStyle.box(UiStyle.BEIGE, UiStyle.BROWN, 1)
+	_tab_open_box = UiStyle.box(UiStyle.BROWN, UiStyle.DARK, 1)
 	for i: int in tab_ids.size():
 		var tab: Button = _tab_button("", Vector2(inner.position.x + i * (tab_w + MENU_GAP), inner.position.y))
 		tab.size = Vector2(tab_w, MENU_TAB_H)
@@ -861,16 +857,7 @@ func _tab_button(title: String, at: Vector2) -> Button:
 	button.position = at
 	button.size = Vector2(70, 22)
 	button.add_theme_font_size_override("font_size", 10)
-	button.add_theme_color_override("font_color", Color("3f2d27"))
-	button.add_theme_color_override("font_hover_color", Color("3f2d27"))
-	button.add_theme_color_override("font_pressed_color", Color("fff3dc"))
-	var box: StyleBoxFlat = _slot_box(Color("e7c99a"))
-	box.border_color = Color("7a4f32")
-	box.set_border_width_all(1)
-	button.add_theme_stylebox_override("normal", box)
-	button.add_theme_stylebox_override("hover", box)
-	button.add_theme_stylebox_override("pressed", _slot_box(Color("7a4f32")))
-	button.add_theme_stylebox_override("focus", box)
+	UiStyle.button(button)
 	return button
 
 func _nine(path: String, at: Vector2, size: Vector2, source_border: int, screen_border: int) -> Panel:
@@ -1326,22 +1313,7 @@ func _player() -> Player:
 
 ## A seed bag with a small picture of what it grows, so each seed row is easy to tell apart.
 func _seed_icon(crop_id: String) -> Texture2D:
-	if _seed_icons.has(crop_id):
-		return _seed_icons[crop_id]
-	var bag: Image = _trimmed_image("res://assets/farming/Six Pixel Farm Seeds.png")
-	var crop: Dictionary = CropCatalog.get_crop(crop_id)
-	var path: String = GoodsCatalog.icon_path(str(crop.get("harvest_item", "")))
-	if path != "":
-		var fruit: Image = _trimmed_image(path)
-		var side: float = float(bag.get_width()) * 0.6
-		var shrink: float = side / float(maxi(fruit.get_width(), fruit.get_height()))
-		fruit.resize(maxi(1, int(fruit.get_width() * shrink)), maxi(1, int(fruit.get_height() * shrink)), Image.INTERPOLATE_NEAREST)
-		var at: Vector2i = bag.get_size() - fruit.get_size()
-		bag.blend_rect(fruit, Rect2i(Vector2i.ZERO, fruit.get_size()), at)
-	var longest: float = float(maxi(bag.get_width(), bag.get_height()))
-	var picture: Texture2D = UiStyle.hd_texture(bag, Vector2(bag.get_size()) * 16.0 / longest)
-	_seed_icons[crop_id] = picture
-	return picture
+	return UiStyle.seed_picture(crop_id)
 
 func _trimmed_image(path: String) -> Image:
 	var image: Image = UiStyle.pixels_of(load(path) as Texture2D).duplicate() as Image
@@ -1367,16 +1339,13 @@ func _make_label(at: Vector2, color: Color) -> Label:
 	return label
 
 func _build_sale() -> void:
-	var panel: TextureRect = TextureRect.new()
+	# The receipt is a paper window like every other one.
+	var panel: Panel = Panel.new()
 	panel.name = "SaleReceipt"
-	var wood: Image = _open_image("res://assets/ui/Blank pixel-art wooden HUD panel.png")
-	wood = wood.get_region(_solid_bounds(wood))
-	panel.texture = ImageTexture.create_from_image(wood)
-	panel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	panel.stretch_mode = TextureRect.STRETCH_SCALE
+	UiStyle.panel(panel)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	panel.position = Vector2(120, 78)
-	panel.size = Vector2(272, 124)
+	panel.position = Vector2(120, 88)
+	panel.size = Vector2(272, 104)
 	panel.visible = false
 	add_child(panel)
 	_sale_panel = panel
@@ -1392,7 +1361,7 @@ func _build_sale() -> void:
 	hit.pressed.connect(dismiss_sale)
 	panel.add_child(hit)
 	for i: int in 4:
-		var title: Label = _make_label(Vector2(18, 22 + i * 22), Color("7a4f32"))
+		var title: Label = _make_label(Vector2(16, 10 + i * 22), Color("7a4f32"))
 		_sale_titles.append(title)
 		title.size = Vector2(70, 16)
 		title.add_theme_font_size_override("font_size", 12)
@@ -1403,7 +1372,7 @@ func _build_sale() -> void:
 	_sale_balance = _sale_value(3)
 
 func _sale_value(row: int) -> Label:
-	var label: Label = _make_label(Vector2(96, 22 + row * 22), Color("3f2d27"))
+	var label: Label = _make_label(Vector2(96, 10 + row * 22), Color("3f2d27"))
 	label.size = Vector2(156, 18)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	label.add_theme_font_size_override("font_size", 12)

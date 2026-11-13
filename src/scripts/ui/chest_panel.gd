@@ -115,6 +115,7 @@ func _name_labels() -> void:
 	for row: Dictionary in _rows:
 		if row.has("name"):
 			(row["name"] as Label).text = Locale.item(str(row["item"]))
+			Locale.apply_control(row["name"] as Label)
 		for action: String in ["store", "take"]:
 			var title: Label = (row[action] as Node).get_child(0) as Label
 			title.text = Locale.t(action + "_one")
@@ -189,6 +190,7 @@ func _add_row(body: Control, item_id: String, index: int) -> void:
 		"line": line,
 		"bag": bag_count,
 		"chest": chest_count,
+		"name": name,
 		"store": store,
 		"take": take,
 	})
@@ -322,6 +324,10 @@ func _item_name(item_id: String) -> String:
 	return Locale.item(item_id)
 
 func _icon(item_id: String) -> Texture2D:
+	# Seeds use the same picture as in the bag: a seed bag with the crop in its corner.
+	for crop_id: String in CropCatalog.ids():
+		if str(CropCatalog.get_crop(crop_id).get("seed_item", "")) == item_id:
+			return UiStyle.seed_picture(crop_id)
 	var extra_icon: String = GoodsCatalog.icon_path(item_id)
 	if extra_icon != "":
 		return _fit_icon(extra_icon)
