@@ -185,15 +185,15 @@ static func boing(node: Node2D) -> void:
 	spring.tween_property(node, "scale", home * Vector2(0.9, 1.15), 0.08)
 	spring.tween_property(node, "scale", home, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-## A UI button that pops when it is picked.
+## A UI button that dips when it is pressed: down to 0.97 and back, about 150 ms, no bounce
+## (design guide: buttons are pressed many times, so the feedback is small and calm).
 static func press(control: Control) -> void:
 	if control == null:
 		return
 	control.pivot_offset = control.size * 0.5
-	var pop: Tween = control.create_tween()
-	pop.tween_property(control, "scale", Vector2(0.85, 0.85), 0.05)
-	pop.tween_property(control, "scale", Vector2(1.18, 1.18), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	pop.tween_property(control, "scale", Vector2.ONE, 0.1)
+	var dip: Tween = control.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	dip.tween_property(control, "scale", Vector2(0.97, 0.97), 0.06)
+	dip.tween_property(control, "scale", Vector2.ONE, 0.09)
 
 ## The view gives one small jolt, for a tree that lands or a rock that breaks.
 static func kick(tree: SceneTree, strength: float = 2.0) -> void:

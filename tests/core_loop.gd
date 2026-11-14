@@ -1383,13 +1383,13 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	var saw_cave: bool = bool(stead.visited.get("Cave", false))
 	stead.visited.erase("Cave")
 	map.tap_at(map._screen(WorldMap.PLACES["Cave"][0]))
-	check(map._note == Locale.t("map_walk_first") and hud._menu.visible and _place_name(main) != "Cave", "the map won't take the boy somewhere he hasn't walked to")
+	check(map._note == Locale.t("map_walk_first") and hud.menu_open() and _place_name(main) != "Cave", "the map won't take the boy somewhere he hasn't walked to")
 	if saw_cave:
 		stead.visited["Cave"] = true
 	map.tap_at(map._screen(WorldMap.PLACES["Home"][0]))
 	for i: int in 3:
 		await process_frame
-	check(_place_name(main) == "Home" and not hud._menu.visible, "tapping a visited place on the map takes the boy there")
+	check(_place_name(main) == "Home" and not hud.menu_open(), "tapping a visited place on the map takes the boy there")
 	hud._show_tab("bag")
 	loader.go_to(load("res://src/scenes/world/village/Village.tscn") as PackedScene, "MosqueDoor")
 	for i: int in 3:

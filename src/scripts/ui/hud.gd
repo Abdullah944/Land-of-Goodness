@@ -37,6 +37,9 @@ var _clock_panel: Control
 var _toolbar: Control
 var _burger: Button
 var _menu: Control
+## Whether the menu is open. Its picture may still be fading out for a moment after it closes.
+var _menu_open: bool = false
+var _menu_motion: Tween
 var _slots: Array[Button] = []
 var _tab: String = "bag"
 var _seed_icons: Dictionary = {}
@@ -198,7 +201,7 @@ func show_pickup(item: String, amount: int) -> void:
 	panel.position.x -= 30.0
 	var slide: Tween = panel.create_tween()
 	slide.set_parallel(true)
-	slide.tween_property(panel, "position:x", panel.position.x + 30.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	slide.tween_property(panel, "position:x", panel.position.x + 30.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	slide.tween_property(panel, "modulate:a", 1.0, 0.15)
 
 func _pickup_text(row: Dictionary) -> void:
@@ -282,11 +285,11 @@ func show_sale(item: String, quantity: int, earned: int, remaining: int, balance
 	_sale_panel.move_to_front()
 	# The receipt pops in, and the sum earned counts up.
 	_sale_panel.pivot_offset = _sale_panel.size * 0.5
-	_sale_panel.scale = Vector2(0.8, 0.8)
+	_sale_panel.scale = Vector2(0.95, 0.95)
 	_sale_panel.modulate.a = 0.0
 	var pop: Tween = _sale_panel.create_tween()
-	pop.tween_property(_sale_panel, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	pop.parallel().tween_property(_sale_panel, "modulate:a", 1.0, 0.12)
+	pop.tween_property(_sale_panel, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	pop.parallel().tween_property(_sale_panel, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var count_up: Callable = func(value: float) -> void:
 		_sale_earned.text = Locale.t("dinars") % int(round(value))
 	pop.parallel().tween_method(count_up, 0.0, float(earned), 0.5).set_delay(0.1)
@@ -300,9 +303,13 @@ func dismiss_sale() -> void:
 	if _sale_panel != null:
 		_sale_panel.visible = false
 
+func menu_open() -> bool:
+	return _menu_open
+
 func dismiss_menu() -> void:
-	if _menu != null and _menu.visible:
-		_menu.visible = false
+	if _menu != null and _menu_open:
+		_menu_open = false
+		_animate_menu(false)
 		var clock: Node = get_tree().current_scene.get_node_or_null("Systems/Clock")
 		if clock != null:
 			clock.set_process(true)
@@ -319,7 +326,7 @@ func blocks_point(screen_position: Vector2) -> bool:
 	var title: Node = get_parent().get_node_or_null("TitleMenu")
 	if title != null and title.has_method("is_open") and bool(title.call("is_open")):
 		return true
-	if _menu.visible:
+	if _menu_open:
 		return true
 	if _sale_panel != null and _sale_panel.visible and _sale_panel.get_global_rect().has_point(screen_position):
 		return true
@@ -978,21 +985,46 @@ func activities_flash(text: String) -> void:
 	(get_tree().current_scene.get_node("Systems/Activities") as Activities).flash(text)
 
 func _toggle_menu() -> void:
-	_menu.visible = not _menu.visible
+	_menu_open = not _menu_open
+	_animate_menu(_menu_open)
 	var boy: Player = _player()
-	boy.busy = _menu.visible
-	if _menu.visible:
+	boy.busy = _menu_open
+	if _menu_open:
 		boy.cancel_tap()
 	var clock: Node = get_tree().current_scene.get_node_or_null("Systems/Clock")
 	if clock != null:
-		clock.set_process(not _menu.visible)
+		clock.set_process(not _menu_open)
 	refresh()
+
+## The menu grows out of the menu button that opened it (scale 0.95 to 1 and a fade, 200 ms, ease-out),
+## and goes back into it 20% faster (160 ms, ease-in). No bounce: it opens many times a day.
+func _animate_menu(open: bool) -> void:
+	if _menu_motion != null and _menu_motion.is_valid():
+		_menu_motion.kill()
+	_menu.pivot_offset = (_burger.position + _burger.size * 0.5) - _menu.position
+	_menu_motion = _menu.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC)
+	if open:
+		_menu.visible = true
+		_menu.scale = Vector2(0.95, 0.95)
+		_menu.modulate.a = 0.0
+		_menu_motion.set_ease(Tween.EASE_OUT)
+		_menu_motion.tween_property(_menu, "scale", Vector2.ONE, 0.2)
+		_menu_motion.tween_property(_menu, "modulate:a", 1.0, 0.2)
+	else:
+		_menu_motion.set_ease(Tween.EASE_IN)
+		_menu_motion.tween_property(_menu, "scale", Vector2(0.95, 0.95), 0.16)
+		_menu_motion.tween_property(_menu, "modulate:a", 0.0, 0.16)
+		_menu_motion.chain().tween_callback(func() -> void:
+			if not _menu_open:
+				_menu.visible = false
+				_menu.scale = Vector2.ONE
+				_menu.modulate.a = 1.0)
 
 ## Fast travel from the map: closes the menu and takes the boy to that place's arrival spot.
 func _travel_to(key: String) -> void:
 	var main: Node = get_tree().current_scene
 	var stead: Stead = main.get_node_or_null("Systems/Stead") as Stead
-	if _menu.visible:
+	if _menu_open:
 		_toggle_menu()
 	if stead == null or stead.place_name == key:
 		return
@@ -1018,6 +1050,7 @@ func _fill_quests(stead: Stead) -> void:
 		old.queue_free()
 	if stead == null:
 		return
+	_quest_rows.set_meta("stagger", 0)
 	var box: Vector2 = _quest_rows.size
 	var right_to_left: bool = Locale.language == "ar"
 	var left_w: float = floor(box.x * 0.62)
@@ -1131,6 +1164,11 @@ func _quest_label(text: String, at: Vector2, size: Vector2, font_size: int, colo
 	_quest_rows.add_child(label)
 	Locale.apply_control(label)
 	label.add_theme_font_size_override("font_size", font_size)
+	# Lines come in one after another, 30 ms apart, each a short fade (design guide: stagger lists).
+	var order: int = int(_quest_rows.get_meta("stagger", 0))
+	_quest_rows.set_meta("stagger", order + 1)
+	label.modulate.a = 0.0
+	label.create_tween().tween_property(label, "modulate:a", 1.0, 0.15).set_delay(order * 0.03).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	return label
 
 ## The small round mark in front of a step: a tick when done, gold now, an empty ring for later.

@@ -60,6 +60,8 @@ No fighting, no ads, no purchases, nature sounds only.
 
 - Harvests flying to the bag: everyday actions stay calm (frequency of use), and items already jump and fly to the boy in an arc, so no bigger show was added.
 - Talk-box choice rows are 30 game units high (about 41 points), a little under 44; making them taller would push long menus off the box. Menus already show 4 or fewer choices.
+- Motion numbers (2026-11-14, for 1.0.1): buttons dip to 0.97 and back in about 150 ms with no bounce; the menu grows out of the menu button (0.95 to 1, 200 ms, ease-out) and shrinks back 20% faster; pickups and the sale receipt ease in with no bounce; quest lines appear 30 ms apart. Bounce stays only for rare moments (a ripe plant's star, a found item).
+- Not used: Reduce Motion (the game engine cannot read the iPhone's setting); rubber-band and stretch on drags (the only drags are the map and the sura list, which follow the finger 1:1); icon crossfades (the Quran button shows words, not icons).
 - Toolbar slots: the hit area is the toolbar's full width but only the gap between slots high (about 37 points), since the slots sit close together.
 
 ## Owner notes

@@ -69,8 +69,7 @@ func _boy_is_free() -> bool:
 		if layer is CanvasLayer and (layer as CanvasLayer).visible and not (name == "UI/FishGame" and not bool(layer.call("is_open"))):
 			return false
 	var hud: Node = scene.get_node_or_null("UI/HUD")
-	var menu: Variant = hud.get("_menu") if hud != null else null
-	return not (menu is Control and (menu as Control).visible)
+	return not (hud != null and hud.has_method("menu_open") and bool(hud.call("menu_open")))
 
 func _ask() -> void:
 	_asked = true

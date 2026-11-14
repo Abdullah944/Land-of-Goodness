@@ -439,8 +439,7 @@ func _world_shows() -> bool:
 	var hud: Node = scene.get_node_or_null("UI/HUD") if scene != null else null
 	if hud == null:
 		return true
-	var menu: Variant = hud.get("_menu")
-	return not (menu is Control and (menu as Control).visible)
+	return not (hud.has_method("menu_open") and bool(hud.call("menu_open")))
 
 func _hold(on: bool) -> void:
 	var scene: Node = get_tree().current_scene
