@@ -16,7 +16,10 @@ func _on_body_entered(body: Node2D) -> void:
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
 	if activities.rock_mined:
 		return
+	if not CaveWork.can_mine(self, activities):
+		return
 	activities.give_stone()
+	CaveWork.pay(self)
 	_hide_rock()
 
 func _hide_rock() -> void:

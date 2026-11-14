@@ -1149,6 +1149,25 @@ func _check_cave(main: Node) -> void:
 		await process_frame
 	var cave: CaveFloor = main.get_node("World/Cave") as CaveFloor
 	check(cave != null and cave.level == 1 and cave.get_node_or_null("LadderDown") != null and cave.get_node_or_null("Rock") != null, "the farm's cave opens on level 1, with its rock and a ladder down")
+	var ladder: Node2D = cave.get_node("LadderDown") as Node2D
+	check(not ladder.visible and cave.left_to_mine() == 2 and not cave.is_open(), "the ladder down stays hidden until the level's rocks are mined")
+	var digger: Player = main.find_child("Player", true, false) as Player
+	var cave_bag: Inventory = systems.get_node("Inventory") as Inventory
+	cave_bag.hearts = cave_bag.max_hearts
+	cave.get_node("Rock").call("_on_body_entered", digger)
+	for i: int in 2:
+		await process_frame
+	check(not ladder.visible and cave.left_to_mine() == 1, "after one rock the way is still closed, with one left")
+	cave.get_node("Copper").call("_on_body_entered", digger)
+	for i: int in 2:
+		await process_frame
+	check(ladder.visible and cave.is_open() and cave_bag.hearts < cave_bag.max_hearts, "the last rock opens the way down, and mining tires the boy a little")
+	var harder: bool = true
+	for depth: int in range(2, CaveFloor.DEEPEST + 1):
+		var here: int = CaveFloor.stone_count(depth) + CaveFloor.copper_count(depth) + CaveFloor.iron_count(depth)
+		var above: int = CaveFloor.stone_count(depth - 1) + CaveFloor.copper_count(depth - 1) + CaveFloor.iron_count(depth - 1)
+		harder = harder and here >= above and CaveFloor.mine_cost(depth) >= CaveFloor.mine_cost(depth - 1) and CaveFloor.obstacle_count(depth) >= CaveFloor.obstacle_count(depth - 1)
+	check(harder and CaveFloor.mine_cost(10) > CaveFloor.mine_cost(1) and CaveFloor.stone_count(10) + CaveFloor.copper_count(10) + CaveFloor.iron_count(10) >= 15, "each cave level is at least as hard as the one above, and the deepest much harder")
 	await create_timer(loader.settle_left() + 0.05).timeout
 	cave.go_down()
 	for i: int in 6:
@@ -1179,7 +1198,14 @@ func _check_cave(main: Node) -> void:
 	for i: int in 6:
 		await process_frame
 	cave = main.get_node("World/Cave") as CaveFloor
-	check(cave.level == 10 and cave.get_node_or_null("LadderDown") == null and cave.get_node_or_null("Treasure") != null and CaveFloor.iron_count(10) > 0, "level 10 is the bottom, with iron and a glowing treasure")
+	check(cave.level == 10 and cave.get_node_or_null("LadderDown") == null and cave.get_node_or_null("Treasure") == null and CaveFloor.iron_count(10) > 0, "level 10 is the bottom, with iron, and the treasure is hidden at first")
+	var mined_all: Dictionary = stead.flags.get("cave_mined", {})
+	for spot: Area2D in cave.mining_spots():
+		mined_all[str(spot.get("mark"))] = true
+	stead.flags["cave_mined"] = mined_all
+	for i: int in 2:
+		await process_frame
+	check(cave.get_node_or_null("Treasure") != null and cave.is_open(), "when every rock on level 10 is mined, the glowing treasure appears")
 	var language: String = Locale.language
 	Locale.language = "ar"
 	var arabic: String = Locale.t("cave_level")

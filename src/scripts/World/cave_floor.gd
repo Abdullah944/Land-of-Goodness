@@ -1,6 +1,9 @@
 # src/scripts/World/cave_floor.gd
 # Purpose: The cave goes ten levels down. Each level has its own color, its own layout of rocks, ore and crystals,
 # a ladder down at the back, and the way out at the front leads one level up.
+# The ladder (and on level 10 the treasure) stays hidden until every rock and vein on the level has been mined once;
+# then it appears with a small celebration and stays open. Each level is harder than the one above: more to mine,
+# iron from level 3, more tiring work (hearts per rock) and more things to walk around. No timers, by design.
 
 class_name CaveFloor
 extends Node2D
@@ -36,15 +39,28 @@ var level: int = 1
 var ladder_at: Vector2 = Vector2.ZERO
 var _taken: Array[Vector2] = []
 
-## How many of each gathering spot a level has.
+var _ladder: Area2D
+var _open: bool = false
+var _left: int = -1
+
+## How many of each gathering spot a level has. Level 1 keeps its two hand-placed spots (a rock and copper);
+## level 2 has 4 to mine, level 5 has 8 and level 10 has 15.
 static func stone_count(depth: int) -> int:
-	return 2 + depth / 3
+	return 2 + depth / 2
 
 static func copper_count(depth: int) -> int:
 	return 1 + depth / 3
 
 static func iron_count(depth: int) -> int:
-	return 0 if depth < 3 else (depth - 1) / 2
+	return 0 if depth < 3 else 1 + (depth - 3) / 2
+
+## Hearts that mining one rock or vein costs: 0.1 on levels 1 and 2, up to 0.5 on levels 9 and 10.
+static func mine_cost(depth: int) -> float:
+	return 0.1 * ceilf(float(clampi(depth, 1, DEEPEST)) / 2.0)
+
+## How many mining carts, barrels and crates stand in the way.
+static func obstacle_count(depth: int) -> int:
+	return 1 + depth / 2
 
 static func floor_color(depth: int) -> Color:
 	return COLORS[clampi(depth, 1, DEEPEST) - 1][0]
@@ -75,9 +91,8 @@ func _ready() -> void:
 	_add_ladder_spawn()
 	if level < DEEPEST:
 		_add_ladder()
-	else:
-		_add_spot("Cave10/Treasure", "pearl", ladder_at, crystal_color(level), 1.4)
 	_set_exit()
+	_check_way(false)
 	var activities: Node = _activities()
 	if activities != null and activities.has_method("flash"):
 		activities.call("flash", Locale.t("cave_level") % level)
@@ -132,7 +147,7 @@ func _fill(roll: RandomNumberGenerator) -> void:
 		_add_spot("Cave%d/Copper%d" % [level, i], "copper", _free_spot(roll, 30.0), Color.WHITE, 1.0, "res://assets/props/ore_copper.png")
 	for i: int in iron_count(level):
 		_add_spot("Cave%d/Iron%d" % [level, i], "iron", _free_spot(roll, 30.0), Color.WHITE, 1.0, "res://assets/props/ore_iron.png")
-	for i: int in 1 + level % 3:
+	for i: int in obstacle_count(level):
 		var prop: Node2D = PropPiece.MARK.new() as Node2D
 		prop.name = "Mining%d" % i
 		prop.position = _free_spot(roll, 34.0)
@@ -149,6 +164,95 @@ func _fill(roll: RandomNumberGenerator) -> void:
 		glow.modulate = crystal_color(level)
 		glow.position = _free_spot(roll, 16.0)
 		add_child(glow)
+
+func _process(_delta: float) -> void:
+	if not _open:
+		_check_way(true)
+
+## The rocks and veins to mine on this level (not the treasure).
+func mining_spots() -> Array[Area2D]:
+	var spots: Array[Area2D] = []
+	for child: Node in get_children():
+		if child is Area2D and child.name != "Treasure" and (child.get("mark") != null or child.name == "Rock"):
+			spots.append(child as Area2D)
+	return spots
+
+## The name a spot is remembered by in the save: its daily-gathering mark, or the level and its name.
+func _spot_key(spot: Area2D) -> String:
+	var mark: Variant = spot.get("mark")
+	return str(mark) if mark != null else "Cave%d/%s" % [level, spot.name]
+
+## How many rocks and veins on this level have never been mined.
+func left_to_mine() -> int:
+	return maxi(0, _left)
+
+func is_open() -> bool:
+	return _open
+
+## Counts what is still unmined. A spot counts as mined once it has been gathered on any day. When nothing is
+## left, the way down (or the treasure) appears.
+func _check_way(celebrate: bool) -> void:
+	var stead: Stead = _stead()
+	if stead == null:
+		return
+	var mined: Dictionary = stead.flags.get("cave_mined", {})
+	var left: int = 0
+	for spot: Area2D in mining_spots():
+		var key: String = _spot_key(spot)
+		if mined.has(key):
+			continue
+		if not spot.visible:
+			mined[key] = true
+			continue
+		left += 1
+	stead.flags["cave_mined"] = mined
+	if left == _left:
+		return
+	var first_look: bool = _left < 0
+	_left = left
+	var activities: Node = _activities()
+	if left > 0:
+		_show_way(false)
+		if activities != null:
+			activities.set("note", Locale.t("cave_treasure_left" if level >= DEEPEST else "cave_way_left") % left)
+		return
+	_open = true
+	_show_way(true)
+	if celebrate and not first_look:
+		_celebrate(activities)
+
+## Hides or shows the ladder down; on the last level, the treasure.
+func _show_way(shown: bool) -> void:
+	if level >= DEEPEST:
+		if shown and get_node_or_null("Treasure") == null:
+			_add_spot("Cave10/Treasure", "pearl", ladder_at, crystal_color(level), 1.4)
+		return
+	if _ladder == null:
+		return
+	_ladder.visible = shown
+	_ladder.set_deferred("monitoring", shown)
+	for child: Node in _ladder.get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).set_deferred("disabled", not shown)
+
+## The way down appears: it grows in from small with a soft gold burst and a chime (a rare moment, so it may
+## celebrate: about 0.6 s, ease-out).
+func _celebrate(activities: Node) -> void:
+	var target: Node2D = _ladder if level < DEEPEST else get_node_or_null("Treasure") as Node2D
+	if target != null:
+		target.scale = Vector2(0.4, 0.4)
+		target.modulate.a = 0.0
+		var grow: Tween = target.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		grow.tween_property(target, "scale", Vector2.ONE * (1.4 if level >= DEEPEST else 1.0), 0.6)
+		grow.tween_property(target, "modulate:a", 1.0, 0.4)
+		Juice.burst(self, target.position + Vector2(0, -6), UiStyle.GOLD, 14, 46.0, 0.6, 2.4)
+		Juice.glint(self, target.position + Vector2(10, -18))
+	Juice.tap(get_tree(), Juice.TAP_FIRM)
+	var bank: Node = get_tree().current_scene.get_node_or_null("Systems/SoundBank")
+	if bank != null:
+		bank.call("play", "level")
+	if activities != null:
+		activities.call("flash", Locale.t("cave_treasure_open" if level >= DEEPEST else "cave_way_open"))
 
 ## A spot inside the room, away from the walk and from everything already placed.
 func _free_spot(roll: RandomNumberGenerator, apart: float) -> Vector2:
@@ -219,6 +323,7 @@ func _add_ladder() -> void:
 	ladder.add_child(shape)
 	ladder.body_entered.connect(_on_ladder)
 	add_child(ladder)
+	_ladder = ladder
 
 func _add_ladder_spawn() -> void:
 	var spawn: Marker2D = Marker2D.new()

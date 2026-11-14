@@ -18,7 +18,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body is Player:
 		return
 	var activities: Activities = get_tree().current_scene.get_node("Systems/Activities") as Activities
+	if not CaveWork.can_mine(self, activities):
+		return
 	if activities.take_daily(mark, item):
+		CaveWork.pay(self)
 		_apply()
 
 func apply_day(gathered: Dictionary, day: int) -> void:

@@ -471,8 +471,16 @@ func from_data(data: Dictionary) -> void:
 	flags = {}
 	var stored_flags: Variant = data.get("flags", {})
 	if stored_flags is Dictionary:
+		# Most flags are yes or no, but some hold a number (the cave level, the last sura), a word (the day
+		# the boy last prayed) or a list (the cave rocks mined). Each keeps its own kind.
 		for key: Variant in stored_flags:
-			flags[str(key)] = bool(stored_flags[key])
+			var value: Variant = stored_flags[key]
+			if value is Dictionary:
+				flags[str(key)] = (value as Dictionary).duplicate(true)
+			elif value is String or value is float or value is int:
+				flags[str(key)] = value
+			else:
+				flags[str(key)] = bool(value)
 	visited = {}
 	var stored_visits: Variant = data.get("visited", {})
 	if stored_visits is Dictionary:
