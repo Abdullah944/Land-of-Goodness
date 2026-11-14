@@ -846,6 +846,13 @@ func _check_sound(main: Node) -> void:
 	var paid: String = bank.last_kind
 	dialogue._advance()
 	check(refused == "no" and paid == "coin" and bank.last_kind == "ui", "a refusal, a purchase and the next line of talk each have a sound")
+	check(SoundBank.ground_at("Village", Vector2(10, -40)) == "stone" and SoundBank.ground_at("HouseInside", Vector2.ZERO) == "wood" and SoundBank.ground_at("Cave", Vector2.ZERO) == "stone" and SoundBank.ground_at("Home", Vector2(-392, -200)) == "gravel" and SoundBank.ground_at("Home", Vector2(-200, 0)) == "grass", "footsteps know stone squares, wooden floors, paths and grass")
+	var calls: bool = true
+	for animal_kind: String in ["chicken", "goat", "sheep", "cow"]:
+		calls = calls and bank.animal_call(animal_kind) != null
+	check(calls, "every farm animal has a real call to play")
+	bank.step("grass")
+	check(bank.last_kind == "step_grass", "a footstep plays")
 	activities._on_fish_game(false)
 	check(bank.last_kind == "no", "a lost fish has a sound")
 	loader.go_to(load("res://src/scenes/world/workshop/Workshop_inside.tscn") as PackedScene, "PlayerSpawn")

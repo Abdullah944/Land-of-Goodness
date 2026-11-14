@@ -14,6 +14,9 @@ const SHEETS: Dictionary = {
 @export var barn_area: Rect2 = Rect2(180, 190, 70, 70)
 
 var _walkers: Array[Dictionary] = []
+## Seconds between one animal's calls, and how near the boy must be to hear them.
+const CALL_EVERY: Vector2 = Vector2(16.0, 38.0)
+const CALL_REACH: float = 240.0
 
 static var _sheets: Dictionary = {}
 
@@ -63,10 +66,15 @@ func sync(animals: Array) -> void:
 		var cell: Vector2 = sprite.texture.get_size() / Vector2(2.0, 1.0)
 		sprite.add_child(UiStyle.shadow_node(Vector2(0, cell.y * 0.5 - 2.0), cell.x * 0.8))
 		sprite.z_index = 2000 + int(global_position.y + sprite.position.y)
-		_walkers.append({"sprite": sprite, "area": area, "goal": sprite.position, "wait": 0.5 + 0.3 * i, "clock": 0.0, "kind": kind, "peck": randf() * 1.5})
+		var voice: AudioStreamPlayer2D = AudioStreamPlayer2D.new()
+		voice.max_distance = CALL_REACH
+		voice.attenuation = 1.6
+		sprite.add_child(voice)
+		_walkers.append({"sprite": sprite, "area": area, "goal": sprite.position, "wait": 0.5 + 0.3 * i, "clock": 0.0, "kind": kind, "peck": randf() * 1.5, "voice": voice, "call_in": randf_range(4.0, CALL_EVERY.y)})
 
 func _process(delta: float) -> void:
 	for walker: Dictionary in _walkers:
+		_maybe_call(walker, delta)
 		var sprite: Sprite2D = walker["sprite"]
 		var area: Rect2 = walker["area"]
 		walker["clock"] = float(walker["clock"]) + delta
@@ -87,6 +95,27 @@ func _process(delta: float) -> void:
 		sprite.flip_h = gap.x < 0.0
 		sprite.frame = int(float(walker["clock"]) * 4.0) % 2
 		sprite.z_index = 2000 + int(global_position.y + sprite.position.y)
+
+## Now and then an animal calls, heard only when the boy is near; a calm, rare sound, never a constant noise.
+func _maybe_call(walker: Dictionary, delta: float) -> void:
+	walker["call_in"] = float(walker["call_in"]) - delta
+	if float(walker["call_in"]) > 0.0:
+		return
+	walker["call_in"] = randf_range(CALL_EVERY.x, CALL_EVERY.y)
+	var scene: Node = get_tree().current_scene
+	var player: Node2D = scene.find_child("Player", true, false) as Node2D if scene != null else null
+	var sprite: Sprite2D = walker["sprite"]
+	var bank: SoundBank = scene.get_node_or_null("Systems/SoundBank") as SoundBank if scene != null else null
+	if player == null or bank == null or player.global_position.distance_to(sprite.global_position) > CALL_REACH:
+		return
+	var call: AudioStream = bank.animal_call(str(walker["kind"]))
+	if call == null:
+		return
+	var voice: AudioStreamPlayer2D = walker["voice"]
+	voice.stream = call
+	voice.volume_db = bank.animal_db()
+	voice.pitch_scale = randf_range(0.94, 1.06)
+	voice.play()
 
 ## While standing, a hen pecks at the ground and the others chew, with now and then a small hop.
 func _graze(walker: Dictionary, sprite: Sprite2D, delta: float) -> void:

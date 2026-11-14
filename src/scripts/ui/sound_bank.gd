@@ -41,6 +41,18 @@ const CRICKET_PLAY: Vector2 = Vector2(15, 26)
 const CRICKET_REST: Vector2 = Vector2(25, 60)
 ## Places with a river or a lake, where the waterfall plays too.
 const WATER_PLACES: Array[String] = ["Forest", "Village"]
+## Footsteps: four real steps for each kind of ground (tools/cut_sounds.py). They play on every step, so
+## they stay quiet and vary a little (design guide: what happens most animates and sounds least).
+const STEP_PATH: String = "res://assets/audio/steps/%s_%d.wav"
+const STEP_GROUNDS: Array[String] = ["grass", "gravel", "stone", "wood"]
+const STEP_COUNT: int = 4
+const STEP_DB: float = -15.0
+## Farm animals call now and then near the boy. Real recordings, cut short.
+const ANIMAL_PATH: String = "res://assets/audio/animals/%s.wav"
+const ANIMAL_CALLS: Dictionary = {
+	"chicken": ["hen_1", "hen_2"], "goat": ["goat_1", "goat_2"], "sheep": ["sheep_1", "sheep_2", "sheep_3"], "cow": ["cow_1", "cow_2"],
+}
+const ANIMAL_DB: float = -9.0
 const FADE_SECONDS: float = 3.0
 const RAIN_FADE_SECONDS: float = 5.0
 
@@ -54,6 +66,9 @@ var _cricket: Dictionary = {}
 var _rain: AudioStreamPlayer
 var _waterfall: AudioStreamPlayer
 var _last_clip: String = ""
+var _step_player: AudioStreamPlayer
+var _step_clips: Dictionary = {}
+var _last_step: int = -1
 ## The last effect asked for, even with the sound off. Tests read it.
 var last_kind: String = ""
 
@@ -71,6 +86,14 @@ func _ready() -> void:
 	_rain.stream = _sound("rain", true)
 	_waterfall = _new_player()
 	_waterfall.stream = _sound("waterfall", true)
+	_step_player = _new_player()
+	for ground: String in STEP_GROUNDS:
+		var clips: Array[AudioStream] = []
+		for n: int in range(1, STEP_COUNT + 1):
+			var clip: AudioStream = load(STEP_PATH % [ground, n]) as AudioStream
+			if clip != null:
+				clips.append(clip)
+		_step_clips[ground] = clips
 
 func play(kind: String) -> void:
 	last_kind = kind
@@ -82,6 +105,53 @@ func play(kind: String) -> void:
 		player.volume_db = LEVEL_DB[level] + float(TRIM_DB.get(kind, 0.0))
 		player.pitch_scale = _roll.randf_range(1.0 - PITCH_SPREAD, 1.0 + PITCH_SPREAD) if kind in VARIED else 1.0
 		player.play()
+
+## One footstep on this kind of ground, never the same clip twice in a row.
+func step(ground: String) -> void:
+	last_kind = "step_" + ground
+	var level: int = _level("sfx_level")
+	var clips: Array = _step_clips.get(ground, [])
+	if level < 1 or clips.is_empty():
+		return
+	var pick: int = _roll.randi_range(0, clips.size() - 1)
+	if pick == _last_step:
+		pick = (pick + 1) % clips.size()
+	_last_step = pick
+	_step_player.stream = clips[pick]
+	# Prayer rugs are soft: steps in the mosque are quieter still.
+	_step_player.volume_db = LEVEL_DB[level] + STEP_DB + (-6.0 if _place() == "MosqueInside" else 0.0)
+	_step_player.pitch_scale = _roll.randf_range(0.92, 1.08)
+	_step_player.play()
+
+## What the boy's feet are on here: wood in the house and workshop and on piers, stone on squares and in the
+## cave, gravel on roads, dirt paths and sand, the soft rugs of the mosque, and grass everywhere else.
+static func ground_at(place: String, at: Vector2) -> String:
+	match place:
+		"HouseInside", "WorkshopInside":
+			return "wood"
+		"MosqueInside":
+			return "grass"
+		"Cave":
+			return "stone"
+	if not WorldShapes.has_place(place):
+		return "grass"
+	if WorldShapes.on_planks(place, at):
+		return "wood"
+	if WorldShapes.on_cobble(place, at):
+		return "stone"
+	if WorldShapes.on_path(place, at) or bool(WorldShapes.PLACES[place].get("sandy", false)):
+		return "gravel"
+	return "grass"
+
+## A random call for this animal, and how loud animal calls are now (or null when sounds are off).
+func animal_call(kind: String) -> AudioStream:
+	var names: Array = ANIMAL_CALLS.get(kind, [])
+	if names.is_empty() or _level("sfx_level") < 1:
+		return null
+	return load(ANIMAL_PATH % str(names[_roll.randi_range(0, names.size() - 1)])) as AudioStream
+
+func animal_db() -> float:
+	return LEVEL_DB[_level("sfx_level")] + ANIMAL_DB
 
 ## What is heard in a place: which voices are on, and how much quieter the outdoors is there.
 static func mood(place: String, season: String, raining: bool, minute: float) -> Dictionary:

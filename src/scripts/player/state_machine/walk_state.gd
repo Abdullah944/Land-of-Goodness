@@ -7,6 +7,9 @@ extends NodeState
 @export var animated_sprite_2d: AnimatedSprite2D
 
 var _blocked: float = 0.0
+## Distance walked since the last footstep. A step sounds every STEP_PIXELS.
+var _stride: float = 0.0
+const STEP_PIXELS: float = 22.0
 ## The way around obstacles to the current goal, and the goal it was found for.
 var _path: PackedVector2Array = PackedVector2Array()
 var _path_goal: Vector2 = Vector2.INF
@@ -23,7 +26,19 @@ func _on_physics_process(_delta: float) -> void:
 			animated_sprite_2d.play(anim)
 	player.velocity = direction * player.move_speed
 	player.move_and_slide()
+	_footsteps(_delta)
 	_give_up_when_blocked(_delta, direction)
+
+func _footsteps(delta: float) -> void:
+	_stride += player.get_real_velocity().length() * delta
+	if _stride < STEP_PIXELS:
+		return
+	_stride = 0.0
+	var systems: Node = get_tree().current_scene.get_node_or_null("Systems")
+	var bank: SoundBank = systems.get_node_or_null("SoundBank") as SoundBank if systems != null else null
+	var stead: Node = systems.get_node_or_null("Stead") if systems != null else null
+	if bank != null and stead != null:
+		bank.step(SoundBank.ground_at(str(stead.get("place_name")), player.global_position + WalkPath.FEET))
 
 ## A tap behind a wall or stall would push the boy into it forever.
 func _give_up_when_blocked(delta: float, direction: Vector2) -> void:
