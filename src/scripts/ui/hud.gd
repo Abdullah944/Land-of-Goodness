@@ -649,6 +649,19 @@ func _build_tools() -> void:
 		slot.button_down.connect(Juice.press.bind(slot))
 		bar.add_child(slot)
 		_slots.append(slot)
+		# The drawn square is small; an invisible hit area spans the toolbar's whole width and the gap between
+		# squares, so a thumb finds the tool easily (Fitts's law).
+		var hit: Button = Button.new()
+		hit.flat = true
+		hit.focus_mode = Control.FOCUS_NONE
+		for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
+			hit.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+		var pitch: float = squares[1].position.y - squares[0].position.y
+		hit.position = Vector2(-squares[i].position.x, -(pitch - squares[i].size.y) * 0.5)
+		hit.size = Vector2(bar.size.x, pitch)
+		hit.pressed.connect(slot.pressed.emit)
+		hit.button_down.connect(Juice.press.bind(slot))
+		slot.add_child(hit)
 
 func _slot_box(color: Color) -> StyleBoxFlat:
 	var box: StyleBoxFlat = StyleBoxFlat.new()

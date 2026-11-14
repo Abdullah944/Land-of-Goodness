@@ -22,6 +22,8 @@ No fighting, no ads, no purchases, nature sounds only.
 - Quran listening: the 114 suras recited by Mishary Alafasy, from the Quran shelf in the mosque; each sura downloads once when the player asks, no text shown (2026-11-14)
 - Art check 2: animals by the barn, clearer rain, seasonal grass and trees, a centerpiece for each festival (2026-11-13)
 - App Store: version 1.0 (build 11, iPhone only) submitted for Apple review on 2026-11-14, "Waiting for Review"; Made for Kids, ages 6-8; privacy and support pages on GitHub Pages. Listing: Arabic and English text, 7 pictures per language, age rating 4+, Data Not Collected, free in all countries, Games / Simulation and Family
+- Prayer together, pathfinding around obstacles, tap anywhere on a tree or rock (2026-11-14, in build 11)
+- UX pass from ~/.claude/DESIGN.md (2026-11-14, for 1.0.1, not in build 11): a ring answers every tap at once; tool work lands on the swing's impact frame and the hoe and can swing faster (the hoe tills about 0.35 s after a tap); toolbar slots tap across the whole toolbar width; small stones and herbs have a tap area of at least 32 game units (about 44 points)
 - Android debug APK (2026-11-14): build/android/LandOfKhair-debug.apk on the ASUS, copy on the NAS; not run yet (no emulator image or Android phone); notifications are iPhone only
 
 ## Now
@@ -44,6 +46,12 @@ No fighting, no ads, no purchases, nature sounds only.
 - Replace pictures if any look wrong (SpriteCook: 8 credits left)
 - Short frame dips on the iPhone: one place now and then drops to 42-47 frames a second for a moment, in any place and any weather (simplest road included), so not the game's load. Checked twice on 2026-11-13 with the 44x24 field fully planted: the farm holds 59-60.
 - Android: run the APK on a phone or emulator; notifications need the plugin's Android files and a Gradle build
+
+## Design guide: where a rule does not fit
+
+- Harvests flying to the bag: everyday actions stay calm (frequency of use), and items already jump and fly to the boy in an arc, so no bigger show was added.
+- Talk-box choice rows are 30 game units high (about 41 points), a little under 44; making them taller would push long menus off the box. Menus already show 4 or fewer choices.
+- Toolbar slots: the hit area is the toolbar's full width but only the gap between slots high (about 37 points), since the slots sit close together.
 
 ## Owner notes
 

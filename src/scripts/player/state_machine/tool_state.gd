@@ -1,5 +1,7 @@
 # scripts/player/state_machine/tool_state.gd
 # Purpose: Plays one tool animation, then returns to Idle.
+# The tool's work lands on the swing's impact frame, not when the swing has ended, so the ground answers at once.
+# Hoeing and watering happen hundreds of times a day, so they swing a little faster than the axe and pick.
 
 extends NodeState
 
@@ -7,25 +9,43 @@ extends NodeState
 @export var animated_sprite_2d: AnimatedSprite2D
 @export var animation_prefix: String = "hoe_"
 
+## How fast each swing plays (1 is the drawn speed).
+const SPEED: Dictionary = {"hoe_": 1.6, "water_": 1.6, "axe_": 1.25, "pick_": 1.25}
+
 var _used: bool = false
+var _tired: bool = false
 
 func _on_enter() -> void:
 	_used = false
+	_tired = false
 	var swing: String = animation_prefix + player.facing
+	animated_sprite_2d.speed_scale = float(SPEED.get(animation_prefix, 1.0))
+	if not animated_sprite_2d.frame_changed.is_connected(_on_frame):
+		animated_sprite_2d.frame_changed.connect(_on_frame)
 	if animated_sprite_2d.sprite_frames.has_animation(swing):
 		animated_sprite_2d.play(swing)
 
+## Halfway through the swing the tool meets the ground, the tree or the rock.
+func _on_frame() -> void:
+	var swing: String = animation_prefix + player.facing
+	if _used or animated_sprite_2d.animation != swing:
+		return
+	var impact: int = maxi(1, animated_sprite_2d.sprite_frames.get_frame_count(swing) / 2)
+	if animated_sprite_2d.frame >= impact:
+		_apply()
+
 func _on_next_transitions() -> void:
 	var swing: String = animation_prefix + player.facing
-	if animated_sprite_2d.animation == swing and animated_sprite_2d.is_playing():
+	if animated_sprite_2d.animation == swing and animated_sprite_2d.is_playing() and not _tired:
 		return
-	_finish()
+	_apply()
+	transition.emit("Idle")
 
-func _finish() -> void:
+func _apply() -> void:
 	if not _used:
 		_used = true
 		if not _rested():
-			transition.emit("Idle")
+			_tired = true
 			return
 		_chime()
 		if animation_prefix == "water_":
@@ -36,9 +56,9 @@ func _finish() -> void:
 			_swing("wood")
 		elif animation_prefix == "pick_":
 			_swing("stone")
-	transition.emit("Idle")
 
 func _on_exit() -> void:
+	animated_sprite_2d.speed_scale = 1.0
 	animated_sprite_2d.stop()
 
 func _rested() -> bool:

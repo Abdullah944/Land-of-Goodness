@@ -67,8 +67,10 @@ func set_walk_target(world_position: Vector2) -> void:
 	var dirt: TileMapLayer = find_dirt()
 	if dirt != null:
 		set_tapped_cell(dirt.local_to_map(dirt.to_local(world_position)))
+		Juice.tap_ring(_current_place(), world_position, has_tapped_cell and tool != "")
 		return
 	tapped_point = _snap_indoor(world_position)
+	Juice.tap_ring(_current_place(), world_position, tapped_point.distance_to(world_position) > 2.0 and tapped_point.distance_to(_grid_point(world_position)) > 1.0)
 	walking_indoors = true
 	has_tapped_cell = true
 	wants_hoe = false

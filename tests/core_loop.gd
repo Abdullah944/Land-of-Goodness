@@ -1419,6 +1419,11 @@ func _check_world(main: Node, loader: LevelLoader, activities: Activities) -> vo
 	check(not reader.is_open() and not walker.busy, "closing the Quran lets the boy walk again")
 	var menu_tabs: Array = (main.get_node("UI/HUD").get("_tab_ids") as Dictionary).values()
 	check("quran" in menu_tabs and "quests" in menu_tabs, "the menu has a Quran tab")
+	var big_slots: bool = true
+	for slot: Button in main.get_node("UI/HUD").get("_slots"):
+		var hit: Button = slot.get_child(slot.get_child_count() - 1) as Button
+		big_slots = big_slots and hit != null and hit.size.x >= 50.0 and hit.size.y >= 26.0
+	check(big_slots, "every toolbar slot has a tap area as wide as the toolbar")
 	check(map.current_key() == "Village", "the map shows the mosque inside the village")
 	# Walking: a far tap finds the way around the forest's lake, and passing a fishing spot does not start fishing.
 	loader.go_to(load("res://src/scenes/world/forest/Forest.tscn") as PackedScene, "PlayerSpawn")

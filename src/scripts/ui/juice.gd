@@ -260,3 +260,33 @@ static func wobble(control: Control, strength: float = 3.0) -> void:
 static func _season(tree: SceneTree) -> String:
 	var clock: Node = tree.current_scene.get_node_or_null("Systems/Clock") if tree != null and tree.current_scene != null else null
 	return str(clock.get("season")) if clock != null else "Spring"
+
+## A small ring where the player tapped, shown the moment the finger lands, so every tap is answered at once.
+## Gold when the tap asks for a tool or a person, light when it is only a walk.
+static func tap_ring(place: Node, at: Vector2, busy_spot: bool) -> void:
+	if place == null:
+		return
+	var ring: TapRing = TapRing.new()
+	ring.position = at
+	ring.z_index = 3600
+	ring.color = Color("d9a441") if busy_spot else Color(1.0, 0.97, 0.88)
+	place.add_child(ring)
+
+class TapRing extends Node2D:
+	var color: Color = Color.WHITE
+	var _t: float = 0.0
+	const LIFE: float = 0.28
+
+	func _process(delta: float) -> void:
+		_t += delta
+		if _t >= LIFE:
+			queue_free()
+			return
+		queue_redraw()
+
+	func _draw() -> void:
+		var k: float = _t / LIFE
+		var ease_out: float = 1.0 - pow(1.0 - k, 3.0)
+		var fade: Color = Color(color, 0.9 * (1.0 - k))
+		draw_arc(Vector2.ZERO, 3.0 + 7.0 * ease_out, 0.0, TAU, 20, fade, 1.4, true)
+		draw_circle(Vector2.ZERO, 1.6 * (1.0 - k), fade)

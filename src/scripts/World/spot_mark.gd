@@ -375,11 +375,18 @@ func _draw_talk_mark() -> void:
 
 ## True when a tap at this point lands on the picture itself: the middle of its width, top to feet.
 ## A tap on a tree's leaves then chops that tree, not only a tap at its foot.
+const MIN_TAP: float = 32.0
+
 func covers_tap(point: Vector2) -> bool:
 	if _picture == null or not is_visible_in_tree():
 		return false
 	var box: Rect2 = _sprite_rect()
 	var inner: Rect2 = Rect2(box.position + Vector2(box.size.x * 0.15, box.size.y * 0.05), Vector2(box.size.x * 0.7, box.size.y * 0.95 + 6.0))
+	# Small things (a stone, a herb) get a tap area of at least MIN_TAP around them, about 44 points on a phone.
+	if inner.size.x < MIN_TAP or inner.size.y < MIN_TAP:
+		var middle: Vector2 = inner.get_center()
+		var size: Vector2 = Vector2(maxf(inner.size.x, MIN_TAP), maxf(inner.size.y, MIN_TAP))
+		inner = Rect2(middle - size * 0.5, size)
 	return inner.has_point(point)
 
 func _sprite_rect() -> Rect2:
