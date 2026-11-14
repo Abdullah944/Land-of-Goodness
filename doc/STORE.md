@@ -86,7 +86,7 @@ The game shows a mosque and a prayer reminder. Step 11 of the plan (a reviewer f
    then `xcodebuild -exportArchive -archivePath LandOfKhair.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath export -allowProvisioningUpdates` (method app-store-connect, destination upload).
    The signing identity must be "Apple Development" for the archive; the upload step re-signs for distribution.
 
-The "iOS Store" preset is the same as "iOS" but leaves out `tests/`, `tools/` and `doc/`, signs for distribution, and answers the encryption question. The phone check (`tests/phone_check.gd`) only runs in debug builds, so leaving it out is safe.
+The "iOS Store" preset is the same as "iOS" but leaves out `tests/`, `tools/`, `doc/`, `docs/` and `spritecook-assets.json` (its exclude filter is `tests/*, tools/*, doc/*, docs/*, spritecook-assets.json`), signs for distribution, and answers the encryption question. The phone check (`tests/phone_check.gd`) only runs in debug builds, so leaving it out is safe.
 
 ## Only the owner can do these
 

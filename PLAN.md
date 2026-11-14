@@ -47,6 +47,15 @@ No fighting, no ads, no purchases, nature sounds only.
 - Short frame dips on the iPhone: one place now and then drops to 42-47 frames a second for a moment, in any place and any weather (simplest road included), so not the game's load. Checked twice on 2026-11-13 with the 44x24 field fully planted: the farm holds 59-60.
 - Android: run the APK on a phone or emulator; notifications need the plugin's Android files and a Gradle build
 
+## Security check (~/.claude/SECURITY.md), 2026-11-14
+
+- Passed: no keys, tokens or passwords in the code or anywhere in the git history (76 commits); no key or settings files ever committed; export_presets.cfg and build/ stay out of git.
+- Passed: the store build is a release export; the phone speed check only runs in debug builds; the game prints nothing to the log; the app bundle holds only the normal files.
+- Passed: no accounts, servers or database, so the sign-in, API, database and rate-limit rules do not apply. The only network use is the Quran download over HTTPS from cdn.islamic.network; nothing about the player is sent (App Store label: Data Not Collected).
+- Fixed for 1.0.1: spritecook-assets.json (art IDs, not secret) was packed into the game; every export now leaves out spritecook-assets.json and docs/. The test-only switches (KHAIR_SAVE, KHAIR_SKIP_TITLE) now work only in debug builds.
+- Website rule 14 (security headers): the privacy and support pages on GitHub Pages are plain text pages with no forms or scripts; GitHub Pages does not allow custom headers.
+- Plugins: Notification Scheduler 6.0 and GMPShared 1.0 (local notifications only, no network). Not yet checked for newer versions.
+
 ## Design guide: where a rule does not fit
 
 - Harvests flying to the bag: everyday actions stay calm (frequency of use), and items already jump and fly to the boy in an arc, so no bigger show was added.

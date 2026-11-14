@@ -28,7 +28,8 @@ var _paused_at: float = 0.0
 var _good_path: String = ""
 
 func _ready() -> void:
-	var override_path: String = OS.get_environment("KHAIR_SAVE")
+	# Tests and tools pick their own save file; a store (release) build always uses the player's own.
+	var override_path: String = OS.get_environment("KHAIR_SAVE") if OS.is_debug_build() else ""
 	if override_path != "":
 		path = override_path
 	if OS.is_debug_build() and _take_check_turn():

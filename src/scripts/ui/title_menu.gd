@@ -13,7 +13,7 @@ var _hero: TextureRect
 var _confirm: bool = false
 
 func _ready() -> void:
-	if dismissed or OS.get_environment("KHAIR_SKIP_TITLE") == "1":
+	if dismissed or (OS.is_debug_build() and OS.get_environment("KHAIR_SKIP_TITLE") == "1"):
 		visible = false
 		return
 	_build()
