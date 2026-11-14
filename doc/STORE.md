@@ -7,10 +7,10 @@ Written 2026-11-11, updated 2026-11-14. This text is filled into App Store Conne
 | Field | Value |
 | --- | --- |
 | Bundle ID | `com.abdullah.landofkhair` |
-| Version | 1.0.0 (build 9; raise the build number for every upload) |
+| Version | 1.0.0 (build 11 submitted for review on 2026-11-14; raise the build number for every upload) |
 | Team | NBCQF98255 |
 | Lowest iOS | 15.0 |
-| Screen | Landscape, iPhone |
+| Screen | Landscape, iPhone only (archive with TARGETED_DEVICE_FAMILY=1, or Apple asks for iPad pictures) |
 | Languages | Arabic and English (switch in Settings) |
 | Price | Free, no ads, no purchases |
 | Category | Games: Simulation (second: Family) |
@@ -81,7 +81,10 @@ The game shows a mosque and a prayer reminder. Step 11 of the plan (a reviewer f
 2. Raise `application/version` in the "iOS Store" preset in `export_presets.cfg` (this file is not in git; it lives on the Mac).
 3. `Godot --headless --path . --import`
 4. `Godot --headless --path . --export-release "iOS Store" build/ios_store/LandOfKhair.xcodeproj`
-5. In Xcode: Product → Archive, then Distribute App → App Store Connect.
+5. Archive and upload from the command line (used for build 11):
+   `xcodebuild -project LandOfKhair.xcodeproj -scheme LandOfKhair -configuration Release -destination 'generic/platform=iOS' -archivePath LandOfKhair.xcarchive -allowProvisioningUpdates DEVELOPMENT_TEAM=NBCQF98255 CODE_SIGN_STYLE=Automatic CODE_SIGN_IDENTITY="Apple Development" TARGETED_DEVICE_FAMILY=1 archive`
+   then `xcodebuild -exportArchive -archivePath LandOfKhair.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath export -allowProvisioningUpdates` (method app-store-connect, destination upload).
+   The signing identity must be "Apple Development" for the archive; the upload step re-signs for distribution.
 
 The "iOS Store" preset is the same as "iOS" but leaves out `tests/`, `tools/` and `doc/`, signs for distribution, and answers the encryption question. The phone check (`tests/phone_check.gd`) only runs in debug builds, so leaving it out is safe.
 

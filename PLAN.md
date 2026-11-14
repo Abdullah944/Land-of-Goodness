@@ -21,7 +21,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - Every window has the menu's look; big talking portraits of the five neighbors in the talk box (2026-11-13)
 - Quran listening: the 114 suras recited by Mishary Alafasy, from the Quran shelf in the mosque; each sura downloads once when the player asks, no text shown (2026-11-14)
 - Art check 2: animals by the barn, clearer rain, seasonal grass and trees, a centerpiece for each festival (2026-11-13)
-- App Store Connect listing filled, not submitted (2026-11-14): Arabic and English text, 7 pictures per language, age rating 4+, Data Not Collected, free in all countries, Games / Simulation and Family
+- App Store: version 1.0 (build 11, iPhone only) submitted for Apple review on 2026-11-14, "Waiting for Review"; Made for Kids, ages 6-8; privacy and support pages on GitHub Pages. Listing: Arabic and English text, 7 pictures per language, age rating 4+, Data Not Collected, free in all countries, Games / Simulation and Family
 - Android debug APK (2026-11-14): build/android/LandOfKhair-debug.apk on the ASUS, copy on the NAS; not run yet (no emulator image or Android phone); notifications are iPhone only
 
 ## Now
@@ -29,13 +29,13 @@ No fighting, no ads, no purchases, nature sounds only.
 - The game is finished. Waiting for the owner (3 cards in "Waiting on me" on Trello):
   1. Play the latest build on the iPhone and note anything odd
   2. Find a reviewer for the mosque and prayer reminder
-  3. App Store Connect: say yes to publishing the privacy and support pages (docs/, GitHub Pages), then the support and privacy links go in; set up Content Rights (the recitation is third-party content); a game rating number (RCN) is needed for South Korea
+  3. Watch for Apple's review email (up to 48 hours); South Korea still needs a game rating number (RCN) before sale there
 
 ## Next
 
 1. Fix what the owner reports from the iPhone
 2. Change anything the reviewer asks for
-3. TestFlight upload, after the owner says yes
+3. Answer anything Apple's review asks
 
 ## Ideas / later
 
