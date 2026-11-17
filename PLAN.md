@@ -32,7 +32,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - The game is finished. Waiting for the owner (3 cards in "Waiting on me" on Trello):
   1. Play the latest build on the iPhone and note anything odd
   2. Find a reviewer for the mosque and prayer reminder
-  3. Watch for Apple's review email (up to 48 hours); South Korea still needs a game rating number (RCN) before sale there
+  3. Watch for Apple's review email (up to 48 hours). South Korea is skipped (owner, 2026-11-17)
 
 ## Next
 
