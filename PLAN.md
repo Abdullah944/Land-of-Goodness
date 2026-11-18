@@ -55,7 +55,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - Passed: no accounts, servers or database, so the sign-in, API, database and rate-limit rules do not apply. The only network use is the Quran download over HTTPS from cdn.islamic.network; nothing about the player is sent (App Store label: Data Not Collected).
 - Fixed for 1.0.1: spritecook-assets.json (art IDs, not secret) was packed into the game; every export now leaves out spritecook-assets.json and docs/. The test-only switches (KHAIR_SAVE, KHAIR_SKIP_TITLE) now work only in debug builds.
 - Website rule 14 (security headers): the privacy and support pages on GitHub Pages are plain text pages with no forms or scripts; GitHub Pages does not allow custom headers.
-- Plugins: Notification Scheduler 6.0 and GMPShared 1.0 (local notifications only, no network). Not yet checked for newer versions.
+- Plugins: Notification Scheduler 6.0 and GMPShared 1.0 (local notifications only, no network). Checked 2026-11-18: 6.0 is the newest release, nothing to update.
 
 ## Design guide: where a rule does not fit
 
