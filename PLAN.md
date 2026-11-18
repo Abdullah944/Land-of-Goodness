@@ -56,6 +56,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - Fixed for 1.0.1: spritecook-assets.json (art IDs, not secret) was packed into the game; every export now leaves out spritecook-assets.json and docs/. The test-only switches (KHAIR_SAVE, KHAIR_SKIP_TITLE) now work only in debug builds.
 - Website rule 14 (security headers): the privacy and support pages on GitHub Pages are plain text pages with no forms or scripts; GitHub Pages does not allow custom headers.
 - Plugins: Notification Scheduler 6.0 and GMPShared 1.0 (local notifications only, no network). Checked 2026-11-18: 6.0 is the newest release, nothing to update.
+- New rules 21-26, checked 2026-11-18: the only network call (Quran audio) is HTTPS, with no plain http anywhere; there is no sign-in, cookies, forms or reset links, so the CSRF, cookie and reset rules do not apply; the game is free with no purchases, so rule 25 does not apply; git history has no keys (the "token" hits are game counters); test switches work only in debug builds and the game prints nothing. Nothing to fix; the build in Apple review was not touched.
 
 ## Design guide: where a rule does not fit
 
