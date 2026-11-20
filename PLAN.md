@@ -32,7 +32,7 @@ No fighting, no ads, no purchases, nature sounds only.
 - The game is finished. Waiting for the owner (3 cards in "Waiting on me" on Trello):
   1. Play the latest build on the iPhone and note anything odd
   2. Find a reviewer for the mosque and prayer reminder
-  3. Watch for Apple's review email (up to 48 hours). South Korea is skipped (owner, 2026-11-17). 2026-11-18: Apple asked about paid content (2.1(b)); replied "free, no purchases" and resubmitted. China mainland removed from the store (owner): it needs a Security Assessment and an AI-content filing
+  3. Watch for Apple's review email (up to 48 hours). South Korea is skipped (owner, 2026-11-17). 2026-11-18: Apple asked about paid content (2.1(b)); replied "free, no purchases" and resubmitted. China mainland removed from the store (owner): it needs a Security Assessment and an AI-content filing. 2026-11-20 (owner): when Apple approves, this chat says "Apple approved, ready to archive" and the owner archives it. 1.0.1 then goes in a new chat with his OK
 
 ## Next
 
